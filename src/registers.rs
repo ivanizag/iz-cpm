@@ -1,32 +1,47 @@
 
-pub const REG_A: usize = 8;
+// 8 bit registers
+pub const REG_A: usize = 0;
 pub const REG_COUNT8: usize = 14;
 
+// 16 bit registers
+pub const REG_PC: usize = 0;
+pub const REG_COUNT16: usize = 14;
+
 pub struct Registers {
-    bytes: [u8; REG_COUNT8]
+    bytes: [u8; REG_COUNT8],
+    words: [u16; REG_COUNT16]
 }
 
 impl Registers {
     pub fn new() -> Registers {
         Registers {
-            bytes: [0; REG_COUNT8]
+            bytes: [0; REG_COUNT8],
+            words: [0; REG_COUNT16]
         }
     }
 
-    pub fn get(&self, reg: usize) -> u8 {
+    pub fn get8(&self, reg: usize) -> u8 {
         self.bytes[reg]
     }
 
-    pub fn set(&mut self, reg: usize, value: u8) {
+    pub fn set8(&mut self, reg: usize, value: u8) {
         self.bytes[reg] = value;
     }
 
+    pub fn get16(&self, reg: usize) -> u16 {
+        self.words[reg]
+    }
+
+    pub fn set16(&mut self, reg: usize, value: u16) {
+        self.words[reg] = value;
+    }
+
     pub fn get_a(&self) -> u8 {
-        self.get(REG_A)
+        self.get8(REG_A)
     }
 
     pub fn set_a(&mut self, value: u8) {
-        self.set(REG_A, value);
+        self.set8(REG_A, value);
     }
 
 }
@@ -40,8 +55,8 @@ mod tests {
         let mut r = Registers::new();
         const V:u8 = 23;
 
-        r.set(REG_A, V);
-        assert_eq!(V, r.get(REG_A));
+        r.set8(REG_A, V);
+        assert_eq!(V, r.get8(REG_A));
     }
 
     #[test]
