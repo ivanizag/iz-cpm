@@ -1,6 +1,13 @@
 
-// 8 bit registers
-pub const REG_A: usize = 0;
+// 8 bit registers, indexes in table "r" of http://www.z80.info/decoding.htm
+pub const REG_B: usize = 0;
+pub const REG_C: usize = 1;
+pub const REG_D: usize = 2;
+pub const REG_E: usize = 3;
+pub const REG_H: usize = 4;
+pub const REG_L: usize = 5;
+// / is unused, it's (HL) for decoding
+pub const REG_A: usize = 7;
 pub const REG_COUNT8: usize = 14;
 
 // 16 bit registers
