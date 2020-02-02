@@ -1,3 +1,5 @@
+use std::num::Wrapping;
+
 use super::state::*;
 use super::registers::*;
 
@@ -200,42 +202,50 @@ impl Decoder {
 
     fn load_no_prefix(&mut self) {
         for c in 0..=255 {
-            let opcode: Option<Opcode>;
+            //let opcode: Option<Opcode>;
             let p = DecodingHelper::parts(c);
-            match p.x {
+            let opcode = match p.x {
                 0 => match p.z {
                     0 => match p.y { // Relative jumps and assorted ops.
-                        0 => opcode = Some(Decoder::build_nop()), // NOP
-                        1 => opcode = None,
-                        2 => opcode = None,
-                        3 => opcode = None,
-                        4..=7 => opcode = None,
+                        0 => Some(Decoder::build_nop()), // NOP
+                        1 => None,
+                        2 => None,
+                        3 => None,
+                        4..=7 => None,
                         _ => panic!("Unreachable")
                     },
                     1 => match p.q { // 16 bit load imm / add 
-                        0 => opcode = Some(Decoder::build_ld_rr_nn(p.p)), // LD rp[p], nn -- 16-bit load add
-                        1 => opcode = None,
+                        0 =>  Some(Decoder::build_ld_rr_nn(p.p)), // LD rp[p], nn -- 16-bit load add
+                        1 =>  None,
                         _ => panic!("Unreachable")
                     },
-                    2 => opcode = None,
-                    3 => opcode = None,
+                    2 => None,
+                    3 => match p.q {
+                        0 =>  Some(Decoder::build_inc_dec_rr(p.p,  1)), // INC rp[p] -- 16-bit inc
+                        1 =>  Some(Decoder::build_inc_dec_rr(p.p, 65535)), // DEC rp[p] -- 16-bit dec
+                        _ => panic!("Unreachable")                       
+                    },
                     4 => match p.y { // 8 bit inc
-                        6 => opcode = None, // INC (HL) -- 8 bit inc
-                        0..=7 => opcode = Some(Decoder::build_inc_r(p.y)), // INC r[y] -- 8 bit inc
+                        6 => None, // INC (HL) -- 8 bit inc
+                        0..=7 => Some(Decoder::build_inc_dec_r(p.y, 1)), // INC r[y] -- 8 bit inc
                         _ => panic!("Unreachable")
-                    }
-                    5 => opcode = None,
-                    6 => opcode = None,
-                    7 => opcode = None,
+                    },
+                    5 => match p.y { // 8 bit dec
+                        6 => None, // DEC (HL) -- 8 bit dec
+                        0..=7 => Some(Decoder::build_inc_dec_r(p.y, 255)), // DEC r[y] -- 8 bit dec
+                        _ => panic!("Unreachable")
+                    },
+                    6 => None,
+                    7 => None,
                     _ => panic!("Unreachable")
                 },
-                1 => opcode = None,
-                2 => opcode = None,
-                3 => opcode = None,
-                4 => opcode = None,
-                5 => opcode = None,
-                6 => opcode = None,
-                7 => opcode = None,
+                1 => None,
+                2 => None,
+                3 => None,
+                4 => None,
+                5 => None,
+                6 => None,
+                7 => None,
                 _ => panic!("Unreachable")
             };
 
@@ -273,16 +283,31 @@ impl Decoder {
         }
     }
 
-    fn build_inc_r(y: usize) -> Opcode {
+    fn build_inc_dec_rr(p: usize, delta: u16) -> Opcode {
+        let reg16 = TABLE_RP[p];
+        Opcode {
+            name: "INC rr",
+            bytes: 1,
+            cycles: 6,
+            action: Box::new(move |state: &mut State| {
+                let mut v = Wrapping(state.reg.get16(reg16));
+                v = v + Wrapping(delta);
+                state.reg.set16(reg16, v.0); 
+                // TODO: flags
+            })
+        }    
+    }    
+
+    fn build_inc_dec_r(y: usize, delta: u8) -> Opcode {
         let reg8 = TABLE_R[y];
         Opcode {
-            name: "INC r",
+            name: "INC r", //format!("INC {}", TABLE_R_NAME[y]),
             bytes: 1,
             cycles: 4,
             action: Box::new(move |state: &mut State| {
-                let mut v = state.reg.get8(reg8);
-                v = v + 1; // TODO: should wrap on 255
-                state.reg.set8(reg8, v); 
+                let mut v = Wrapping(state.reg.get8(reg8));
+                v = v + Wrapping(delta);
+                state.reg.set8(reg8, v.0); 
                 // TODO: flags
             })
         }        
@@ -314,4 +339,5 @@ impl DecodingHelper {
 
 const TABLE_RP: [usize; 4] = [REG_BC, REG_DE, REG_HL, REG_SP];
 const TABLE_R:  [usize; 8] = [REG_B, REG_C, REG_D, REG_E, REG_H, REG_L, 0 /* (HL) not a register */, REG_A];
+const TABLE_R_NAME: [&str; 8] = ["B", "C", "D", "E", "H", "L", "undefined", "A"];
 
