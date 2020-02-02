@@ -11,6 +11,10 @@ pub struct Opcode {
 }
 
 impl Opcode {
+    fn new (name: &'static str, bytes: usize, cycles: u64, action: Box<OpcodeFn>) -> Opcode {
+        Opcode {name, bytes, cycles, action}
+    }
+
     pub fn execute(&self, state: &mut State) {
         (self.action)(state);
         state.cycles += self.cycles 
@@ -196,54 +200,62 @@ impl Decoder {
 
     fn load_no_prefix(&mut self) {
         for c in 0..=255 {
-            let mut opcode: Opcode;
-            opcode = Opcode {
-                name: "NOT IMPLEMENTED",
-                bytes: 1,
-                cycles: 4,
-                action: Box::new(|_: &mut State| panic!("Not implemented"))
-            };
+            let opcode: Option<Opcode>;
             let p = DecodingHelper::parts(c);
-            if p.x == 0 {
-                if p.z == 0 {
-                    // Relative jumps and assorted ops.
-                    // TODO
-                } else if p.z == 1 {
-                    if p.q == 0 {
-                        // 16-bit load immediate
-                        //println!("Opcode LD 0x{:x} defined.", c);
-                        opcode = Decoder::build_ld_rr_nn(p.p); // LD rp[p], nn -- 16-bit load add
-                    } else {
-                        // TODO
+            match p.x {
+                0 => match p.z {
+                    0 => match p.y { // Relative jumps and assorted ops.
+                        0 => opcode = Some(Decoder::build_nop()), // NOP
+                        1 => opcode = None,
+                        2 => opcode = None,
+                        3 => opcode = None,
+                        4..=7 => opcode = None,
+                        _ => panic!("Unreachable")
+                    },
+                    1 => match p.q { // 16 bit load imm / add 
+                        0 => opcode = Some(Decoder::build_ld_rr_nn(p.p)), // LD rp[p], nn -- 16-bit load add
+                        1 => opcode = None,
+                        _ => panic!("Unreachable")
+                    },
+                    2 => opcode = None,
+                    3 => opcode = None,
+                    4 => match p.y { // 8 bit inc
+                        6 => opcode = None, // INC (HL) -- 8 bit inc
+                        0..=7 => opcode = Some(Decoder::build_inc_r(p.y)), // INC r[y] -- 8 bit inc
+                        _ => panic!("Unreachable")
                     }
-                } else if p.z == 2 {
-                    // TODO
-                } else if p.z == 3 {
-                    // TODO
-                } else if p.z == 4 {
-                    if p.y == 6 {
-                        // INC (HL) -- 8 bit inc
-                        // TODO
-                    } else {
-                        //println!("Opcode INC 0x{:x} defined.", c);
-                        opcode = Decoder::build_inc_r(p.y); // INC r[y] -- 8 bit inc
-                    }
-                } else if p.z == 5 {
-                    // TODO
-                } else if p.z == 6 {
-                    // TODO
-                } else if p.z == 7 {
-                    // TODO
-                }               
-            } else if p.x == 1 {
-                if p.z == 6 {
-                    // TODO
-                } else {
-                    // TODO: HALT
-                }
+                    5 => opcode = None,
+                    6 => opcode = None,
+                    7 => opcode = None,
+                    _ => panic!("Unreachable")
+                },
+                1 => opcode = None,
+                2 => opcode = None,
+                3 => opcode = None,
+                4 => opcode = None,
+                5 => opcode = None,
+                6 => opcode = None,
+                7 => opcode = None,
+                _ => panic!("Unreachable")
+            };
+
+            match opcode.as_ref() {
+                None => (),
+                Some(o) => println!("0x{:02x} {:20}: {:?}", c, o.name, p)
             }
-            println!("0x{:x} {}: {:?}", c, opcode.name, p);
-            self.no_prefix[c as usize] = Some(opcode)
+            self.no_prefix[c as usize] = opcode;
+        }
+    }
+
+    fn build_nop() -> Opcode {
+        Opcode {
+            name: "NOP",
+            bytes: 1,
+            cycles: 4,
+            action: Box::new(|_: &mut State| {
+                // Nothing done
+            })
+
         }
     }
 
