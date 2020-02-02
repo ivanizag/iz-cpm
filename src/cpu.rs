@@ -17,6 +17,6 @@ impl Cpu {
 
     pub fn execute_instruction(&mut self) {
         let opcode = self.decoder.decode(&mut self.state);
-        opcode.execute(&mut self.state); 
+        opcode.as_ref().unwrap().execute(&mut self.state)
     }
 }

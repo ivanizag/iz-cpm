@@ -11,9 +11,14 @@ pub const REG_A: usize = 7;
 pub const REG_COUNT8: usize = 14;
 
 // 16 bit registers
-pub const REG_PC: usize = 0;
+pub const REG_BC: usize = 0;
+pub const REG_DE: usize = 1;
+pub const REG_HL: usize = 2;
+pub const REG_SP: usize = 3;
+pub const REG_PC: usize = 09;
 pub const REG_COUNT16: usize = 14;
 
+#[derive(Debug)]
 pub struct Registers {
     bytes: [u8; REG_COUNT8],
     words: [u16; REG_COUNT16]
