@@ -28,7 +28,7 @@ impl State {
         value
     }
 
-    pub fn advance_immediate(& mut self) -> u16 {
+    pub fn advance_immediate16(& mut self) -> u16 {
         let mut value: u16 = self.advance_pc() as u16;
         value += (self.advance_pc() as u16) << 8;
         value

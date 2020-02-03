@@ -7,6 +7,15 @@ use z80::memory::PlainMemory;
 
 
 #[test]
+#[should_panic]
+fn test_not_implemented() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0xff);
+
+    cpu.execute_instruction();
+}
+
+#[test]
 fn test_inc_a() {
     let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
     cpu.state.mem.poke(0x0000, 0x3c);  // INC A
@@ -121,10 +130,28 @@ fn test_ld_bc_imm() {
 }
 
 #[test]
-#[should_panic]
-fn test_not_implemented() {
+fn test_ld_b_imm() {
     let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
-    cpu.state.mem.poke(0x0000, 0xff);
+    cpu.state.mem.poke(0x0000, 0x06);  // LD B, $34
+    cpu.state.mem.poke(0x0001, 0x34); 
+    cpu.state.reg.set8(&Register8::B, 0x9e);
 
     cpu.execute_instruction();
+
+    println!("Registers: {:?}", cpu.state.reg);
+
+    assert_eq!(0x34, cpu.state.reg.get8(&Register8::B));
+}
+
+
+#[test]
+fn test_add_hl_de() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0x19);  // ADD HL, DE
+    cpu.state.reg.set16(&Register16::HL, 0x1234);
+    cpu.state.reg.set16(&Register16::DE, 0x0101);
+
+    cpu.execute_instruction();
+
+    assert_eq!(0x1335, cpu.state.reg.get16(&Register16::HL));
 }

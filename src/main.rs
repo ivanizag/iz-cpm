@@ -2,6 +2,7 @@
 
 mod decoder;
 mod memory;
+mod opcode;
 mod registers;
 mod state;
 mod cpu;

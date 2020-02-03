@@ -1,27 +1,5 @@
-use std::num::Wrapping;
-
+use super::opcode::*;
 use super::state::*;
-use super::registers::*;
-
-type OpcodeFn = dyn Fn(&mut State) -> ();
-
-pub struct Opcode {
-    name: String,
-    bytes: usize,
-    cycles: u64,
-    action: Box<OpcodeFn>,
-}
-
-impl Opcode {
-    fn new (name: String, bytes: usize, cycles: u64, action: Box<OpcodeFn>) -> Opcode {
-        Opcode {name, bytes, cycles, action}
-    }
-
-    pub fn execute(&self, state: &mut State) {
-        (self.action)(state);
-        state.cycles += self.cycles 
-    }
-}
 
 /* See
     http://www.z80.info/decoding.htm
@@ -207,35 +185,39 @@ impl Decoder {
             let opcode = match p.x {
                 0 => match p.z {
                     0 => match p.y { // Relative jumps and assorted ops.
-                        0 => Some(Decoder::build_nop()), // NOP
+                        0 => Some(build_nop()), // NOP
                         1 => None,
                         2 => None,
                         3 => None,
                         4..=7 => None,
                         _ => panic!("Unreachable")
                     },
-                    1 => match p.q { // 16 bit load imm / add 
-                        0 =>  Some(Decoder::build_ld_rr_nn(p.p)), // LD rp[p], nn -- 16-bit load add
-                        1 =>  None,
+                    1 => match p.q {
+                        0 =>  Some(build_ld_rr_nn(p.p)), // LD rp[p], nn -- 16-bit load add
+                        1 =>  Some(build_add_hl_rr(p.p)), // ADD HL, rp[p] -- 16-bit add
                         _ => panic!("Unreachable")
                     },
                     2 => None,
                     3 => match p.q {
-                        0 =>  Some(Decoder::build_inc_dec_rr(p.p, true)), // INC rp[p] -- 16-bit inc
-                        1 =>  Some(Decoder::build_inc_dec_rr(p.p, false)), // DEC rp[p] -- 16-bit dec
+                        0 =>  Some(build_inc_dec_rr(p.p, true)), // INC rp[p] -- 16-bit inc
+                        1 =>  Some(build_inc_dec_rr(p.p, false)), // DEC rp[p] -- 16-bit dec
                         _ => panic!("Unreachable")                       
                     },
-                    4 => match p.y { // 8 bit inc
+                    4 => match p.y {
                         6 => None, // INC (HL) -- 8 bit inc
-                        0..=7 => Some(Decoder::build_inc_dec_r(p.y, true)), // INC r[y] -- 8 bit inc
+                        0..=7 => Some(build_inc_dec_r(p.y, true)), // INC r[y] -- 8 bit inc
                         _ => panic!("Unreachable")
                     },
-                    5 => match p.y { // 8 bit dec
+                    5 => match p.y {
                         6 => None, // DEC (HL) -- 8 bit dec
-                        0..=7 => Some(Decoder::build_inc_dec_r(p.y, false)), // DEC r[y] -- 8 bit dec
+                        0..=7 => Some(build_inc_dec_r(p.y, false)), // DEC r[y] -- 8 bit dec
                         _ => panic!("Unreachable")
                     },
-                    6 => None,
+                    6 => match p.y {
+                        6 => None, // LD (HL), n -- 8 bit load imm
+                        0..=7 => Some(build_ld_r_n(p.y)), // LD r[y], n -- 8 bit load imm
+                        _ => panic!("Unreachable")
+                    },
                     7 => None,
                     _ => panic!("Unreachable")
                 },
@@ -256,68 +238,7 @@ impl Decoder {
             self.no_prefix[c as usize] = opcode;
         }
     }
-
-    fn build_nop() -> Opcode {
-        Opcode {
-            name: "NOP".to_string(),
-            bytes: 1,
-            cycles: 4,
-            action: Box::new(|_: &mut State| {
-                // Nothing done
-            })
-
-        }
-    }
-
-    fn build_ld_rr_nn(p: usize) -> Opcode {
-        let reg16 = &TABLE_RP[p];
-        Opcode {
-            name: format!("LD {}, XX", TABLE_RP_NAME[p]),
-            bytes: 1,
-            cycles: 10,
-            action: Box::new(move |state: &mut State| {
-                let value = state.advance_immediate();
-                state.reg.set16(reg16, value);
-                // TODO: flags
-            })
-        }
-    }
-
-    fn build_inc_dec_rr(p: usize, inc: bool) -> Opcode {
-        let reg16 = &TABLE_RP[p];
-        let delta = if inc {1} else {65535};
-        let mnemonic = if inc {"INC"} else {"DEC"};
-        Opcode {
-            name: format!("{} {}", mnemonic, TABLE_RP_NAME[p]),
-            bytes: 1,
-            cycles: 6,
-            action: Box::new(move |state: &mut State| {
-                let mut v = Wrapping(state.reg.get16(reg16));
-                v = v + Wrapping(delta);
-                state.reg.set16(reg16, v.0); 
-                // TODO: flags
-            })
-        }    
-    }    
-
-    fn build_inc_dec_r(y: usize, inc: bool) -> Opcode {
-        let reg8 = &TABLE_R[y];
-        let delta = if inc {1} else {255};
-        let mnemonic = if inc {"INC"} else {"DEC"};
-        Opcode {
-            name: format!("{} {}", mnemonic, TABLE_R_NAME[y]),
-            bytes: 1,
-            cycles: 4,
-            action: Box::new(move |state: &mut State| {
-                let mut v = Wrapping(state.reg.get8(reg8));
-                v = v + Wrapping(delta);
-                state.reg.set8(reg8, v.0); 
-                // TODO: flags
-            })
-        }        
-    }
 }
-
 
 #[derive(Debug)]
 struct DecodingHelper {
@@ -340,15 +261,3 @@ impl DecodingHelper {
         }
     }
 }
-
-const TABLE_RP: [Register16; 4] = [
-    Register16::BC, Register16::DE, Register16::HL, Register16::SP];
-const TABLE_RP_NAME: [&str; 4] = [
-    "BC", "DE", "HL", "SP"];
-const TABLE_R:  [Register8; 8] = [
-    Register8::B, Register8::C, Register8::D, Register8::E,
-    Register8::H, Register8::L, Register8::_HL_, Register8::A];
-const TABLE_R_NAME: [&str; 8] = [
-    "B", "C", "D", "E",
-    "H", "L", "undefined", "A"];
-
