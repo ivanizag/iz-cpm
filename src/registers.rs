@@ -1,22 +1,30 @@
 
-// 8 bit registers, indexes in table "r" of http://www.z80.info/decoding.htm
-pub const REG_B: usize = 0;
-pub const REG_C: usize = 1;
-pub const REG_D: usize = 2;
-pub const REG_E: usize = 3;
-pub const REG_H: usize = 4;
-pub const REG_L: usize = 5;
-// / is unused, it's (HL) for decoding
-pub const REG_A: usize = 7;
-pub const REG_COUNT8: usize = 14;
+// 8 bit registers
+#[derive(Copy, Clone)]
+pub enum Register8 {
+    A,
+    B,
+    C,
+    D,
+    E,
+    H,
+    L,
+    _HL_ // Not a real register
+}
+pub const REG_COUNT8: usize = 8;
+
 
 // 16 bit registers
-pub const REG_BC: usize = 0;
-pub const REG_DE: usize = 1;
-pub const REG_HL: usize = 2;
-pub const REG_SP: usize = 3;
-pub const REG_PC: usize = 09;
-pub const REG_COUNT16: usize = 14;
+#[derive(Copy, Clone)]
+pub enum Register16 {
+    AF,
+    BC,
+    DE,
+    HL,
+    SP,
+    PC
+}
+pub const REG_COUNT16: usize = 6;
 
 #[derive(Debug)]
 pub struct Registers {
@@ -32,30 +40,21 @@ impl Registers {
         }
     }
 
-    pub fn get8(&self, reg: usize) -> u8 {
-        self.bytes[reg]
+    pub fn get8(&self, reg: &Register8) -> u8 {
+        self.bytes[*reg as usize]
     }
 
-    pub fn set8(&mut self, reg: usize, value: u8) {
-        self.bytes[reg] = value;
+    pub fn set8(&mut self, reg: &Register8, value: u8) {
+        self.bytes[*reg as usize] = value;
     }
 
-    pub fn get16(&self, reg: usize) -> u16 {
-        self.words[reg]
+    pub fn get16(&self, reg: &Register16) -> u16 {
+        self.words[*reg as usize]
     }
 
-    pub fn set16(&mut self, reg: usize, value: u16) {
-        self.words[reg] = value;
+    pub fn set16(&mut self, reg: &Register16, value: u16) {
+        self.words[*reg as usize] = value;
     }
-
-    pub fn get_a(&self) -> u8 {
-        self.get8(REG_A)
-    }
-
-    pub fn set_a(&mut self, value: u8) {
-        self.set8(REG_A, value);
-    }
-
 }
 
 #[cfg(test)]
@@ -67,18 +66,7 @@ mod tests {
         let mut r = Registers::new();
         const V:u8 = 23;
 
-        r.set8(REG_A, V);
-        assert_eq!(V, r.get8(REG_A));
+        r.set8(&Register8::A, V);
+        assert_eq!(V, r.get8(&Register8::A));
     }
-
-    #[test]
-    fn set_get_a() {
-        let mut r = Registers::new();
-        const V:u8 = 44;
-
-        r.set_a(V);
-        assert_eq!(V, r.get_a());
-    }
-
-
 }

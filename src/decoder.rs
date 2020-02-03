@@ -6,14 +6,14 @@ use super::registers::*;
 type OpcodeFn = dyn Fn(&mut State) -> ();
 
 pub struct Opcode {
-    name: &'static str,
+    name: String,
     bytes: usize,
     cycles: u64,
     action: Box<OpcodeFn>,
 }
 
 impl Opcode {
-    fn new (name: &'static str, bytes: usize, cycles: u64, action: Box<OpcodeFn>) -> Opcode {
+    fn new (name: String, bytes: usize, cycles: u64, action: Box<OpcodeFn>) -> Opcode {
         Opcode {name, bytes, cycles, action}
     }
 
@@ -221,18 +221,18 @@ impl Decoder {
                     },
                     2 => None,
                     3 => match p.q {
-                        0 =>  Some(Decoder::build_inc_dec_rr(p.p,  1)), // INC rp[p] -- 16-bit inc
-                        1 =>  Some(Decoder::build_inc_dec_rr(p.p, 65535)), // DEC rp[p] -- 16-bit dec
+                        0 =>  Some(Decoder::build_inc_dec_rr(p.p, true)), // INC rp[p] -- 16-bit inc
+                        1 =>  Some(Decoder::build_inc_dec_rr(p.p, false)), // DEC rp[p] -- 16-bit dec
                         _ => panic!("Unreachable")                       
                     },
                     4 => match p.y { // 8 bit inc
                         6 => None, // INC (HL) -- 8 bit inc
-                        0..=7 => Some(Decoder::build_inc_dec_r(p.y, 1)), // INC r[y] -- 8 bit inc
+                        0..=7 => Some(Decoder::build_inc_dec_r(p.y, true)), // INC r[y] -- 8 bit inc
                         _ => panic!("Unreachable")
                     },
                     5 => match p.y { // 8 bit dec
                         6 => None, // DEC (HL) -- 8 bit dec
-                        0..=7 => Some(Decoder::build_inc_dec_r(p.y, 255)), // DEC r[y] -- 8 bit dec
+                        0..=7 => Some(Decoder::build_inc_dec_r(p.y, false)), // DEC r[y] -- 8 bit dec
                         _ => panic!("Unreachable")
                     },
                     6 => None,
@@ -259,7 +259,7 @@ impl Decoder {
 
     fn build_nop() -> Opcode {
         Opcode {
-            name: "NOP",
+            name: "NOP".to_string(),
             bytes: 1,
             cycles: 4,
             action: Box::new(|_: &mut State| {
@@ -270,9 +270,9 @@ impl Decoder {
     }
 
     fn build_ld_rr_nn(p: usize) -> Opcode {
-        let reg16 = TABLE_RP[p];
+        let reg16 = &TABLE_RP[p];
         Opcode {
-            name: "LD rr, XX",
+            name: format!("LD {}, XX", TABLE_RP_NAME[p]),
             bytes: 1,
             cycles: 10,
             action: Box::new(move |state: &mut State| {
@@ -283,10 +283,12 @@ impl Decoder {
         }
     }
 
-    fn build_inc_dec_rr(p: usize, delta: u16) -> Opcode {
-        let reg16 = TABLE_RP[p];
+    fn build_inc_dec_rr(p: usize, inc: bool) -> Opcode {
+        let reg16 = &TABLE_RP[p];
+        let delta = if inc {1} else {65535};
+        let mnemonic = if inc {"INC"} else {"DEC"};
         Opcode {
-            name: "INC rr",
+            name: format!("{} {}", mnemonic, TABLE_RP_NAME[p]),
             bytes: 1,
             cycles: 6,
             action: Box::new(move |state: &mut State| {
@@ -298,10 +300,12 @@ impl Decoder {
         }    
     }    
 
-    fn build_inc_dec_r(y: usize, delta: u8) -> Opcode {
-        let reg8 = TABLE_R[y];
+    fn build_inc_dec_r(y: usize, inc: bool) -> Opcode {
+        let reg8 = &TABLE_R[y];
+        let delta = if inc {1} else {255};
+        let mnemonic = if inc {"INC"} else {"DEC"};
         Opcode {
-            name: "INC r", //format!("INC {}", TABLE_R_NAME[y]),
+            name: format!("{} {}", mnemonic, TABLE_R_NAME[y]),
             bytes: 1,
             cycles: 4,
             action: Box::new(move |state: &mut State| {
@@ -337,7 +341,14 @@ impl DecodingHelper {
     }
 }
 
-const TABLE_RP: [usize; 4] = [REG_BC, REG_DE, REG_HL, REG_SP];
-const TABLE_R:  [usize; 8] = [REG_B, REG_C, REG_D, REG_E, REG_H, REG_L, 0 /* (HL) not a register */, REG_A];
-const TABLE_R_NAME: [&str; 8] = ["B", "C", "D", "E", "H", "L", "undefined", "A"];
+const TABLE_RP: [Register16; 4] = [
+    Register16::BC, Register16::DE, Register16::HL, Register16::SP];
+const TABLE_RP_NAME: [&str; 4] = [
+    "BC", "DE", "HL", "SP"];
+const TABLE_R:  [Register8; 8] = [
+    Register8::B, Register8::C, Register8::D, Register8::E,
+    Register8::H, Register8::L, Register8::_HL_, Register8::A];
+const TABLE_R_NAME: [&str; 8] = [
+    "B", "C", "D", "E",
+    "H", "L", "undefined", "A"];
 
