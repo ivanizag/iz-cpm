@@ -35,6 +35,7 @@ pub fn build_nop() -> Opcode {
     }
 }
 
+// ADD opcodes
 pub fn build_add_hl_rr(p: usize) -> Opcode {
     let reg16 = &TABLE_RP[p];
     Opcode {
@@ -50,16 +51,17 @@ pub fn build_add_hl_rr(p: usize) -> Opcode {
     }
 }
 
+// LD opcodes
 pub fn build_ld_r_n(y: usize) -> Opcode {
     let reg8 = &TABLE_R[y];
     Opcode {
         name: format!("LD {}, X", TABLE_R_NAME[y]),
         bytes: 1,
-        cycles: 10,
+        cycles: 7,
         action: Box::new(move |state: &mut State| {
             let value = state.advance_pc();
             state.reg.set8(reg8, value);
-            // TODO: flags
+            // Note: flags not affected
         })
     }
 }
@@ -73,11 +75,12 @@ pub fn build_ld_rr_nn(p: usize) -> Opcode {
         action: Box::new(move |state: &mut State| {
             let value = state.advance_immediate16();
             state.reg.set16(reg16, value);
-            // TODO: flags
+            // Note: flags not affected
         })
     }
 }
 
+// INC, DEC opcodes
 pub fn build_inc_dec_rr(p: usize, inc: bool) -> Opcode {
     let reg16 = &TABLE_RP[p];
     let delta = if inc {1} else {65535};
@@ -89,28 +92,52 @@ pub fn build_inc_dec_rr(p: usize, inc: bool) -> Opcode {
         action: Box::new(move |state: &mut State| {
             let mut v = Wrapping(state.reg.get16(reg16));
             v = v + Wrapping(delta);
-            state.reg.set16(reg16, v.0); 
-            // TODO: flags
+            state.reg.set16(reg16, v.0);
+            // Note: flags not affected
         })
     }    
 }    
 
-pub fn build_inc_dec_r(y: usize, inc: bool) -> Opcode {
+pub fn build_inc_r(y: usize) -> Opcode {
     let reg8 = &TABLE_R[y];
-    let delta = if inc {1} else {255};
-    let mnemonic = if inc {"INC"} else {"DEC"};
     Opcode {
-        name: format!("{} {}", mnemonic, TABLE_R_NAME[y]),
+        name: format!("INC {}", TABLE_R_NAME[y]),
         bytes: 1,
         cycles: 4,
         action: Box::new(move |state: &mut State| {
-            let mut v = Wrapping(state.reg.get8(reg8));
-            v = v + Wrapping(delta);
-            state.reg.set8(reg8, v.0); 
-            // TODO: flags
+            let mut v = state.reg.get8(reg8);
+            v = if v == 255 {0} else {v+1};
+
+            state.reg.set8(reg8, v); 
+            state.reg.update_sz53_flags(v);
+            state.reg.clear_flag(&Flag::N);
+            state.reg.put_flag(&Flag::P, v == 0x80);
+            state.reg.put_flag(&Flag::H, (v & 0x0F) == 0x00);
+            // Flag::C is not affected
         })
     }        
 }
+
+pub fn build_dec_r(y: usize) -> Opcode {
+    let reg8 = &TABLE_R[y];
+    Opcode {
+        name: format!("DEC {}", TABLE_R_NAME[y]),
+        bytes: 1,
+        cycles: 4,
+        action: Box::new(move |state: &mut State| {
+            let mut v = state.reg.get8(reg8);
+            v = if v == 0 {255} else {v-1};
+
+            state.reg.set8(reg8, v); 
+            state.reg.update_sz53_flags(v);
+            state.reg.set_flag(&Flag::N);
+            state.reg.put_flag(&Flag::P, v == 0x7F);
+            state.reg.put_flag(&Flag::H, (v & 0x0F) == 0x0F);
+            // Flag::C is not affected
+        })
+    }        
+}
+
 
 
 #[derive(Debug)]

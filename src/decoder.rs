@@ -205,12 +205,12 @@ impl Decoder {
                     },
                     4 => match p.y {
                         6 => None, // INC (HL) -- 8 bit inc
-                        0..=7 => Some(build_inc_dec_r(p.y, true)), // INC r[y] -- 8 bit inc
+                        0..=7 => Some(build_inc_r(p.y)), // INC r[y] -- 8 bit inc
                         _ => panic!("Unreachable")
                     },
                     5 => match p.y {
                         6 => None, // DEC (HL) -- 8 bit dec
-                        0..=7 => Some(build_inc_dec_r(p.y, false)), // DEC r[y] -- 8 bit dec
+                        0..=7 => Some(build_dec_r(p.y)), // DEC r[y] -- 8 bit dec
                         _ => panic!("Unreachable")
                     },
                     6 => match p.y {
