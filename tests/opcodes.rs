@@ -143,6 +143,21 @@ fn test_ld_b_imm() {
     assert_eq!(0x34, cpu.state.reg.get8(&Register8::B));
 }
 
+#[test]
+fn test_ld_d_e() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0x53);  // LD D, E
+    cpu.state.mem.poke(0x0001, 0x34); 
+    cpu.state.reg.set8(&Register8::D, 0xdd);
+    cpu.state.reg.set8(&Register8::E, 0xee);
+
+    cpu.execute_instruction();
+
+    println!("Registers: {:?}", cpu.state.reg);
+
+    assert_eq!(0xee, cpu.state.reg.get8(&Register8::D));
+    assert_eq!(0xee, cpu.state.reg.get8(&Register8::E));
+}
 
 #[test]
 fn test_add_hl_de() {

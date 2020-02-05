@@ -66,6 +66,21 @@ pub fn build_ld_r_n(y: usize) -> Opcode {
     }
 }
 
+pub fn build_ld_r_r(y: usize, z: usize) -> Opcode {
+    let dst = &TABLE_R[y];
+    let src = &TABLE_R[z];
+    Opcode {
+        name: format!("LD {}, {}", TABLE_R_NAME[y], TABLE_R_NAME[z]),
+        bytes: 1,
+        cycles: 7,
+        action: Box::new(move |state: &mut State| {
+            let value = state.reg.get8(src);
+            state.reg.set8(dst, value);
+            // Note: flags not affected
+        })
+    }
+}
+
 pub fn build_ld_rr_nn(p: usize) -> Opcode {
     let reg16 = &TABLE_RP[p];
     Opcode {

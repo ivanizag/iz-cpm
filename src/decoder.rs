@@ -221,7 +221,15 @@ impl Decoder {
                     7 => None,
                     _ => panic!("Unreachable")
                 },
-                1 => None,
+                1 => match p.y {
+                    6 => None, // HALT
+                    0..=7 => match p.z {
+                        6 => None, // LD r, (HL) -- 8 bit loading
+                        0..=7 => Some(build_ld_r_r(p.y, p.z)), // LD r[y], r[z] -- 8 bit load imm
+                        _ => panic!("Unreachable")
+                    }
+                    _ => panic!("Unreacheable")
+                },
                 2 => None,
                 3 => None,
                 4 => None,
