@@ -16,6 +16,21 @@ fn test_not_implemented() {
 }
 
 #[test]
+fn test_two_opcodes() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0x06);  // LD B, $34
+    cpu.state.mem.poke(0x0001, 0x34); 
+    cpu.state.mem.poke(0x0002, 0x78);  // LD A, B
+ 
+    cpu.execute_instruction();
+    cpu.execute_instruction();
+
+    println!("Registers: {:?}", cpu.state.reg);
+
+    assert_eq!(0x34, cpu.state.reg.get8(&Register8::A));
+}
+
+#[test]
 fn test_inc_a() {
     let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
     cpu.state.mem.poke(0x0000, 0x3c);  // INC A
@@ -112,51 +127,6 @@ fn test_dec_de_underflow() {
     cpu.execute_instruction();
 
     assert_eq!(0xffff, cpu.state.reg.get16(&Register16::DE));
-}
-
-#[test]
-fn test_ld_bc_imm() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
-    cpu.state.mem.poke(0x0000, 0x01);  // LD BC, $1234
-    cpu.state.mem.poke(0x0001, 0x34); 
-    cpu.state.mem.poke(0x0002, 0x12); 
-    cpu.state.reg.set16(&Register16::BC, 0x0000);
-
-    cpu.execute_instruction();
-
-    println!("Registers: {:?}", cpu.state.reg);
-
-    assert_eq!(0x1234, cpu.state.reg.get16(&Register16::BC));
-}
-
-#[test]
-fn test_ld_b_imm() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
-    cpu.state.mem.poke(0x0000, 0x06);  // LD B, $34
-    cpu.state.mem.poke(0x0001, 0x34); 
-    cpu.state.reg.set8(&Register8::B, 0x9e);
-
-    cpu.execute_instruction();
-
-    println!("Registers: {:?}", cpu.state.reg);
-
-    assert_eq!(0x34, cpu.state.reg.get8(&Register8::B));
-}
-
-#[test]
-fn test_ld_d_e() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
-    cpu.state.mem.poke(0x0000, 0x53);  // LD D, E
-    cpu.state.mem.poke(0x0001, 0x34); 
-    cpu.state.reg.set8(&Register8::D, 0xdd);
-    cpu.state.reg.set8(&Register8::E, 0xee);
-
-    cpu.execute_instruction();
-
-    println!("Registers: {:?}", cpu.state.reg);
-
-    assert_eq!(0xee, cpu.state.reg.get8(&Register8::D));
-    assert_eq!(0xee, cpu.state.reg.get8(&Register8::E));
 }
 
 #[test]

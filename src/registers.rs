@@ -106,6 +106,11 @@ impl Registers {
         *f = (*f & !MASK_S53) + (reference & MASK_S53);
     }
 
+    pub fn get_hl(&self) -> u16 {
+        self.bytes[Register8::L as usize] as u16
+        + (self.bytes[Register8::H as usize] as u16) << 8
+    }
+
 }
 
 #[cfg(test)]

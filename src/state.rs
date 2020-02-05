@@ -25,6 +25,7 @@ impl State {
         let pc = self.reg.get16(&Register16::PC);
         let value = self.mem.peek(pc);
         self.reg.set16(&Register16::PC, pc + 1); // TOOD: wrap
+        //println!("Read: 0x{:02x}, PC: 0x{:04x}", value, self.reg.get16(&Register16::PC));
         value
     }
 

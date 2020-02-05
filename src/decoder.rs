@@ -1,4 +1,5 @@
 use super::opcode::*;
+use super::opcode_ld::*;
 use super::state::*;
 
 /* See
@@ -149,6 +150,7 @@ impl Decoder {
             ],
         };
         decoder.load_no_prefix();
+        decoder.load_prefix_ed();
         decoder
     }
 
@@ -224,7 +226,7 @@ impl Decoder {
                 1 => match p.y {
                     6 => None, // HALT
                     0..=7 => match p.z {
-                        6 => None, // LD r, (HL) -- 8 bit loading
+                        6 => Some(build_ld_r_phl(p.y)), // LD r, (HL) -- 8 bit loading
                         0..=7 => Some(build_ld_r_r(p.y, p.z)), // LD r[y], r[z] -- 8 bit load imm
                         _ => panic!("Unreachable")
                     }
@@ -246,6 +248,45 @@ impl Decoder {
             self.no_prefix[c as usize] = opcode;
         }
     }
+
+    fn load_prefix_ed(&mut self) {
+        for c in 0..=255 {
+            //let opcode: Option<Opcode>;
+            let p = DecodingHelper::parts(c);
+            let opcode = match p.x {
+                0 => None, // Invalid instruction NONI + NOP
+                1 => match p.z {
+                    0 => None,
+                    1 => None,
+                    2 => None,
+                    3 => match p.q {
+                        0 => Some(build_ld_pnn_rr(p.p)), // LD (nn), rr -- 16 bit loading
+                        1 => Some(build_ld_rr_pnn(p.p)), // LD rr, (nn) -- 16 bit loading
+                        _ => panic!("Unreachable")
+                    }
+                    4 => None,
+                    5 => None,
+                    6 => None,
+                    7 => None,
+                    _ => panic!("Unreacheable")
+                },
+                2 => None,
+                3 => None, // Invalid instruction NONI + NOP
+                4 => None,
+                5 => None,
+                6 => None,
+                7 => None,
+                _ => panic!("Unreachable")
+            };
+
+            match opcode.as_ref() {
+                None => (),
+                Some(o) => println!("0x{:02x} {:20}: {:?}", c, o.name, p)
+            }
+            self.prefix_ed[c as usize] = opcode;
+        }
+    }
+
 }
 
 #[derive(Debug)]
