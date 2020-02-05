@@ -72,7 +72,7 @@ pub fn build_ld_r_r(y: usize, z: usize) -> Opcode {
     Opcode {
         name: format!("LD {}, {}", TABLE_R_NAME[y], TABLE_R_NAME[z]),
         bytes: 1,
-        cycles: 7,
+        cycles: 4,
         action: Box::new(move |state: &mut State| {
             let value = state.reg.get8(src);
             state.reg.set8(dst, value);
