@@ -24,10 +24,10 @@ use super::registers::*;
         (DE), a     7 - Done
         (XX), a     13 - Done
 
-        a, i        9
-        a, r        9
-        i, a        9
-        r, a        9
+        a, i        9 - Done
+        a, r        9 - Done
+        i, a        9 - Done
+        r, a        9 - Done
 
         rr, XX      10 - Done
         ix, XX      14
@@ -45,6 +45,8 @@ use super::registers::*;
         sp, hl      6 - Done
         sp, ix      10
         sp, iy      10
+
+        TODO: ix and iy based opcodes-
 */
 
 // 8 bit load
