@@ -196,29 +196,45 @@ impl Decoder {
                         _ => panic!("Unreachable")
                     },
                     1 => match p.q {
-                        0 =>  Some(build_ld_rr_nn(RP[p.p])), // LD rp[p], nn -- 16-bit load add
-                        1 =>  Some(build_add_hl_rr(RP[p.p])), // ADD HL, rp[p] -- 16-bit add
+                        0 =>  Some(build_ld_rr_nn(RP[p.p])), // LD rr, nn -- 16-bit load add
+                        1 =>  Some(build_add_hl_rr(RP[p.p])), // ADD HL, rr -- 16-bit add
                         _ => panic!("Unreachable")
                     },
-                    2 => None,
+                    2 => match p.q {
+                        0 =>  match p.p {
+                            0 => Some(build_ld_prr_r(Register16::BC, Register8::A)), // LD (BC), A
+                            1 => Some(build_ld_prr_r(Register16::DE, Register8::A)), // LD (DE), A
+                            2 => Some(build_ld_pnn_rr(Register16::HL)), // LD (nn), HL
+                            3 => Some(build_ld_pnn_r(Register8::A)), // LD (nn), A
+                            _ => panic!("Unreachable")
+                        },
+                        1 =>  match p.p {
+                            0 => Some(build_ld_r_prr(Register8::A, Register16::BC)), // LD A, (BC)
+                            1 => Some(build_ld_r_prr(Register8::A, Register16::DE)), // LD A, (DE)
+                            2 => Some(build_ld_rr_pnn(Register16::HL)), // LD HL, (nn)
+                            3 => Some(build_ld_r_pnn(Register8::A)), // LD A, (nn)
+                            _ => panic!("Unreachable")
+                        }
+                        _ => panic!("Unreachable")
+                    },
                     3 => match p.q {
-                        0 =>  Some(build_inc_dec_rr(RP[p.p], true)), // INC rp[p] -- 16-bit inc
-                        1 =>  Some(build_inc_dec_rr(RP[p.p], false)), // DEC rp[p] -- 16-bit dec
+                        0 =>  Some(build_inc_dec_rr(RP[p.p], true)), // INC rr -- 16-bit inc
+                        1 =>  Some(build_inc_dec_rr(RP[p.p], false)), // DEC rr -- 16-bit dec
                         _ => panic!("Unreachable")                       
                     },
                     4 => match p.y {
                         6 => None, // INC (HL) -- 8 bit inc
-                        0..=7 => Some(build_inc_r(R[p.y])), // INC r[y] -- 8 bit inc
+                        0..=7 => Some(build_inc_r(R[p.y])), // INC r -- 8 bit inc
                         _ => panic!("Unreachable")
                     },
                     5 => match p.y {
                         6 => None, // DEC (HL) -- 8 bit dec
-                        0..=7 => Some(build_dec_r(R[p.y])), // DEC r[y] -- 8 bit dec
+                        0..=7 => Some(build_dec_r(R[p.y])), // DEC r -- 8 bit dec
                         _ => panic!("Unreachable")
                     },
                     6 => match p.y {
-                        6 => None, // LD (HL), n -- 8 bit load imm
-                        0..=7 => Some(build_ld_r_n(R[p.y])), // LD r[y], n -- 8 bit load imm
+                        6 => Some(build_ld_prr_n(Register16::HL)), // LD (HL), n -- 8 bit load imm
+                        0..=7 => Some(build_ld_r_n(R[p.y])), // LD r, n -- 8 bit load imm
                         _ => panic!("Unreachable")
                     },
                     7 => None,
@@ -227,18 +243,34 @@ impl Decoder {
                 1 => match p.y {
                     6 => None, // HALT
                     0..=7 => match p.z {
-                        6 => Some(build_ld_r_phl(R[p.y])), // LD r, (HL) -- 8 bit loading
-                        0..=7 => Some(build_ld_r_r(R[p.y], R[p.z])), // LD r[y], r[z] -- 8 bit load imm
+                        6 => Some(build_ld_r_prr(R[p.y], Register16::HL)), // LD r, (HL) -- 8 bit loading
+                        0..=7 => Some(build_ld_r_r(R[p.y], R[p.z], false)), // LD r[y], r[z] -- 8 bit load imm
                         _ => panic!("Unreachable")
                     }
                     _ => panic!("Unreacheable")
                 },
                 2 => None,
-                3 => None,
-                4 => None,
-                5 => None,
-                6 => None,
-                7 => None,
+                3 => match p.z {
+                    0 => None, // RET cc
+                    1 => match p.q {
+                        0 => None, // POP rr
+                        1 => match p.p {
+                            0 => None, // RET
+                            1 => None, // EXX
+                            2 => None, // JP HL
+                            3 => Some(build_ld_rr_rr(Register16::SP, Register16::HL)),
+                            _ => panic!("Unreacheable")
+                        },
+                        _ => panic!("Unreacheable")
+                    },
+                    2 => None, // JP cc, nn
+                    3 => None,
+                    4 => None, // CALL
+                    5 => None,
+                    6 => None,
+                    7 => None,
+                    _ => panic!("Unreachable")
+                    },
                 _ => panic!("Unreachable")
             };
 
@@ -255,7 +287,7 @@ impl Decoder {
             //let opcode: Option<Opcode>;
             let p = DecodingHelper::parts(c);
             let opcode = match p.x {
-                0 => None, // Invalid instruction NONI + NOP
+                0 | 3 => None, // Invalid instruction NONI + NOP
                 1 => match p.z {
                     0 => None,
                     1 => None,
@@ -264,19 +296,28 @@ impl Decoder {
                         0 => Some(build_ld_pnn_rr(RP[p.p])), // LD (nn), rr -- 16 bit loading
                         1 => Some(build_ld_rr_pnn(RP[p.p])), // LD rr, (nn) -- 16 bit loading
                         _ => panic!("Unreachable")
-                    }
+                    },
                     4 => None,
                     5 => None,
                     6 => None,
-                    7 => None,
+                    7 => match p.y {
+                        0 => Some(build_ld_r_r(Register8::I, Register8::A, true)), // LD I, A
+                        1 => Some(build_ld_r_r(Register8::R, Register8::A, true)), // LD R, A
+                        2 => Some(build_ld_r_r(Register8::A, Register8::I, true)), // LD A, I
+                        3 => Some(build_ld_r_r(Register8::A, Register8::R, true)), // LD A, R
+                        4 => None, // RRD
+                        5 => None, // RLD
+                        6 | 7 => Some(build_nop()), // NOP
+                        _ => panic!("Unreacheable")
+                    },
                     _ => panic!("Unreacheable")
                 },
-                2 => None,
-                3 => None, // Invalid instruction NONI + NOP
-                4 => None,
-                5 => None,
-                6 => None,
-                7 => None,
+                2 =>
+                    if p.z <= 3 && p.y >= 4 {
+                        None // bli[y,z] -- block instruction
+                    } else {
+                        None // NONI + NOP
+                    },
                 _ => panic!("Unreachable")
             };
 

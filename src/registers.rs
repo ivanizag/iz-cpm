@@ -10,9 +10,11 @@ pub enum Register8 {
     F, // Flags
     H,
     L,
-    _HL_ // Not a real register
+    _HL_, // Not a real register
+    I,
+    R
 }
-pub const REG_COUNT8: usize = 8;
+pub const REG_COUNT8: usize = 11;
 
 
 // 16 bit registers
