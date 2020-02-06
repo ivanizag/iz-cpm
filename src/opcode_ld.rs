@@ -1,6 +1,6 @@
 use super::opcode::*;
 use super::state::*;
-//use super::registers::*;
+use super::registers::*;
 
 /*
     Load: http://z80-heaven.wikidot.com/instructions-set:ld
@@ -47,84 +47,77 @@ use super::state::*;
         sp, iy      10
 */
 
-pub fn build_ld_r_r(y: usize, z: usize) -> Opcode {
-    let dst = &TABLE_R[y];
-    let src = &TABLE_R[z];
+pub fn build_ld_r_r(dst: Register8, src: Register8) -> Opcode {
     Opcode {
-        name: format!("LD {}, {}", TABLE_R_NAME[y], TABLE_R_NAME[z]),
+        name: format!("LD {:?}, {:?}", dst, src),
         bytes: 1,
         cycles: 4,
         action: Box::new(move |state: &mut State| {
-            let value = state.reg.get8(src);
-            state.reg.set8(dst, value);
+            let value = state.reg.get8(&src);
+            state.reg.set8(&dst, value);
         })
     }
 }
 
-pub fn build_ld_r_n(y: usize) -> Opcode {
-    let reg8 = &TABLE_R[y];
+pub fn build_ld_r_n(r: Register8) -> Opcode {
     Opcode {
-        name: format!("LD {}, X", TABLE_R_NAME[y]),
+        name: format!("LD {:?}, X", r),
         bytes: 2,
         cycles: 7,
         action: Box::new(move |state: &mut State| {
             let value = state.advance_pc();
-            state.reg.set8(reg8, value);
+            state.reg.set8(&r, value);
         })
     }
 }
 
-pub fn build_ld_r_phl(y: usize) -> Opcode {
-    let reg8 = &TABLE_R[y];
+pub fn build_ld_r_phl(r: Register8) -> Opcode {
     Opcode {
-        name: format!("LD {}, (HL)", TABLE_R_NAME[y]),
+        name: format!("LD {:?}, (HL)", r),
         bytes: 1,
         cycles: 7,
         action: Box::new(move |state: &mut State| {
             let address = state.reg.get_hl();
             let value = state.mem.peek(address);
-            state.reg.set8(reg8, value);
+            state.reg.set8(&r, value);
         })
     }
 }
 
-pub fn build_ld_rr_nn(p: usize) -> Opcode {
-    let reg16 = &TABLE_RP[p];
+pub fn build_ld_rr_nn(rr: Register16) -> Opcode {
     Opcode {
-        name: format!("LD {}, XX", TABLE_RP_NAME[p]),
+        name: format!("LD {:?}, XX", rr),
         bytes: 3,
         cycles: 10,
         action: Box::new(move |state: &mut State| {
             let value = state.advance_immediate16();
-            state.reg.set16(reg16, value);
+            state.reg.set16(&rr, value);
         })
     }
 }
 
-pub fn build_ld_pnn_rr(p: usize) -> Opcode {
-    let reg16 = &TABLE_RP[p];
+pub fn build_ld_pnn_rr(rr: Register16) -> Opcode {
     Opcode {
-        name: format!("LD (XX), {}", TABLE_RP_NAME[p]),
+        name: format!("LD (XX), {:?}", rr),
         bytes: 3,
         cycles: 20,
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
-            let value = state.reg.get16(reg16);
+            let value = state.reg.get16(&rr);
             state.mem.poke16(address, value);
         })
     }
 }
 
-pub fn build_ld_rr_pnn(p: usize) -> Opcode {
-    let reg16 = &TABLE_RP[p];
+pub fn build_ld_rr_pnn(rr: Register16) -> Opcode {
     Opcode {
-        name: format!("LD {}, (XX)", TABLE_RP_NAME[p]),
+        name: format!("LD {:?}, (XX)", rr),
         bytes: 3,
         cycles: 20,
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
             let value = state.mem.peek16(address);
-            state.reg.set16(reg16, value);
+            state.reg.set16(&rr, value);
         })
     }
 }

@@ -1,6 +1,6 @@
 
 // 8 bit registers
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Register8 {
     A,
     B,
@@ -16,7 +16,7 @@ pub const REG_COUNT8: usize = 8;
 
 
 // 16 bit registers
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Register16 {
     AF, // TODO: get from A, F
     BC,

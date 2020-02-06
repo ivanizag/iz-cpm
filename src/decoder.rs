@@ -1,5 +1,6 @@
 use super::opcode::*;
 use super::opcode_ld::*;
+use super::registers::*;
 use super::state::*;
 
 /* See
@@ -195,29 +196,29 @@ impl Decoder {
                         _ => panic!("Unreachable")
                     },
                     1 => match p.q {
-                        0 =>  Some(build_ld_rr_nn(p.p)), // LD rp[p], nn -- 16-bit load add
-                        1 =>  Some(build_add_hl_rr(p.p)), // ADD HL, rp[p] -- 16-bit add
+                        0 =>  Some(build_ld_rr_nn(RP[p.p])), // LD rp[p], nn -- 16-bit load add
+                        1 =>  Some(build_add_hl_rr(RP[p.p])), // ADD HL, rp[p] -- 16-bit add
                         _ => panic!("Unreachable")
                     },
                     2 => None,
                     3 => match p.q {
-                        0 =>  Some(build_inc_dec_rr(p.p, true)), // INC rp[p] -- 16-bit inc
-                        1 =>  Some(build_inc_dec_rr(p.p, false)), // DEC rp[p] -- 16-bit dec
+                        0 =>  Some(build_inc_dec_rr(RP[p.p], true)), // INC rp[p] -- 16-bit inc
+                        1 =>  Some(build_inc_dec_rr(RP[p.p], false)), // DEC rp[p] -- 16-bit dec
                         _ => panic!("Unreachable")                       
                     },
                     4 => match p.y {
                         6 => None, // INC (HL) -- 8 bit inc
-                        0..=7 => Some(build_inc_r(p.y)), // INC r[y] -- 8 bit inc
+                        0..=7 => Some(build_inc_r(R[p.y])), // INC r[y] -- 8 bit inc
                         _ => panic!("Unreachable")
                     },
                     5 => match p.y {
                         6 => None, // DEC (HL) -- 8 bit dec
-                        0..=7 => Some(build_dec_r(p.y)), // DEC r[y] -- 8 bit dec
+                        0..=7 => Some(build_dec_r(R[p.y])), // DEC r[y] -- 8 bit dec
                         _ => panic!("Unreachable")
                     },
                     6 => match p.y {
                         6 => None, // LD (HL), n -- 8 bit load imm
-                        0..=7 => Some(build_ld_r_n(p.y)), // LD r[y], n -- 8 bit load imm
+                        0..=7 => Some(build_ld_r_n(R[p.y])), // LD r[y], n -- 8 bit load imm
                         _ => panic!("Unreachable")
                     },
                     7 => None,
@@ -226,8 +227,8 @@ impl Decoder {
                 1 => match p.y {
                     6 => None, // HALT
                     0..=7 => match p.z {
-                        6 => Some(build_ld_r_phl(p.y)), // LD r, (HL) -- 8 bit loading
-                        0..=7 => Some(build_ld_r_r(p.y, p.z)), // LD r[y], r[z] -- 8 bit load imm
+                        6 => Some(build_ld_r_phl(R[p.y])), // LD r, (HL) -- 8 bit loading
+                        0..=7 => Some(build_ld_r_r(R[p.y], R[p.z])), // LD r[y], r[z] -- 8 bit load imm
                         _ => panic!("Unreachable")
                     }
                     _ => panic!("Unreacheable")
@@ -260,8 +261,8 @@ impl Decoder {
                     1 => None,
                     2 => None,
                     3 => match p.q {
-                        0 => Some(build_ld_pnn_rr(p.p)), // LD (nn), rr -- 16 bit loading
-                        1 => Some(build_ld_rr_pnn(p.p)), // LD rr, (nn) -- 16 bit loading
+                        0 => Some(build_ld_pnn_rr(RP[p.p])), // LD (nn), rr -- 16 bit loading
+                        1 => Some(build_ld_rr_pnn(RP[p.p])), // LD rr, (nn) -- 16 bit loading
                         _ => panic!("Unreachable")
                     }
                     4 => None,
@@ -281,12 +282,11 @@ impl Decoder {
 
             match opcode.as_ref() {
                 None => (),
-                Some(o) => println!("0x{:02x} {:20}: {:?}", c, o.name, p)
+                Some(o) => println!("0x{:02x} 0x{:02x} {:15}: {:?}", 0xed, c, o.name, p)
             }
             self.prefix_ed[c as usize] = opcode;
         }
     }
-
 }
 
 #[derive(Debug)]
@@ -310,3 +310,11 @@ impl DecodingHelper {
         }
     }
 }
+
+
+pub const RP: [Register16; 4] = [
+    Register16::BC, Register16::DE, Register16::HL, Register16::SP];
+
+pub const R:  [Register8; 8] = [
+    Register8::B, Register8::C, Register8::D, Register8::E,
+    Register8::H, Register8::L, Register8::_HL_, Register8::A];
