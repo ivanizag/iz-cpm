@@ -1,7 +1,7 @@
 
 // 8 bit registers
 #[derive(Copy, Clone, Debug)]
-pub enum Register8 {
+pub enum Reg8 {
     A,
     B,
     C,
@@ -10,24 +10,30 @@ pub enum Register8 {
     F, // Flags
     H,
     L,
-    _HL_, // Not a real register
     I,
-    R
+    R,
+    IXH,
+    IXL,
+    IYH,
+    IYL,
+    SPH,
+    SPL,
+    _HL // Invalid
 }
-pub const REG_COUNT8: usize = 11;
+pub const REG_COUNT8: usize = 16;
 
 
-// 16 bit registers
+// 16 bit registers, composed from 8 bit registers
 #[derive(Copy, Clone, Debug)]
-pub enum Register16 {
-    AF, // TODO: get from A, F
+pub enum Reg16 {
+    AF,
     BC,
     DE,
     HL,
+    IX,
+    IY,
     SP,
-    PC
 }
-pub const REG_COUNT16: usize = 6;
 
 // Flags, see http://www.z80.info/z80sflag.htm
 #[derive(Copy, Clone)]
@@ -46,43 +52,63 @@ pub enum Flag {
 #[derive(Debug)]
 pub struct Registers {
     bytes: [u8; REG_COUNT8],
-    words: [u16; REG_COUNT16]
+    sp: u16,
+    pc: u16
 }
 
 impl Registers {
     pub fn new() -> Registers {
         Registers {
             bytes: [0; REG_COUNT8],
-            words: [0; REG_COUNT16]
+            sp: 0,
+            pc: 0
         }
     }
 
-    pub fn get8(&self, reg: Register8) -> u8 {
+    pub fn get8(&self, reg: Reg8) -> u8 {
         self.bytes[reg as usize]
     }
 
-    pub fn set8(&mut self, reg: Register8, value: u8) {
+    pub fn set8(&mut self, reg: Reg8, value: u8) {
         self.bytes[reg as usize] = value;
     }
 
-    pub fn get16(&self, reg: Register16) -> u16 {
-        self.words[reg as usize]
+    pub fn get16(&self, reg: Reg16) -> u16 {
+        let (h, l) = Registers::get_pair(reg);
+
+        self.bytes[l as usize] as u16
+        + ((self.bytes[h as usize] as u16) << 8)
     }
 
-    pub fn set16(&mut self, reg: Register16, value: u16) {
-        self.words[reg as usize] = value;
+    pub fn set16(&mut self, reg: Reg16, value: u16) {
+        let (h, l) = Registers::get_pair(reg);
+
+        self.bytes[l as usize] = value as u8;
+        self.bytes[h as usize] = (value >> 8) as u8;
+    }
+
+    fn get_pair(reg: Reg16) -> (Reg8, Reg8) {
+        match reg {
+            Reg16::AF => (Reg8::A, Reg8::F),
+            Reg16::BC => (Reg8::B, Reg8::C),
+            Reg16::DE => (Reg8::D, Reg8::E),
+            Reg16::HL => (Reg8::H, Reg8::L),
+            Reg16::IX => (Reg8::IXH, Reg8::IXL),
+            Reg16::IY => (Reg8::IYH, Reg8::IYL),
+            Reg16::SP => (Reg8::SPH, Reg8::SPL)
+        }
     }
 
     pub fn get_flag(&self, flag: Flag) -> bool {
-        self.get8(Register8::F) & flag as u8 != 0
+        self.get8(Reg8::F) & flag as u8 != 0
     }
 
     pub fn set_flag(&mut self, flag: Flag) {
-        self.bytes[Register8::F as usize] |= flag as u8;
+        self.bytes[Reg8::F as usize] |= flag as u8;
     }
 
     pub fn clear_flag(&mut self, flag: Flag) {
-        self.bytes[Register8::F as usize] &= !(flag as u8);
+        self.bytes[Reg8::F as usize] &= !(flag as u8);
     }
 
     pub fn put_flag(&mut self, flag: Flag, value: bool) {
@@ -94,7 +120,7 @@ impl Registers {
     }
 
     pub fn update_sz53_flags(&mut self, reference: u8) {
-        let f: &mut u8 = &mut self.bytes[Register8::F as usize];
+        let f: &mut u8 = &mut self.bytes[Reg8::F as usize];
 
         // Zero
         if reference == 0 {
@@ -108,11 +134,21 @@ impl Registers {
         *f = (*f & !MASK_S53) + (reference & MASK_S53);
     }
 
-    pub fn get_hl(&self) -> u16 {
-        self.bytes[Register8::L as usize] as u16
-        + (self.bytes[Register8::H as usize] as u16) << 8
+    pub fn get_sp(&self) -> u16 {
+        self.sp
     }
 
+    pub fn set_sp(&mut self, value: u16) {
+        self.sp = value;
+    }
+
+    pub fn get_pc(&self) -> u16 {
+        self.pc
+    }
+
+    pub fn set_pc(&mut self, value: u16) {
+        self.pc = value;
+    }
 }
 
 #[cfg(test)]
@@ -124,8 +160,18 @@ mod tests {
         let mut r = Registers::new();
         const V:u8 = 23;
 
-        r.set8(Register8::A, V);
-        assert_eq!(V, r.get8(Register8::A));
+        r.set8(Reg8::A, V);
+        assert_eq!(V, r.get8(Reg8::A));
+    }
+
+    #[test]
+    fn set_get_16bit_register() {
+        let mut r = Registers::new();
+
+        r.set16(Reg16::BC, 0x34de);
+        assert_eq!(0x34de, r.get16(Reg16::BC));
+        assert_eq!(0x34, r.get8(Reg8::B));
+        assert_eq!(0xde, r.get8(Reg8::C));
     }
 
     #[test]

@@ -202,17 +202,17 @@ impl Decoder {
                     },
                     2 => match p.q {
                         0 =>  match p.p {
-                            0 => Some(build_ld_prr_r(Register16::BC, Register8::A)), // LD (BC), A
-                            1 => Some(build_ld_prr_r(Register16::DE, Register8::A)), // LD (DE), A
-                            2 => Some(build_ld_pnn_rr(Register16::HL)), // LD (nn), HL
-                            3 => Some(build_ld_pnn_r(Register8::A)), // LD (nn), A
+                            0 => Some(build_ld_prr_r(Reg16::BC, Reg8::A)), // LD (BC), A
+                            1 => Some(build_ld_prr_r(Reg16::DE, Reg8::A)), // LD (DE), A
+                            2 => Some(build_ld_pnn_rr(Reg16::HL)), // LD (nn), HL
+                            3 => Some(build_ld_pnn_r(Reg8::A)), // LD (nn), A
                             _ => panic!("Unreachable")
                         },
                         1 =>  match p.p {
-                            0 => Some(build_ld_r_prr(Register8::A, Register16::BC)), // LD A, (BC)
-                            1 => Some(build_ld_r_prr(Register8::A, Register16::DE)), // LD A, (DE)
-                            2 => Some(build_ld_rr_pnn(Register16::HL)), // LD HL, (nn)
-                            3 => Some(build_ld_r_pnn(Register8::A)), // LD A, (nn)
+                            0 => Some(build_ld_r_prr(Reg8::A, Reg16::BC)), // LD A, (BC)
+                            1 => Some(build_ld_r_prr(Reg8::A, Reg16::DE)), // LD A, (DE)
+                            2 => Some(build_ld_rr_pnn(Reg16::HL)), // LD HL, (nn)
+                            3 => Some(build_ld_r_pnn(Reg8::A)), // LD A, (nn)
                             _ => panic!("Unreachable")
                         }
                         _ => panic!("Unreachable")
@@ -233,7 +233,7 @@ impl Decoder {
                         _ => panic!("Unreachable")
                     },
                     6 => match p.y {
-                        6 => Some(build_ld_prr_n(Register16::HL)), // LD (HL), n -- 8 bit load imm
+                        6 => Some(build_ld_prr_n(Reg16::HL)), // LD (HL), n -- 8 bit load imm
                         0..=7 => Some(build_ld_r_n(R[p.y])), // LD r, n -- 8 bit load imm
                         _ => panic!("Unreachable")
                     },
@@ -243,7 +243,7 @@ impl Decoder {
                 1 => match p.y {
                     6 => None, // HALT
                     0..=7 => match p.z {
-                        6 => Some(build_ld_r_prr(R[p.y], Register16::HL)), // LD r, (HL) -- 8 bit loading
+                        6 => Some(build_ld_r_prr(R[p.y], Reg16::HL)), // LD r, (HL) -- 8 bit loading
                         0..=7 => Some(build_ld_r_r(R[p.y], R[p.z], false)), // LD r[y], r[z] -- 8 bit load imm
                         _ => panic!("Unreachable")
                     }
@@ -258,7 +258,7 @@ impl Decoder {
                             0 => None, // RET
                             1 => None, // EXX
                             2 => None, // JP HL
-                            3 => Some(build_ld_rr_rr(Register16::SP, Register16::HL)),
+                            3 => Some(build_ld_rr_rr(Reg16::SP, Reg16::HL)),
                             _ => panic!("Unreacheable")
                         },
                         _ => panic!("Unreacheable")
@@ -301,10 +301,10 @@ impl Decoder {
                     5 => None,
                     6 => None,
                     7 => match p.y {
-                        0 => Some(build_ld_r_r(Register8::I, Register8::A, true)), // LD I, A
-                        1 => Some(build_ld_r_r(Register8::R, Register8::A, true)), // LD R, A
-                        2 => Some(build_ld_r_r(Register8::A, Register8::I, true)), // LD A, I
-                        3 => Some(build_ld_r_r(Register8::A, Register8::R, true)), // LD A, R
+                        0 => Some(build_ld_r_r(Reg8::I, Reg8::A, true)), // LD I, A
+                        1 => Some(build_ld_r_r(Reg8::R, Reg8::A, true)), // LD R, A
+                        2 => Some(build_ld_r_r(Reg8::A, Reg8::I, true)), // LD A, I
+                        3 => Some(build_ld_r_r(Reg8::A, Reg8::R, true)), // LD A, R
                         4 => None, // RRD
                         5 => None, // RLD
                         6 | 7 => Some(build_nop()), // NOP
@@ -353,9 +353,9 @@ impl DecodingHelper {
 }
 
 
-pub const RP: [Register16; 4] = [
-    Register16::BC, Register16::DE, Register16::HL, Register16::SP];
+pub const RP: [Reg16; 4] = [
+    Reg16::BC, Reg16::DE, Reg16::HL, Reg16::SP];
 
-pub const R:  [Register8; 8] = [
-    Register8::B, Register8::C, Register8::D, Register8::E,
-    Register8::H, Register8::L, Register8::_HL_, Register8::A];
+pub const R:  [Reg8; 8] = [
+    Reg8::B, Reg8::C, Reg8::D, Reg8::E,
+    Reg8::H, Reg8::L, Reg8::_HL, Reg8::A];

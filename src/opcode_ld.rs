@@ -50,7 +50,7 @@ use super::registers::*;
 */
 
 // 8 bit load
-pub fn build_ld_r_r(dst: Register8, src: Register8, special: bool) -> Opcode {
+pub fn build_ld_r_r(dst: Reg8, src: Reg8, special: bool) -> Opcode {
     Opcode {
         name: format!("LD {:?}, {:?}", dst, src),
         bytes: 1,
@@ -62,7 +62,7 @@ pub fn build_ld_r_r(dst: Register8, src: Register8, special: bool) -> Opcode {
     }
 }
 
-pub fn build_ld_r_n(r: Register8) -> Opcode {
+pub fn build_ld_r_n(r: Reg8) -> Opcode {
     Opcode {
         name: format!("LD {:?}, X", r),
         bytes: 2,
@@ -74,7 +74,7 @@ pub fn build_ld_r_n(r: Register8) -> Opcode {
     }
 }
 
-pub fn build_ld_r_prr(r: Register8, rr: Register16) -> Opcode {
+pub fn build_ld_r_prr(r: Reg8, rr: Reg16) -> Opcode {
     Opcode {
         name: format!("LD {:?}, ({:?})", r, rr),
         bytes: 1,
@@ -87,7 +87,7 @@ pub fn build_ld_r_prr(r: Register8, rr: Register16) -> Opcode {
     }
 }
 
-pub fn build_ld_r_pnn(r: Register8) -> Opcode {
+pub fn build_ld_r_pnn(r: Reg8) -> Opcode {
     Opcode {
         name: format!("LD {:?}, (XX)", r),
         bytes: 1,
@@ -100,7 +100,7 @@ pub fn build_ld_r_pnn(r: Register8) -> Opcode {
     }
 }
 
-pub fn build_ld_prr_r(rr: Register16, r: Register8) -> Opcode {
+pub fn build_ld_prr_r(rr: Reg16, r: Reg8) -> Opcode {
     Opcode {
         name: format!("LD {:?}, ({:?})", r, rr),
         bytes: 1,
@@ -114,7 +114,7 @@ pub fn build_ld_prr_r(rr: Register16, r: Register8) -> Opcode {
     
 }
 
-pub fn build_ld_prr_n(rr: Register16) -> Opcode {
+pub fn build_ld_prr_n(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("LD ({:?}), XX", rr),
         bytes: 1,
@@ -128,7 +128,7 @@ pub fn build_ld_prr_n(rr: Register16) -> Opcode {
     
 }
 
-pub fn build_ld_pnn_r(r: Register8) -> Opcode {
+pub fn build_ld_pnn_r(r: Reg8) -> Opcode {
     Opcode {
         name: format!("LD {:?}, (XX)", r),
         bytes: 1,
@@ -144,7 +144,7 @@ pub fn build_ld_pnn_r(r: Register8) -> Opcode {
 
 
 // 16 bit load
-pub fn build_ld_rr_nn(rr: Register16) -> Opcode {
+pub fn build_ld_rr_nn(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("LD {:?}, XX", rr),
         bytes: 3,
@@ -156,7 +156,7 @@ pub fn build_ld_rr_nn(rr: Register16) -> Opcode {
     }
 }
 
-pub fn build_ld_rr_rr(dst: Register16, src: Register16) -> Opcode {
+pub fn build_ld_rr_rr(dst: Reg16, src: Reg16) -> Opcode {
     Opcode {
         name: format!("LD {:?}, {:?}", dst, src),
         bytes: 3,
@@ -168,8 +168,7 @@ pub fn build_ld_rr_rr(dst: Register16, src: Register16) -> Opcode {
     }
 }
 
-
-pub fn build_ld_pnn_rr(rr: Register16) -> Opcode {
+pub fn build_ld_pnn_rr(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("LD (XX), {:?}", rr),
         bytes: 3,
@@ -182,7 +181,7 @@ pub fn build_ld_pnn_rr(rr: Register16) -> Opcode {
     }
 }
 
-pub fn build_ld_rr_pnn(rr: Register16) -> Opcode {
+pub fn build_ld_rr_pnn(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("LD {:?}, (XX)", rr),
         bytes: 3,

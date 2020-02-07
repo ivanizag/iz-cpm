@@ -36,22 +36,22 @@ pub fn build_nop() -> Opcode {
 }
 
 // ADD opcodes
-pub fn build_add_hl_rr(rr: Register16) -> Opcode {
+pub fn build_add_hl_rr(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("ADD HL, {:?}", rr),
         bytes: 1,
         cycles: 11,
         action: Box::new(move |state: &mut State| {
-            let mut v = Wrapping(state.reg.get16(Register16::HL));
+            let mut v = Wrapping(state.reg.get16(Reg16::HL));
             v = v + Wrapping(state.reg.get16(rr));
-            state.reg.set16(Register16::HL, v.0); 
+            state.reg.set16(Reg16::HL, v.0); 
             // TODO: flags
         })
     }
 }
 
 // INC, DEC opcodes
-pub fn build_inc_dec_rr(rr: Register16, inc: bool) -> Opcode {
+pub fn build_inc_dec_rr(rr: Reg16, inc: bool) -> Opcode {
     let delta = if inc {1} else {65535};
     let mnemonic = if inc {"INC"} else {"DEC"};
     Opcode {
@@ -67,7 +67,7 @@ pub fn build_inc_dec_rr(rr: Register16, inc: bool) -> Opcode {
     }    
 }    
 
-pub fn build_inc_r(r: Register8) -> Opcode {
+pub fn build_inc_r(r: Reg8) -> Opcode {
     Opcode {
         name: format!("INC {:?}", r),
         bytes: 1,
@@ -86,7 +86,7 @@ pub fn build_inc_r(r: Register8) -> Opcode {
     }        
 }
 
-pub fn build_dec_r(r: Register8) -> Opcode {
+pub fn build_dec_r(r: Reg8) -> Opcode {
     Opcode {
         name: format!("DEC {:?}", &r),
         bytes: 1,
