@@ -22,9 +22,9 @@ impl State {
     }
 
     pub fn advance_pc(&mut self) -> u8 {
-        let pc = self.reg.get16(&Register16::PC);
+        let pc = self.reg.get16(Register16::PC);
         let value = self.mem.peek(pc);
-        self.reg.set16(&Register16::PC, pc + 1); // TOOD: wrap
+        self.reg.set16(Register16::PC, pc + 1); // TOOD: wrap
         //println!("Read: 0x{:02x}, PC: 0x{:04x}", value, self.reg.get16(&Register16::PC));
         value
     }
@@ -45,7 +45,7 @@ mod tests {
         let mut s = State::new(Box::new(PlainMemory::new()));
         const V:u8 = 23;
 
-        s.reg.set8(&Register8::A, V);
-        assert_eq!(V, s.reg.get8(&Register8::A));
+        s.reg.set8(Register8::A, V);
+        assert_eq!(V, s.reg.get8(Register8::A));
     }
 }

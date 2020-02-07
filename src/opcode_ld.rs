@@ -56,8 +56,8 @@ pub fn build_ld_r_r(dst: Register8, src: Register8, special: bool) -> Opcode {
         bytes: 1,
         cycles: if special {9} else {4},
         action: Box::new(move |state: &mut State| {
-            let value = state.reg.get8(&src);
-            state.reg.set8(&dst, value);
+            let value = state.reg.get8(src);
+            state.reg.set8(dst, value);
         })
     }
 }
@@ -69,7 +69,7 @@ pub fn build_ld_r_n(r: Register8) -> Opcode {
         cycles: 7,
         action: Box::new(move |state: &mut State| {
             let value = state.advance_pc();
-            state.reg.set8(&r, value);
+            state.reg.set8(r, value);
         })
     }
 }
@@ -80,9 +80,9 @@ pub fn build_ld_r_prr(r: Register8, rr: Register16) -> Opcode {
         bytes: 1,
         cycles: 7,
         action: Box::new(move |state: &mut State| {
-            let address = state.reg.get16(&rr);
+            let address = state.reg.get16(rr);
             let value = state.mem.peek(address);
-            state.reg.set8(&r, value);
+            state.reg.set8(r, value);
         })
     }
 }
@@ -95,7 +95,7 @@ pub fn build_ld_r_pnn(r: Register8) -> Opcode {
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
             let value = state.mem.peek(address);
-            state.reg.set8(&r, value);
+            state.reg.set8(r, value);
         })
     }
 }
@@ -106,8 +106,8 @@ pub fn build_ld_prr_r(rr: Register16, r: Register8) -> Opcode {
         bytes: 1,
         cycles: 7,
         action: Box::new(move |state: &mut State| {
-            let value = state.reg.get8(&r);
-            let address = state.reg.get16(&rr);
+            let value = state.reg.get8(r);
+            let address = state.reg.get16(rr);
             state.mem.poke(address, value);
         })
     }
@@ -121,7 +121,7 @@ pub fn build_ld_prr_n(rr: Register16) -> Opcode {
         cycles: 7,
         action: Box::new(move |state: &mut State| {
             let value = state.advance_pc();
-            let address = state.reg.get16(&rr);
+            let address = state.reg.get16(rr);
             state.mem.poke(address, value);
         })
     }
@@ -134,7 +134,7 @@ pub fn build_ld_pnn_r(r: Register8) -> Opcode {
         bytes: 1,
         cycles: 13,
         action: Box::new(move |state: &mut State| {
-            let value = state.reg.get8(&r);
+            let value = state.reg.get8(r);
             let address = state.advance_immediate16();
             state.mem.poke(address, value);
         })
@@ -151,7 +151,7 @@ pub fn build_ld_rr_nn(rr: Register16) -> Opcode {
         cycles: 10,
         action: Box::new(move |state: &mut State| {
             let value = state.advance_immediate16();
-            state.reg.set16(&rr, value);
+            state.reg.set16(rr, value);
         })
     }
 }
@@ -162,8 +162,8 @@ pub fn build_ld_rr_rr(dst: Register16, src: Register16) -> Opcode {
         bytes: 3,
         cycles: 6,
         action: Box::new(move |state: &mut State| {
-            let value = state.reg.get16(&src);
-            state.reg.set16(&dst, value);
+            let value = state.reg.get16(src);
+            state.reg.set16(dst, value);
         })
     }
 }
@@ -176,7 +176,7 @@ pub fn build_ld_pnn_rr(rr: Register16) -> Opcode {
         cycles: 20,
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
-            let value = state.reg.get16(&rr);
+            let value = state.reg.get16(rr);
             state.mem.poke16(address, value);
         })
     }
@@ -190,7 +190,7 @@ pub fn build_ld_rr_pnn(rr: Register16) -> Opcode {
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
             let value = state.mem.peek16(address);
-            state.reg.set16(&rr, value);
+            state.reg.set16(rr, value);
         })
     }
 }

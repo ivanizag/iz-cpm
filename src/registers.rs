@@ -57,35 +57,35 @@ impl Registers {
         }
     }
 
-    pub fn get8(&self, reg: &Register8) -> u8 {
-        self.bytes[*reg as usize]
+    pub fn get8(&self, reg: Register8) -> u8 {
+        self.bytes[reg as usize]
     }
 
-    pub fn set8(&mut self, reg: &Register8, value: u8) {
-        self.bytes[*reg as usize] = value;
+    pub fn set8(&mut self, reg: Register8, value: u8) {
+        self.bytes[reg as usize] = value;
     }
 
-    pub fn get16(&self, reg: &Register16) -> u16 {
-        self.words[*reg as usize]
+    pub fn get16(&self, reg: Register16) -> u16 {
+        self.words[reg as usize]
     }
 
-    pub fn set16(&mut self, reg: &Register16, value: u16) {
-        self.words[*reg as usize] = value;
+    pub fn set16(&mut self, reg: Register16, value: u16) {
+        self.words[reg as usize] = value;
     }
 
-    pub fn get_flag(&self, flag: &Flag) -> bool {
-        self.get8(&Register8::F) & *flag as u8 != 0
+    pub fn get_flag(&self, flag: Flag) -> bool {
+        self.get8(Register8::F) & flag as u8 != 0
     }
 
-    pub fn set_flag(&mut self, flag: &Flag) {
-        self.bytes[Register8::F as usize] |= *flag as u8;
+    pub fn set_flag(&mut self, flag: Flag) {
+        self.bytes[Register8::F as usize] |= flag as u8;
     }
 
-    pub fn clear_flag(&mut self, flag: &Flag) {
-        self.bytes[Register8::F as usize] &= !(*flag as u8);
+    pub fn clear_flag(&mut self, flag: Flag) {
+        self.bytes[Register8::F as usize] &= !(flag as u8);
     }
 
-    pub fn put_flag(&mut self, flag: &Flag, value: bool) {
+    pub fn put_flag(&mut self, flag: Flag, value: bool) {
         if value {
             self.set_flag(flag);
         } else {
@@ -124,22 +124,22 @@ mod tests {
         let mut r = Registers::new();
         const V:u8 = 23;
 
-        r.set8(&Register8::A, V);
-        assert_eq!(V, r.get8(&Register8::A));
+        r.set8(Register8::A, V);
+        assert_eq!(V, r.get8(Register8::A));
     }
 
     #[test]
     fn set_get_flag() {
         let mut r = Registers::new();
  
-        assert_eq!(false, r.get_flag(&Flag::P));
-        r.set_flag(&Flag::P);
-        assert_eq!(true, r.get_flag(&Flag::P));
-        r.clear_flag(&Flag::P);
-        assert_eq!(false, r.get_flag(&Flag::P));
-        r.put_flag(&Flag::P, true);
-        assert_eq!(true, r.get_flag(&Flag::P));
-        r.put_flag(&Flag::P, false);
-        assert_eq!(false, r.get_flag(&Flag::P));
+        assert_eq!(false, r.get_flag(Flag::P));
+        r.set_flag(Flag::P);
+        assert_eq!(true, r.get_flag(Flag::P));
+        r.clear_flag(Flag::P);
+        assert_eq!(false, r.get_flag(Flag::P));
+        r.put_flag(Flag::P, true);
+        assert_eq!(true, r.get_flag(Flag::P));
+        r.put_flag(Flag::P, false);
+        assert_eq!(false, r.get_flag(Flag::P));
     }
 }
