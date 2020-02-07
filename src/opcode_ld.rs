@@ -193,3 +193,55 @@ pub fn build_ld_rr_pnn(rr: Reg16) -> Opcode {
         })
     }
 }
+
+pub fn build_ex_af() -> Opcode {
+    Opcode {
+        name: "EX AF, AF'".to_string(),
+        bytes: 1,
+        cycles: 4,
+        action: Box::new(|state: &mut State| {
+            state.reg.swap(Reg16::AF);
+        })
+    }
+}
+
+pub fn build_exx() -> Opcode {
+    Opcode {
+        name: "EXX".to_string(),
+        bytes: 1,
+        cycles: 4,
+        action: Box::new(|state: &mut State| {
+            state.reg.swap(Reg16::BC);
+            state.reg.swap(Reg16::DE);
+            state.reg.swap(Reg16::HL);
+        })
+    }
+}
+
+pub fn build_ex_de_hl() -> Opcode {
+    Opcode {
+        name: "EX DE, HL".to_string(),
+        bytes: 1,
+        cycles: 4,
+        action: Box::new(move |state: &mut State| {
+            let temp = state.reg.get16(Reg16::HL);
+            state.reg.set16(Reg16::HL, state.reg.get16(Reg16::DE));
+            state.reg.set16(Reg16::DE, temp);
+        })         
+    }
+}
+
+pub fn build_ex_psp_rr(rr: Reg16) -> Opcode {
+    Opcode {
+        name: format!("EX (SP), {:?}", rr),
+        bytes: 1,
+        cycles: 19,
+        action: Box::new(move |state: &mut State| {
+            let address = state.reg.get16(Reg16::SP);
+
+            let temp = state.reg.get16(rr);
+            state.reg.set16(rr, state.mem.peek16(address));
+            state.mem.poke16(address, temp);
+        })         
+    }
+}

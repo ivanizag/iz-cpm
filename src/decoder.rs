@@ -189,7 +189,7 @@ impl Decoder {
                 0 => match p.z {
                     0 => match p.y { // Relative jumps and assorted ops.
                         0 => Some(build_nop()), // NOP
-                        1 => None,
+                        1 => Some(build_ex_af()), // EX AF, AF'
                         2 => None,
                         3 => None,
                         4..=7 => None,
@@ -256,7 +256,7 @@ impl Decoder {
                         0 => None, // POP rr
                         1 => match p.p {
                             0 => None, // RET
-                            1 => None, // EXX
+                            1 => Some(build_exx()), // EXX
                             2 => None, // JP HL
                             3 => Some(build_ld_rr_rr(Reg16::SP, Reg16::HL)),
                             _ => panic!("Unreacheable")
@@ -264,7 +264,17 @@ impl Decoder {
                         _ => panic!("Unreacheable")
                     },
                     2 => None, // JP cc, nn
-                    3 => None,
+                    3 => match p.y {
+                        0 => None, // JP nn
+                        1 => None, // CB prefix
+                        2 => None,
+                        3 => None,
+                        4 => Some(build_ex_psp_rr(Reg16::HL)), // EX (SP), HL
+                        5 => Some(build_ex_de_hl()), // EX DE, HL
+                        6 => None, // DI
+                        7 => None, // EI
+                        _ => panic!("Unreacheable")
+                    }
                     4 => None, // CALL
                     5 => None,
                     6 => None,

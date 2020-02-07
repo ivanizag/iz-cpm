@@ -51,7 +51,8 @@ pub enum Flag {
 
 #[derive(Debug)]
 pub struct Registers {
-    bytes: [u8; REG_COUNT8],
+    data: [u8; REG_COUNT8],
+    shadow: [u8; REG_COUNT8],
     sp: u16,
     pc: u16
 }
@@ -59,43 +60,56 @@ pub struct Registers {
 impl Registers {
     pub fn new() -> Registers {
         Registers {
-            bytes: [0; REG_COUNT8],
+            data: [0; REG_COUNT8],
+            shadow: [0; REG_COUNT8],
             sp: 0,
             pc: 0
         }
     }
 
     pub fn get8(&self, reg: Reg8) -> u8 {
-        self.bytes[reg as usize]
+        self.data[reg as usize]
     }
 
     pub fn set8(&mut self, reg: Reg8, value: u8) {
-        self.bytes[reg as usize] = value;
+        self.data[reg as usize] = value;
     }
 
     pub fn get16(&self, reg: Reg16) -> u16 {
         let (h, l) = Registers::get_pair(reg);
 
-        self.bytes[l as usize] as u16
-        + ((self.bytes[h as usize] as u16) << 8)
+        self.data[l] as u16
+        + ((self.data[h] as u16) << 8)
     }
 
     pub fn set16(&mut self, reg: Reg16, value: u16) {
         let (h, l) = Registers::get_pair(reg);
 
-        self.bytes[l as usize] = value as u8;
-        self.bytes[h as usize] = (value >> 8) as u8;
+        self.data[l] = value as u8;
+        self.data[h] = (value >> 8) as u8;
     }
 
-    fn get_pair(reg: Reg16) -> (Reg8, Reg8) {
+    pub fn swap(&mut self, reg: Reg16) {
+        let (h, l) = Registers::get_pair(reg);
+
+        let temp = self.data[l];
+        self.data[l] = self.shadow[l];
+        self.shadow[l] = temp;
+
+        let temp = self.data[h];
+        self.data[h] = self.shadow[h];
+        self.shadow[h] = temp;
+    }
+
+    fn get_pair(reg: Reg16) -> (usize, usize) {
         match reg {
-            Reg16::AF => (Reg8::A, Reg8::F),
-            Reg16::BC => (Reg8::B, Reg8::C),
-            Reg16::DE => (Reg8::D, Reg8::E),
-            Reg16::HL => (Reg8::H, Reg8::L),
-            Reg16::IX => (Reg8::IXH, Reg8::IXL),
-            Reg16::IY => (Reg8::IYH, Reg8::IYL),
-            Reg16::SP => (Reg8::SPH, Reg8::SPL)
+            Reg16::AF => (Reg8::A as usize, Reg8::F as usize),
+            Reg16::BC => (Reg8::B as usize, Reg8::C as usize),
+            Reg16::DE => (Reg8::D as usize, Reg8::E as usize),
+            Reg16::HL => (Reg8::H as usize, Reg8::L as usize),
+            Reg16::IX => (Reg8::IXH as usize, Reg8::IXL as usize),
+            Reg16::IY => (Reg8::IYH as usize, Reg8::IYL as usize),
+            Reg16::SP => (Reg8::SPH as usize, Reg8::SPL as usize)
         }
     }
 
@@ -104,11 +118,11 @@ impl Registers {
     }
 
     pub fn set_flag(&mut self, flag: Flag) {
-        self.bytes[Reg8::F as usize] |= flag as u8;
+        self.data[Reg8::F as usize] |= flag as u8;
     }
 
     pub fn clear_flag(&mut self, flag: Flag) {
-        self.bytes[Reg8::F as usize] &= !(flag as u8);
+        self.data[Reg8::F as usize] &= !(flag as u8);
     }
 
     pub fn put_flag(&mut self, flag: Flag, value: bool) {
@@ -120,7 +134,7 @@ impl Registers {
     }
 
     pub fn update_sz53_flags(&mut self, reference: u8) {
-        let f: &mut u8 = &mut self.bytes[Reg8::F as usize];
+        let f: &mut u8 = &mut self.data[Reg8::F as usize];
 
         // Zero
         if reference == 0 {
@@ -132,14 +146,6 @@ impl Registers {
         // Bits 7, 5, and 3 are copied
         const MASK_S53: u8 = Flag::S as u8 + Flag::_5 as u8 + Flag::_3 as u8;
         *f = (*f & !MASK_S53) + (reference & MASK_S53);
-    }
-
-    pub fn get_sp(&self) -> u16 {
-        self.sp
-    }
-
-    pub fn set_sp(&mut self, value: u16) {
-        self.sp = value;
     }
 
     pub fn get_pc(&self) -> u16 {
