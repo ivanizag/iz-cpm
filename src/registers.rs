@@ -40,7 +40,7 @@ pub enum Reg16 {
 pub enum Flag {
     C  = 1,
     N  = 2,
-    P  = 4,
+    P  = 4, // P/V
     _3 = 8,
     H  = 16,
     _5 = 32,
@@ -146,6 +146,10 @@ impl Registers {
         // Bits 7, 5, and 3 are copied
         const MASK_S53: u8 = Flag::S as u8 + Flag::_5 as u8 + Flag::_3 as u8;
         *f = (*f & !MASK_S53) + (reference & MASK_S53);
+    }
+
+    pub fn update_p_flag(&mut self, reference: u8) {
+        self.put_flag(Flag::P, (reference & 1) == 0);
     }
 
     pub fn get_pc(&self) -> u16 {

@@ -68,6 +68,8 @@ pub fn build_inc_dec_rr(rr: Reg16, inc: bool) -> Opcode {
 pub fn build_inc_dec_r(r: Reg8, inc: bool) -> Opcode {
     let delta = if inc {1} else {-1 as i8 as u8};
     let mnemonic = if inc {"INC"} else {"DEC"};
+    let overflow = if inc {0x80} else {0x7f};
+    let half_overflow = if inc {0x00} else {0x0f};
     Opcode {
         name: format!("{} {:?}", mnemonic, r),
         bytes: 1,
@@ -79,8 +81,8 @@ pub fn build_inc_dec_r(r: Reg8, inc: bool) -> Opcode {
 
             state.reg.update_sz53_flags(v);
             state.reg.clear_flag(Flag::N);
-            state.reg.put_flag(Flag::P, v == 0x80);
-            state.reg.put_flag(Flag::H, (v & 0x0F) == 0x00);
+            state.reg.put_flag(Flag::P, v == overflow);
+            state.reg.put_flag(Flag::H, (v & 0x0F) == half_overflow);
             // Flag::C is not affected
         })
     }        
@@ -89,6 +91,8 @@ pub fn build_inc_dec_r(r: Reg8, inc: bool) -> Opcode {
 pub fn build_inc_dec_phl(inc: bool) -> Opcode {
     let delta = if inc {1} else {-1 as i8 as u8};
     let mnemonic = if inc {"INC"} else {"DEC"};
+    let overflow = if inc {0x80} else {0x7f};
+    let half_overflow = if inc {0x00} else {0x0f};
     Opcode {
         name: format!("{} (HL)", mnemonic),
         bytes: 1,
@@ -101,8 +105,8 @@ pub fn build_inc_dec_phl(inc: bool) -> Opcode {
 
             state.reg.update_sz53_flags(v);
             state.reg.clear_flag(Flag::N);
-            state.reg.put_flag(Flag::P, v == 0x80);
-            state.reg.put_flag(Flag::H, (v & 0x0F) == 0x00);
+            state.reg.put_flag(Flag::P, v == overflow);
+            state.reg.put_flag(Flag::H, (v & 0x0F) == half_overflow);
             // Flag::C is not affected
         })
     }        

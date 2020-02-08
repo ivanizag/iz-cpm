@@ -1,4 +1,5 @@
 use super::opcode::*;
+use super::opcode_bits::*;
 use super::opcode_jumps::*;
 use super::opcode_ld::*;
 use super::registers::*;
@@ -152,6 +153,7 @@ impl Decoder {
             ],
         };
         decoder.load_no_prefix();
+        decoder.load_prefix_cb();
         decoder.load_prefix_ed();
         decoder
     }
@@ -184,7 +186,6 @@ impl Decoder {
 
     fn load_no_prefix(&mut self) {
         for c in 0..=255 {
-            //let opcode: Option<Opcode>;
             let p = DecodingHelper::parts(c);
             let opcode = match p.x {
                 0 => match p.z {
@@ -241,7 +242,17 @@ impl Decoder {
                         0..=7 => Some(build_ld_r_n(R[p.y])), // LD r, n -- 8 bit load imm
                         _ => panic!("Unreachable")
                     },
-                    7 => None,
+                    7 => match p.y {
+                        0 => Some(build_left_r(Reg8::A, ShiftMode::RotateCarry, true)),
+                        1 => Some(build_right_r(Reg8::A, ShiftMode::RotateCarry, true)),
+                        2 => Some(build_left_r(Reg8::A, ShiftMode::Rotate, true)),
+                        3 => Some(build_right_r(Reg8::A, ShiftMode::Rotate, true)),
+                        4 => None,
+                        5 => None,
+                        6 => None,
+                        7 => None,
+                        _ => panic!("Unreachable")
+                    },
                     _ => panic!("Unreachable")
                 },
                 1 => match p.y {
@@ -296,9 +307,54 @@ impl Decoder {
         }
     }
 
+    fn load_prefix_cb(&mut self) {
+        for c in 0..=255 {
+            let p = DecodingHelper::parts(c);
+            let opcode = match p.x {
+                0 => match p.z {
+                    6 => None,
+                    0..=7 => match p.y {
+                        0 => Some(build_left_r(R[p.z], ShiftMode::RotateCarry, false)), // RLC r
+                        1 => Some(build_right_r(R[p.z], ShiftMode::RotateCarry, false)), // RRC r
+                        2 => Some(build_left_r(R[p.z], ShiftMode::Rotate, false)), // RL r
+                        3 => Some(build_right_r(R[p.z], ShiftMode::Rotate, false)), // RR r
+                        4 => Some(build_left_r(R[p.z], ShiftMode::Arithmetic, false)), // SLA r
+                        5 => Some(build_right_r(R[p.z], ShiftMode::Arithmetic, false)), // SRA r
+                        6 => Some(build_left_r(R[p.z], ShiftMode::Logical, false)), // SSL r
+                        7 => Some(build_right_r(R[p.z], ShiftMode::Logical, false)), // SRL r
+                        _ => panic!("Unreacheable")
+                    },
+                    _ => panic!("Unreacheable")
+                },
+                1 => match p.z {
+                    6 => None,
+                    0..=7 => None, // BIT
+                    _ => panic!("Unreacheable")
+                },
+                2 => match p.z {
+                    6 => None,
+                    0..=7 => None, // RES
+                    _ => panic!("Unreacheable")
+                },
+                3 => match p.z {
+                    6 => None,
+                    0..=7 => None, // SET
+                    _ => panic!("Unreacheable")
+                },
+                4..=7 => None, // Invalid instruction NONI + NOP
+                _ => panic!("Unreachable")
+            };
+
+            match opcode.as_ref() {
+                None => (),
+                Some(o) => println!("0x{:02x} 0x{:02x} {:15}: {:?}", 0xcb, c, o.name, p)
+            }
+            self.prefix_cb[c as usize] = opcode;
+        }
+    }
+
     fn load_prefix_ed(&mut self) {
         for c in 0..=255 {
-            //let opcode: Option<Opcode>;
             let p = DecodingHelper::parts(c);
             let opcode = match p.x {
                 0 | 3 => None, // Invalid instruction NONI + NOP
