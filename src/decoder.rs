@@ -192,8 +192,11 @@ impl Decoder {
                         0 => Some(build_nop()), // NOP
                         1 => Some(build_ex_af()), // EX AF, AF'
                         2 => Some(build_djnz()), // DJNZ d
-                        3 => None,
-                        4..=7 => None,
+                        3 => Some(build_jr_unconditional()), // JR d
+                        4 => Some(build_jr_eq(Flag::Z, false)), // JR NZ, d
+                        5 => Some(build_jr_eq(Flag::Z, true)), // JR Z, d
+                        6 => Some(build_jr_eq(Flag::C, false)), // JR NC, d
+                        7 => Some(build_jr_eq(Flag::C, true)), // JR C, d
                         _ => panic!("Unreachable")
                     },
                     1 => match p.q {

@@ -36,7 +36,7 @@ pub enum Reg16 {
 }
 
 // Flags, see http://www.z80.info/z80sflag.htm
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Flag {
     C  = 1,
     N  = 2,

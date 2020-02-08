@@ -27,3 +27,14 @@ fn test_djnz_no_jump() {
     assert_eq!(0x00, cpu.state.reg.get8(Reg8::B));
     assert_eq!(0x0002, cpu.state.reg.get_pc());
 }
+
+#[test]
+fn test_jr_z_jump() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0x10);  // JR -$02
+    cpu.state.mem.poke(0x0001, 0xFE); 
+    cpu.state.reg.set_flag(Flag::Z);
+
+    cpu.execute_instruction();
+    assert_eq!(0xFFFE, cpu.state.reg.get_pc());
+}

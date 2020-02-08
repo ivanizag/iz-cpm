@@ -6,7 +6,7 @@ pub fn build_djnz() -> Opcode {
     Opcode {
         name: "DJNZ d".to_string(),
         bytes: 2,
-        cycles: 8, // TODO: 13 if condition not met,
+        cycles: 8, // TODO: 13 jump,
         action: Box::new(move |state: &mut State| {
             let offset = state.advance_pc();
             let b = state.reg.get8(Reg8::B).wrapping_add(0xff /* -1 */);
@@ -18,6 +18,38 @@ pub fn build_djnz() -> Opcode {
         })
     }
 }
+
+pub fn build_jr_unconditional() -> Opcode {
+    Opcode {
+        name: "JR d".to_string(),
+        bytes: 2,
+        cycles: 12,
+        action: Box::new(move |state: &mut State| {
+            let offset = state.advance_pc();
+            relative_jump(state, offset);
+        })
+    }
+}
+
+pub fn build_jr_eq(flag: Flag, value: bool) -> Opcode {
+    let name = if value {
+        format!("JR {:?} d", flag)
+    } else {
+        format!("JR N{:?} d", flag)
+    };
+    Opcode {
+        name: name,
+        bytes: 2,
+        cycles: 7, // TODO: 12 jump,
+        action: Box::new(move |state: &mut State| {
+            let offset = state.advance_pc();
+            if state.reg.get_flag(flag) == value {
+                relative_jump(state, offset);
+            }
+        })
+    }
+}
+
 
 fn relative_jump(state: &mut State, offset: u8) {
     let mut pc = state.reg.get_pc();
