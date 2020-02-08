@@ -50,7 +50,7 @@ pub fn build_add_hl_rr(rr: Reg16) -> Opcode {
 
 // INC, DEC opcodes
 pub fn build_inc_dec_rr(rr: Reg16, inc: bool) -> Opcode {
-    let delta = if inc {1} else {65535};
+    let delta = if inc {1} else {-1 as i16 as u16};
     let mnemonic = if inc {"INC"} else {"DEC"};
     Opcode {
         name: format!("{} {:?}", mnemonic, rr),
@@ -65,16 +65,18 @@ pub fn build_inc_dec_rr(rr: Reg16, inc: bool) -> Opcode {
     }    
 }    
 
-pub fn build_inc_r(r: Reg8) -> Opcode {
+pub fn build_inc_dec_r(r: Reg8, inc: bool) -> Opcode {
+    let delta = if inc {1} else {-1 as i8 as u8};
+    let mnemonic = if inc {"INC"} else {"DEC"};
     Opcode {
-        name: format!("INC {:?}", r),
+        name: format!("{} {:?}", mnemonic, r),
         bytes: 1,
         cycles: 4,
         action: Box::new(move |state: &mut State| {
             let mut v = state.reg.get8(r);
-            v = if v == 255 {0} else {v+1};
-
+            v = v.wrapping_add(delta);
             state.reg.set8(r, v); 
+
             state.reg.update_sz53_flags(v);
             state.reg.clear_flag(Flag::N);
             state.reg.put_flag(Flag::P, v == 0x80);
@@ -84,22 +86,24 @@ pub fn build_inc_r(r: Reg8) -> Opcode {
     }        
 }
 
-pub fn build_dec_r(r: Reg8) -> Opcode {
+pub fn build_inc_dec_phl(inc: bool) -> Opcode {
+    let delta = if inc {1} else {-1 as i8 as u8};
+    let mnemonic = if inc {"INC"} else {"DEC"};
     Opcode {
-        name: format!("DEC {:?}", &r),
+        name: format!("{} (HL)", mnemonic),
         bytes: 1,
-        cycles: 4,
+        cycles: 11,
         action: Box::new(move |state: &mut State| {
-            let mut v = state.reg.get8(r);
-            v = if v == 0 {255} else {v-1};
+            let p = state.reg.get16(Reg16::HL);
+            let mut v = state.mem.peek(p);
+            v = v.wrapping_add(delta);
+            state.mem.poke(p, v); 
 
-            state.reg.set8(r, v);
             state.reg.update_sz53_flags(v);
-            state.reg.set_flag(Flag::N);
-            state.reg.put_flag(Flag::P, v == 0x7F);
-            state.reg.put_flag(Flag::H, (v & 0x0F) == 0x0F);
+            state.reg.clear_flag(Flag::N);
+            state.reg.put_flag(Flag::P, v == 0x80);
+            state.reg.put_flag(Flag::H, (v & 0x0F) == 0x00);
             // Flag::C is not affected
         })
     }        
 }
-

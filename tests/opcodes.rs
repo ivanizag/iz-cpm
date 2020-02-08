@@ -130,6 +130,18 @@ fn test_dec_de_underflow() {
 }
 
 #[test]
+fn test_dec_phl() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0x35);  // DEC (HL)
+    cpu.state.reg.set16(Reg16::HL, 0x23c4);
+    cpu.state.mem.poke(0x23c4, 0x67);
+
+    cpu.execute_instruction();
+
+    assert_eq!(0x66, cpu.state.mem.peek(0x23c4));
+}
+
+#[test]
 fn test_add_hl_de() {
     let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
     cpu.state.mem.poke(0x0000, 0x19);  // ADD HL, DE

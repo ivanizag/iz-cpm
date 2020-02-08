@@ -194,9 +194,9 @@ impl Decoder {
                         2 => Some(build_djnz()), // DJNZ d
                         3 => Some(build_jr_unconditional()), // JR d
                         4 => Some(build_jr_eq(Flag::Z, false)), // JR NZ, d
-                        5 => Some(build_jr_eq(Flag::Z, true)), // JR Z, d
+                        5 => Some(build_jr_eq(Flag::Z, true )), // JR Z, d
                         6 => Some(build_jr_eq(Flag::C, false)), // JR NC, d
-                        7 => Some(build_jr_eq(Flag::C, true)), // JR C, d
+                        7 => Some(build_jr_eq(Flag::C, true )), // JR C, d
                         _ => panic!("Unreachable")
                     },
                     1 => match p.q {
@@ -227,13 +227,13 @@ impl Decoder {
                         _ => panic!("Unreachable")                       
                     },
                     4 => match p.y {
-                        6 => None, // INC (HL) -- 8 bit inc
-                        0..=7 => Some(build_inc_r(R[p.y])), // INC r -- 8 bit inc
+                        6 => Some(build_inc_dec_phl(true)), // INC (HL) -- 8 bit inc
+                        0..=7 => Some(build_inc_dec_r(R[p.y], true)), // INC r -- 8 bit inc
                         _ => panic!("Unreachable")
                     },
                     5 => match p.y {
-                        6 => None, // DEC (HL) -- 8 bit dec
-                        0..=7 => Some(build_dec_r(R[p.y])), // DEC r -- 8 bit dec
+                        6 => Some(build_inc_dec_phl(false)), // DEC (HL) -- 8 bit dec
+                        0..=7 => Some(build_inc_dec_r(R[p.y], false)), // DEC r -- 8 bit dec
                         _ => panic!("Unreachable")
                     },
                     6 => match p.y {
