@@ -1,5 +1,3 @@
-use std::num::Wrapping;
-
 use super::state::*;
 use super::registers::*;
 
@@ -42,9 +40,9 @@ pub fn build_add_hl_rr(rr: Reg16) -> Opcode {
         bytes: 1,
         cycles: 11,
         action: Box::new(move |state: &mut State| {
-            let mut v = Wrapping(state.reg.get16(Reg16::HL));
-            v = v + Wrapping(state.reg.get16(rr));
-            state.reg.set16(Reg16::HL, v.0); 
+            let mut v = state.reg.get16(Reg16::HL);
+            v = v.wrapping_add(state.reg.get16(rr));
+            state.reg.set16(Reg16::HL, v); 
             // TODO: flags
         })
     }
@@ -59,9 +57,9 @@ pub fn build_inc_dec_rr(rr: Reg16, inc: bool) -> Opcode {
         bytes: 1,
         cycles: 6,
         action: Box::new(move |state: &mut State| {
-            let mut v = Wrapping(state.reg.get16(rr));
-            v = v + Wrapping(delta);
-            state.reg.set16(rr, v.0);
+            let mut v = state.reg.get16(rr);
+            v = v.wrapping_add(delta);
+            state.reg.set16(rr, v);
             // Note: flags not affected
         })
     }    

@@ -1,4 +1,5 @@
 use super::opcode::*;
+use super::opcode_jumps::*;
 use super::opcode_ld::*;
 use super::registers::*;
 use super::state::*;
@@ -190,7 +191,7 @@ impl Decoder {
                     0 => match p.y { // Relative jumps and assorted ops.
                         0 => Some(build_nop()), // NOP
                         1 => Some(build_ex_af()), // EX AF, AF'
-                        2 => None,
+                        2 => Some(build_djnz()), // DJNZ d
                         3 => None,
                         4..=7 => None,
                         _ => panic!("Unreachable")

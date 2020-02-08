@@ -3,6 +3,7 @@
 mod decoder;
 mod memory;
 mod opcode;
+mod opcode_jumps;
 mod opcode_ld;
 mod registers;
 mod state;
