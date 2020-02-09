@@ -2,6 +2,7 @@ use super::opcode::*;
 use super::state::*;
 use super::registers::*;
 
+// Relative jumps
 pub fn build_djnz() -> Opcode {
     Opcode {
         name: "DJNZ d".to_string(),
@@ -58,3 +59,45 @@ fn relative_jump(state: &mut State, offset: u8) {
     state.reg.set_pc(pc);
 }
 
+// Absolute jumps
+
+// Calls
+pub fn build_call() -> Opcode {
+    Opcode {
+        name: "CALL".to_string(),
+        bytes: 1,
+        cycles: 10,
+        action: Box::new(move |state: &mut State| {
+            let address = state.advance_immediate16();
+            state.push16(state.reg.get_pc());
+            state.reg.set_pc(address);
+        })
+    }
+}
+
+// Returns
+pub fn build_ret() -> Opcode {
+    Opcode {
+        name: "RET".to_string(),
+        bytes: 1,
+        cycles: 10,
+        action: Box::new(move |state: &mut State| {
+            let pc = state.pop16();
+            state.reg.set_pc(pc);
+        })
+    }
+}
+
+pub fn build_ret_eq(flag: Flag, value: bool, name: &str) -> Opcode {
+    Opcode {
+        name: format!("RET {}", name),
+        bytes: 1,
+        cycles: 5, // TODO: 11 returns,
+        action: Box::new(move |state: &mut State| {
+            if state.reg.get_flag(flag) == value {
+                let pc = state.pop16();
+                state.reg.set_pc(pc);
+            }
+        })
+    }
+}

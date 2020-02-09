@@ -247,16 +247,16 @@ impl Decoder {
                         1 => Some(build_right_r(Reg8::A, ShiftMode::RotateCarry, true)),
                         2 => Some(build_left_r(Reg8::A, ShiftMode::Rotate, true)),
                         3 => Some(build_right_r(Reg8::A, ShiftMode::Rotate, true)),
-                        4 => None,
-                        5 => None,
-                        6 => None,
-                        7 => None,
+                        4 => None, // DAA, decimal adjust A
+                        5 => Some(build_cpl()), // CPL, complement adjust A
+                        6 => Some(build_scf()), // SCF, set carry flag
+                        7 => Some(build_ccf()), // CCF, clear carry flag
                         _ => panic!("Unreachable")
                     },
                     _ => panic!("Unreachable")
                 },
                 1 => match p.y {
-                    6 => None, // HALT
+                    6 => Some(build_halt()), // HALT
                     0..=7 => match p.z {
                         6 => Some(build_ld_r_prr(R[p.y], Reg16::HL)), // LD r, (HL) -- 8 bit loading
                         0..=7 => Some(build_ld_r_r(R[p.y], R[p.z], false)), // LD r[y], r[z] -- 8 bit load imm
@@ -266,11 +266,21 @@ impl Decoder {
                 },
                 2 => None,
                 3 => match p.z {
-                    0 => None, // RET cc
+                    0 => match p.y {
+                        0 => Some(build_ret_eq(Flag::Z, false, "NZ")), // RET NZ
+                        1 => Some(build_ret_eq(Flag::Z, true , "Z" )), // RET Z
+                        2 => Some(build_ret_eq(Flag::C, false, "NC")), // RET NC
+                        3 => Some(build_ret_eq(Flag::C, true , "C" )), // RET C
+                        4 => Some(build_ret_eq(Flag::P, false, "PO")), // RET PO
+                        5 => Some(build_ret_eq(Flag::P, true , "PE")), // RET PE
+                        6 => Some(build_ret_eq(Flag::S, false, "P" )), // RET P
+                        7 => Some(build_ret_eq(Flag::S, true , "M" )), // RET M
+                        _ => panic!("Unreacheable")
+                    }
                     1 => match p.q {
                         0 => None, // POP rr
                         1 => match p.p {
-                            0 => None, // RET
+                            0 => Some(build_ret()), // RET
                             1 => Some(build_exx()), // EXX
                             2 => None, // JP HL
                             3 => Some(build_ld_rr_rr(Reg16::SP, Reg16::HL)),
@@ -282,8 +292,8 @@ impl Decoder {
                     3 => match p.y {
                         0 => None, // JP nn
                         1 => None, // CB prefix
-                        2 => None,
-                        3 => None,
+                        2 => None, // OUT
+                        3 => None, // IN
                         4 => Some(build_ex_psp_rr(Reg16::HL)), // EX (SP), HL
                         5 => Some(build_ex_de_hl()), // EX DE, HL
                         6 => None, // DI
@@ -291,9 +301,19 @@ impl Decoder {
                         _ => panic!("Unreacheable")
                     }
                     4 => None, // CALL
-                    5 => None,
-                    6 => None,
-                    7 => None,
+                    5 => match p.q {
+                        0 => None, // PUSH rr
+                        1 => match p.p {
+                            0 => Some(build_call()), // Call nn
+                            1 => None, // DD prefix
+                            2 => None, // ED prefix
+                            3 => None, // FD prefix
+                            _ => panic!("Unreachable")
+                        },
+                        _ => panic!("Unreachable")
+                    },
+                    6 => None, // alu n
+                    7 => None, // RST
                     _ => panic!("Unreachable")
                     },
                 _ => panic!("Unreachable")

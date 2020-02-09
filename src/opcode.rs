@@ -111,3 +111,56 @@ pub fn build_inc_dec_phl(inc: bool) -> Opcode {
         })
     }        
 }
+
+pub fn build_cpl() -> Opcode {
+    Opcode {
+        name: "CPL".to_string(),
+        bytes: 1,
+        cycles: 4,
+        action: Box::new(move |state: &mut State| {
+            let mut v = state.reg.get8(Reg8::A);
+            v = !v;
+            state.reg.set8(Reg8::A, v); 
+
+            state.reg.set_flag(Flag::H);
+            state.reg.set_flag(Flag::N);
+        })
+    }
+}
+
+pub fn build_scf() -> Opcode {
+    Opcode {
+        name: "SCF".to_string(),
+        bytes: 1,
+        cycles: 4,
+        action: Box::new(move |state: &mut State| {
+            state.reg.set_flag(Flag::C);
+            state.reg.clear_flag(Flag::H);
+            state.reg.clear_flag(Flag::N);
+        })
+    }
+}
+
+pub fn build_ccf() -> Opcode {
+    Opcode {
+        name: "SCF".to_string(),
+        bytes: 1,
+        cycles: 4,
+        action: Box::new(move |state: &mut State| {
+            state.reg.put_flag(Flag::C, !state.reg.get_flag(Flag::C));
+            state.reg.put_flag(Flag::H, !state.reg.get_flag(Flag::H));
+            state.reg.clear_flag(Flag::N);
+        })
+    }
+}
+
+pub fn build_halt() -> Opcode {
+    Opcode {
+        name: "HALT".to_string(),
+        bytes: 1,
+        cycles: 4,
+        action: Box::new(move |state: &mut State| {
+            state.halted = true;
+        })
+    }
+}

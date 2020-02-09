@@ -35,7 +35,6 @@ pub fn build_left_r(r: Reg8, mode: ShiftMode, fast: bool) -> Opcode {
                 ShiftMode::Rotate => state.reg.get_flag(Flag::C), // carry in bit 0
                 ShiftMode::RotateCarry => upper_bit, // bit 7 moves to bit 0
             };
-            println!("left {} {} {}", v, upper_bit, set_lower_bit);
             if set_lower_bit { // bit 0 is 0 already
                 v = v | 1;
             }

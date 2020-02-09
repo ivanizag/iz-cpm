@@ -152,3 +152,14 @@ fn test_add_hl_de() {
 
     assert_eq!(0x1335, cpu.state.reg.get16(Reg16::HL));
 }
+
+#[test]
+fn test_cpl() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0x2f);  // CPL
+    cpu.state.reg.set8(Reg8::A, 0x3d);
+
+    cpu.execute_instruction();
+
+    assert_eq!(0xc2, cpu.state.reg.get8(Reg8::A));
+}

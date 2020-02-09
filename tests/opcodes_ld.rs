@@ -14,8 +14,6 @@ fn test_ld_bc_nn() {
 
     cpu.execute_instruction();
 
-    println!("Registers: {:?}", cpu.state.reg);
-
     assert_eq!(0x1234, cpu.state.reg.get16(Reg16::BC));
 }
 
@@ -33,8 +31,6 @@ fn test_ld_bc_pnn() {
 
     cpu.execute_instruction();
 
-    println!("Registers: {:?}", cpu.state.reg);
-
     assert_eq!(0x6789, cpu.state.reg.get16(Reg16::BC));
 }
 
@@ -50,8 +46,6 @@ fn test_ld_pnn_bc() {
 
     cpu.execute_instruction();
 
-    println!("Registers: {:?}", cpu.state.reg);
-
     assert_eq!(0xde23, cpu.state.mem.peek16(0x1234));
 }
 
@@ -62,8 +56,6 @@ fn test_ld_a_b() {
     cpu.state.reg.set8(Reg8::B, 0x23);
 
     cpu.execute_instruction();
-
-    println!("Registers: {:?}", cpu.state.reg);
 
     assert_eq!(0x23, cpu.state.reg.get8(Reg8::A));
 }
@@ -77,8 +69,6 @@ fn test_ld_b_n() {
 
     cpu.execute_instruction();
 
-    println!("Registers: {:?}", cpu.state.reg);
-
     assert_eq!(0x34, cpu.state.reg.get8(Reg8::B));
 }
 
@@ -91,8 +81,6 @@ fn test_ld_d_e() {
     cpu.state.reg.set8(Reg8::E, 0xee);
 
     cpu.execute_instruction();
-
-    println!("Registers: {:?}", cpu.state.reg);
 
     assert_eq!(0xee, cpu.state.reg.get8(Reg8::D));
     assert_eq!(0xee, cpu.state.reg.get8(Reg8::E));

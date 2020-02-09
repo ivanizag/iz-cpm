@@ -32,9 +32,37 @@ fn test_djnz_no_jump() {
 fn test_jr_z_jump() {
     let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
     cpu.state.mem.poke(0x0000, 0x10);  // JR -$02
-    cpu.state.mem.poke(0x0001, 0xFE); 
+    cpu.state.mem.poke(0x0001, 0xfe); 
     cpu.state.reg.set_flag(Flag::Z);
 
     cpu.execute_instruction();
     assert_eq!(0xFFFE, cpu.state.reg.get_pc());
+}
+
+#[test]
+fn test_call() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0xcd);  // CALL $2000
+    cpu.state.mem.poke(0x0001, 0x00); 
+    cpu.state.mem.poke(0x0002, 0x20);
+    
+ 
+    cpu.execute_instruction();
+    assert_eq!(0x2000, cpu.state.reg.get_pc());
+    assert_eq!(0x0003, cpu.state.pop16());
+}
+
+#[test]
+fn test_call_ret() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0xcd);  // CALL $2000
+    cpu.state.mem.poke(0x0001, 0x00); 
+    cpu.state.mem.poke(0x0002, 0x20);
+
+    cpu.state.mem.poke(0x2000, 0xc9);  // RET
+    
+    cpu.execute_instruction();
+    assert_eq!(0x2000, cpu.state.reg.get_pc());
+     cpu.execute_instruction();
+    assert_eq!(0x0003, cpu.state.reg.get_pc());
 }
