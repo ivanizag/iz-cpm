@@ -194,10 +194,7 @@ impl Decoder {
                         1 => Some(build_ex_af()), // EX AF, AF'
                         2 => Some(build_djnz()), // DJNZ d
                         3 => Some(build_jr_unconditional()), // JR d
-                        4 => Some(build_jr_eq(Flag::Z, false)), // JR NZ, d
-                        5 => Some(build_jr_eq(Flag::Z, true )), // JR Z, d
-                        6 => Some(build_jr_eq(Flag::C, false)), // JR NC, d
-                        7 => Some(build_jr_eq(Flag::C, true )), // JR C, d
+                        4..=7 => Some(build_jr_eq(CC[p.y-4])),
                         _ => panic!("Unreachable")
                     },
                     1 => match p.q {
@@ -256,27 +253,21 @@ impl Decoder {
                     _ => panic!("Unreachable")
                 },
                 1 => match p.y {
-                    6 => Some(build_halt()), // HALT
+                    6 => match p.z {
+                        6 => Some(build_halt()),
+                        0..=7 => None,
+                        _ => panic!("Unreachable")
+                    },
                     0..=7 => match p.z {
                         6 => Some(build_ld_r_prr(R[p.y], Reg16::HL)), // LD r, (HL) -- 8 bit loading
                         0..=7 => Some(build_ld_r_r(R[p.y], R[p.z], false)), // LD r[y], r[z] -- 8 bit load imm
                         _ => panic!("Unreachable")
                     }
-                    _ => panic!("Unreacheable")
+                    _ => panic!("Unreachable")
                 },
                 2 => None,
                 3 => match p.z {
-                    0 => match p.y {
-                        0 => Some(build_ret_eq(Flag::Z, false, "NZ")), // RET NZ
-                        1 => Some(build_ret_eq(Flag::Z, true , "Z" )), // RET Z
-                        2 => Some(build_ret_eq(Flag::C, false, "NC")), // RET NC
-                        3 => Some(build_ret_eq(Flag::C, true , "C" )), // RET C
-                        4 => Some(build_ret_eq(Flag::P, false, "PO")), // RET PO
-                        5 => Some(build_ret_eq(Flag::P, true , "PE")), // RET PE
-                        6 => Some(build_ret_eq(Flag::S, false, "P" )), // RET P
-                        7 => Some(build_ret_eq(Flag::S, true , "M" )), // RET M
-                        _ => panic!("Unreacheable")
-                    },
+                    0 => Some(build_ret_eq(CC[p.y])),
                     1 => match p.q {
                         0 => None, // POP rr
                         1 => match p.p {
@@ -288,9 +279,9 @@ impl Decoder {
                         },
                         _ => panic!("Unreacheable")
                     },
-                    2 => None, // JP cc, nn
+                    2 => Some(build_jp_eq(CC[p.y])), // JP cc, nn
                     3 => match p.y {
-                        0 => None, // JP nn
+                        0 => Some(build_jp_unconditional()), // JP nn
                         1 => None, // CB prefix
                         2 => None, // OUT
                         3 => None, // IN
@@ -300,17 +291,7 @@ impl Decoder {
                         7 => None, // EI
                         _ => panic!("Unreacheable")
                     }
-                    4 => match p.y {
-                        0 => Some(build_call_eq(Flag::Z, false, "NZ")), // CALL NZ
-                        1 => Some(build_call_eq(Flag::Z, true , "Z" )), // CALL Z
-                        2 => Some(build_call_eq(Flag::C, false, "NC")), // CALL NC
-                        3 => Some(build_call_eq(Flag::C, true , "C" )), // CALL C
-                        4 => Some(build_call_eq(Flag::P, false, "PO")), // CALL PO
-                        5 => Some(build_call_eq(Flag::P, true , "PE")), // CALL PE
-                        6 => Some(build_call_eq(Flag::S, false, "P" )), // CALL P
-                        7 => Some(build_call_eq(Flag::S, true , "M" )), // CALL M
-                        _ => panic!("Unreacheable")
-                    },
+                    4 => Some(build_call_eq(CC[p.y])),
                     5 => match p.q {
                         0 => None, // PUSH rr
                         1 => match p.p {
@@ -453,9 +434,16 @@ impl DecodingHelper {
 }
 
 
-pub const RP: [Reg16; 4] = [
-    Reg16::BC, Reg16::DE, Reg16::HL, Reg16::SP];
+pub const RP: [Reg16; 4] = [Reg16::BC, Reg16::DE, Reg16::HL, Reg16::SP];
+pub const R:  [Reg8; 8] = [Reg8::B, Reg8::C, Reg8::D, Reg8::E, Reg8::H, Reg8::L, Reg8::_HL, Reg8::A];
 
-pub const R:  [Reg8; 8] = [
-    Reg8::B, Reg8::C, Reg8::D, Reg8::E,
-    Reg8::H, Reg8::L, Reg8::_HL, Reg8::A];
+pub const CC: [(Flag, bool, &'static str); 8] = [
+    (Flag::Z, false, "NZ"),
+    (Flag::Z, true,  "Z"),
+    (Flag::C, false, "NC"),
+    (Flag::C, true,  "C"),
+    (Flag::P, false, "PO"),
+    (Flag::P, true,  "PE"),
+    (Flag::S, false, "P"),
+    (Flag::S, true,  "N")
+];

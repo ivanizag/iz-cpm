@@ -40,6 +40,17 @@ fn test_jr_z_jump() {
 }
 
 #[test]
+fn test_jp() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0xc3);  // JP $2000
+    cpu.state.mem.poke(0x0001, 0x00); 
+    cpu.state.mem.poke(0x0002, 0x20);
+    
+    cpu.execute_instruction();
+    assert_eq!(0x2000, cpu.state.reg.get_pc());
+}
+
+#[test]
 fn test_call() {
     let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
     cpu.state.mem.poke(0x0000, 0xcd);  // CALL $2000

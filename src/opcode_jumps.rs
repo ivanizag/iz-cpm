@@ -32,14 +32,9 @@ pub fn build_jr_unconditional() -> Opcode {
     }
 }
 
-pub fn build_jr_eq(flag: Flag, value: bool) -> Opcode {
-    let name = if value {
-        format!("JR {:?} d", flag)
-    } else {
-        format!("JR N{:?} d", flag)
-    };
+pub fn build_jr_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
     Opcode {
-        name: name,
+        name: format!("JR {}, d", name),
         bytes: 2,
         cycles: 7, // TODO: 12 jump,
         action: Box::new(move |state: &mut State| {
@@ -60,6 +55,31 @@ fn relative_jump(state: &mut State, offset: u8) {
 }
 
 // Absolute jumps
+pub fn build_jp_unconditional() -> Opcode {
+    Opcode {
+        name: "JP d".to_string(),
+        bytes: 2,
+        cycles: 10,
+        action: Box::new(move |state: &mut State| {
+            let address = state.advance_immediate16();
+            state.reg.set_pc(address);
+        })
+    }
+}
+
+pub fn build_jp_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
+    Opcode {
+        name: format!("JP {}, nn", name),
+        bytes: 2,
+        cycles: 10, // TODO: 10 jump, review
+        action: Box::new(move |state: &mut State| {
+            let address = state.advance_immediate16();
+            if state.reg.get_flag(flag) == value {
+                state.reg.set_pc(address);
+            }
+        })
+    }
+}
 
 // Calls to subroutine
 pub fn build_call() -> Opcode {
@@ -75,7 +95,7 @@ pub fn build_call() -> Opcode {
     }
 }
 
-pub fn build_call_eq(flag: Flag, value: bool, name: &str) -> Opcode {
+pub fn build_call_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
     Opcode {
         name: format!("CALL {}, nn", name),
         bytes: 3,
@@ -103,7 +123,7 @@ pub fn build_ret() -> Opcode {
     }
 }
 
-pub fn build_ret_eq(flag: Flag, value: bool, name: &str) -> Opcode {
+pub fn build_ret_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
     Opcode {
         name: format!("RET {}", name),
         bytes: 1,
