@@ -311,7 +311,7 @@ impl Decoder {
             };
 
             match opcode.as_ref() {
-                None => (),
+                None => println!("0x{:02x} {:20}: {:?}", c, "Pending", p),
                 Some(o) => println!("0x{:02x} {:20}: {:?}", c, o.name, p)
             }
             self.no_prefix[c as usize] = opcode;
@@ -345,7 +345,7 @@ impl Decoder {
             };
 
             match opcode.as_ref() {
-                None => (),
+                None => println!("0x{:02x} 0x{:02x} {:15}: {:?}", 0xcb, c, "Pending", p),
                 Some(o) => println!("0x{:02x} 0x{:02x} {:15}: {:?}", 0xcb, c, o.name, p)
             }
             self.prefix_cb[c as usize] = opcode;
@@ -356,7 +356,7 @@ impl Decoder {
         for c in 0..=255 {
             let p = DecodingHelper::parts(c);
             let opcode = match p.x {
-                0 | 3 => None, // Invalid instruction NONI + NOP
+                0 | 3 => Some(build_noni_nop()), // Invalid instruction NONI + NOP
                 1 => match p.z {
                     0 => None,
                     1 => None,
@@ -385,13 +385,13 @@ impl Decoder {
                     if p.z <= 3 && p.y >= 4 {
                         None // bli[y,z] -- block instruction
                     } else {
-                        None // NONI + NOP
+                        Some(build_noni_nop()) // NONI + NOP
                     },
                 _ => panic!("Unreachable")
             };
 
             match opcode.as_ref() {
-                None => (),
+                None => println!("0x{:02x} 0x{:02x} {:15}: {:?}", 0xed, c, "Pending", p),
                 Some(o) => println!("0x{:02x} 0x{:02x} {:15}: {:?}", 0xed, c, o.name, p)
             }
             self.prefix_ed[c as usize] = opcode;

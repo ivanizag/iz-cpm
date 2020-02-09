@@ -29,7 +29,17 @@ pub fn build_nop() -> Opcode {
         action: Box::new(|_: &mut State| {
             // Nothing done
         })
+    }
+}
 
+pub fn build_noni_nop() -> Opcode {
+    Opcode {
+        name: "NONINOP".to_string(),
+        bytes: 1,
+        cycles: 4,
+        action: Box::new(|_: &mut State| {
+            // Nothing done
+        })
     }
 }
 
