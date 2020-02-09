@@ -61,16 +61,31 @@ fn relative_jump(state: &mut State, offset: u8) {
 
 // Absolute jumps
 
-// Calls
+// Calls to subroutine
 pub fn build_call() -> Opcode {
     Opcode {
-        name: "CALL".to_string(),
-        bytes: 1,
+        name: "CALL nn".to_string(),
+        bytes: 3,
         cycles: 10,
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
             state.push16(state.reg.get_pc());
             state.reg.set_pc(address);
+        })
+    }
+}
+
+pub fn build_call_eq(flag: Flag, value: bool, name: &str) -> Opcode {
+    Opcode {
+        name: format!("CALL {}, nn", name),
+        bytes: 3,
+        cycles: 10, // TODO: 17 calls,
+        action: Box::new(move |state: &mut State| {
+            let address = state.advance_immediate16();
+            if state.reg.get_flag(flag) == value {
+                state.push16(state.reg.get_pc());
+                state.reg.set_pc(address);
+            }
         })
     }
 }

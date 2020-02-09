@@ -276,7 +276,7 @@ impl Decoder {
                         6 => Some(build_ret_eq(Flag::S, false, "P" )), // RET P
                         7 => Some(build_ret_eq(Flag::S, true , "M" )), // RET M
                         _ => panic!("Unreacheable")
-                    }
+                    },
                     1 => match p.q {
                         0 => None, // POP rr
                         1 => match p.p {
@@ -300,7 +300,17 @@ impl Decoder {
                         7 => None, // EI
                         _ => panic!("Unreacheable")
                     }
-                    4 => None, // CALL
+                    4 => match p.y {
+                        0 => Some(build_call_eq(Flag::Z, false, "NZ")), // CALL NZ
+                        1 => Some(build_call_eq(Flag::Z, true , "Z" )), // CALL Z
+                        2 => Some(build_call_eq(Flag::C, false, "NC")), // CALL NC
+                        3 => Some(build_call_eq(Flag::C, true , "C" )), // CALL C
+                        4 => Some(build_call_eq(Flag::P, false, "PO")), // CALL PO
+                        5 => Some(build_call_eq(Flag::P, true , "PE")), // CALL PE
+                        6 => Some(build_call_eq(Flag::S, false, "P" )), // CALL P
+                        7 => Some(build_call_eq(Flag::S, true , "M" )), // CALL M
+                        _ => panic!("Unreacheable")
+                    },
                     5 => match p.q {
                         0 => None, // PUSH rr
                         1 => match p.p {
