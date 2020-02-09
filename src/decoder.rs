@@ -275,9 +275,9 @@ impl Decoder {
                             1 => Some(build_exx()), // EXX
                             2 => None, // JP HL
                             3 => Some(build_ld_rr_rr(Reg16::SP, Reg16::HL)), // LD SP, HL
-                            _ => panic!("Unreacheable")
+                            _ => panic!("Unreachable")
                         },
-                        _ => panic!("Unreacheable")
+                        _ => panic!("Unreachable")
                     },
                     2 => Some(build_jp_eq(CC[p.y])), // JP cc, nn
                     3 => match p.y {
@@ -289,7 +289,7 @@ impl Decoder {
                         5 => Some(build_ex_de_hl()), // EX DE, HL
                         6 => None, // DI
                         7 => None, // EI
-                        _ => panic!("Unreacheable")
+                        _ => panic!("Unreachable")
                     }
                     4 => Some(build_call_eq(CC[p.y])),
                     5 => match p.q {
@@ -321,10 +321,10 @@ impl Decoder {
     fn load_prefix_cb(&mut self) {
         for c in 0..=255 {
             let p = DecodingHelper::parts(c);
-            let opcode = match p.x {
-                0 => match p.z {
-                    6 => None,
-                    0..=7 => match p.y {
+            let opcode = match p.z {
+                6 => None, // (HL) bit manipulation
+                0..=7 =>  match p.x {
+                    0 => match p.y {
                         0 => Some(build_left_r(R[p.z], ShiftMode::RotateCarry, false)), // RLC r
                         1 => Some(build_right_r(R[p.z], ShiftMode::RotateCarry, false)), // RRC r
                         2 => Some(build_left_r(R[p.z], ShiftMode::Rotate, false)), // RL r
@@ -333,26 +333,14 @@ impl Decoder {
                         5 => Some(build_right_r(R[p.z], ShiftMode::Arithmetic, false)), // SRA r
                         6 => Some(build_left_r(R[p.z], ShiftMode::Logical, false)), // SSL r
                         7 => Some(build_right_r(R[p.z], ShiftMode::Logical, false)), // SRL r
-                        _ => panic!("Unreacheable")
+                        _ => panic!("Unreachable")
                     },
-                    _ => panic!("Unreacheable")
+                    1 => Some(build_bit_r(p.y as u8, R[p.z])), // BIT
+                    2 => Some(build_res_r(p.y as u8, R[p.z])), // RES
+                    3 => Some(build_set_r(p.y as u8, R[p.z])), // SET
+                    4..=7 => None, // Invalid instruction NONI + NOP
+                    _ => panic!("Unreachable")
                 },
-                1 => match p.z {
-                    6 => None,
-                    0..=7 => None, // BIT
-                    _ => panic!("Unreacheable")
-                },
-                2 => match p.z {
-                    6 => None,
-                    0..=7 => None, // RES
-                    _ => panic!("Unreacheable")
-                },
-                3 => match p.z {
-                    6 => None,
-                    0..=7 => None, // SET
-                    _ => panic!("Unreacheable")
-                },
-                4..=7 => None, // Invalid instruction NONI + NOP
                 _ => panic!("Unreachable")
             };
 

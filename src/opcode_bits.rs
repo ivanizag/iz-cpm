@@ -2,8 +2,6 @@ use super::opcode::*;
 use super::state::*;
 use super::registers::*;
 
-// Relative jumps
-
 #[derive(Copy, Clone)]
 pub enum ShiftMode {
     Arithmetic,
@@ -93,6 +91,45 @@ pub fn build_right_r(r: Reg8, mode: ShiftMode, fast: bool) -> Opcode {
                 state.reg.update_sz53_flags(v);
                 state.reg.update_p_flag(v);
             }
+        })
+    }
+}
+
+pub fn build_bit_r(bit: u8, r: Reg8) -> Opcode {
+    Opcode {
+        name: format!("BIT {}, {:?}", bit, r),
+        bytes: 1,
+        cycles: 8,
+        action: Box::new(move |state: &mut State| {
+            let v8 = state.reg.get8(r);
+            let v1 = (v8 & (1<<bit)) != 0;
+            state.reg.put_flag(Flag::Z, v1);
+        })
+    }
+}
+
+pub fn build_set_r(bit: u8, r: Reg8) -> Opcode {
+    Opcode {
+        name: format!("SET {}, {:?}", bit, r),
+        bytes: 1,
+        cycles: 8,
+        action: Box::new(move |state: &mut State| {
+            let mut v = state.reg.get8(r);
+            v = v | (1<<bit);
+            state.reg.set8(r, v);
+        })
+    }
+}
+
+pub fn build_res_r(bit: u8, r: Reg8) -> Opcode {
+    Opcode {
+        name: format!("RES {}, {:?}", bit, r),
+        bytes: 1,
+        cycles: 8,
+        action: Box::new(move |state: &mut State| {
+            let mut v = state.reg.get8(r);
+            v = v & !(1<<bit);
+            state.reg.set8(r, v);
         })
     }
 }
