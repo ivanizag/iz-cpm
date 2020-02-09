@@ -89,7 +89,7 @@ pub fn build_call() -> Opcode {
         cycles: 10,
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
-            state.push16(state.reg.get_pc());
+            state.push(state.reg.get_pc());
             state.reg.set_pc(address);
         })
     }
@@ -103,7 +103,7 @@ pub fn build_call_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
             if state.reg.get_flag(flag) == value {
-                state.push16(state.reg.get_pc());
+                state.push(state.reg.get_pc());
                 state.reg.set_pc(address);
             }
         })
@@ -117,7 +117,7 @@ pub fn build_ret() -> Opcode {
         bytes: 1,
         cycles: 10,
         action: Box::new(move |state: &mut State| {
-            let pc = state.pop16();
+            let pc = state.pop();
             state.reg.set_pc(pc);
         })
     }
@@ -130,7 +130,7 @@ pub fn build_ret_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
         cycles: 5, // TODO: 11 returns,
         action: Box::new(move |state: &mut State| {
             if state.reg.get_flag(flag) == value {
-                let pc = state.pop16();
+                let pc = state.pop();
                 state.reg.set_pc(pc);
             }
         })

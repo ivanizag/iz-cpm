@@ -37,34 +37,29 @@ impl State {
         value
     }
 
-    pub fn push(&mut self, value: u8) {
+    pub fn push(&mut self, value: u16) {
         let mut sp = self.reg.get16(Reg16::SP);
+
         sp = sp.wrapping_sub(1);
-        self.mem.poke(sp, value);
+        self.mem.poke(sp, (value >> 8) as u8);
+
+        sp = sp.wrapping_sub(1);
+        self.mem.poke(sp, value as u8);
+
         self.reg.set16(Reg16::SP, sp);
-
-    } 
-
-    pub fn push16(&mut self, value: u16) {
-        self.push((value >> 8) as u8);
-        self.push(value as u8)
     }
 
-
-    pub fn pop(&mut self) -> u8 {
+    pub fn pop(&mut self) -> u16 {
         let mut sp = self.reg.get16(Reg16::SP);
-        let value = self.mem.peek(sp);
+
+        let l = self.mem.peek(sp);
         sp = sp.wrapping_add(1);
+
+        let h = self.mem.peek(sp);
+        sp = sp.wrapping_add(1);
+
         self.reg.set16(Reg16::SP, sp);
-        value
-    }
-
-    pub fn pop16(&mut self) -> u16 {
-        // Todo: review order
-        let mut value: u16 = self.pop() as u16;
-        value += (self.pop() as u16) << 8;
-        value
-
+        (l as u16) + ((h as u16) << 8)
     }
 }
 

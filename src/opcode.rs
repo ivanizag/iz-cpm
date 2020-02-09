@@ -171,7 +171,7 @@ pub fn build_pop_rr(rr: Reg16) -> Opcode {
         bytes: 1,
         cycles: 10,
         action: Box::new(move |state: &mut State| {
-            let value = state.pop16();
+            let value = state.pop();
             state.reg.set16(rr, value);
         })
     }
@@ -181,10 +181,10 @@ pub fn build_push_rr(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("PUSH {:?}", rr),
         bytes: 1,
-        cycles: 10,
+        cycles: 11,
         action: Box::new(move |state: &mut State| {
             let value = state.reg.get16(rr);
-            state.push16(value);
+            state.push(value);
         })
     }
 }

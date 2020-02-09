@@ -60,7 +60,7 @@ fn test_call() {
  
     cpu.execute_instruction();
     assert_eq!(0x2000, cpu.state.reg.get_pc());
-    assert_eq!(0x0003, cpu.state.pop16());
+    assert_eq!(0x0003, cpu.state.pop());
 }
 
 #[test]
@@ -73,7 +73,7 @@ fn test_call_z_jump() {
      
     cpu.execute_instruction();
     assert_eq!(0x2000, cpu.state.reg.get_pc());
-    assert_eq!(0x0003, cpu.state.pop16());
+    assert_eq!(0x0003, cpu.state.pop());
 }
 
 #[test]
