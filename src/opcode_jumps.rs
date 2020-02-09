@@ -110,6 +110,19 @@ pub fn build_call_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
     }
 }
 
+pub fn build_rst(d: u8) -> Opcode {
+    Opcode {
+        name: format!("RST {:02x}h", d),
+        bytes: 1,
+        cycles: 11,
+        action: Box::new(move |state: &mut State| {
+            let address = d as u16;
+            state.push(state.reg.get_pc());
+            state.reg.set_pc(address);
+        })
+    }
+}
+
 // Returns
 pub fn build_ret() -> Opcode {
     Opcode {

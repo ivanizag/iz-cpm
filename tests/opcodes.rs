@@ -4,17 +4,6 @@ use z80::cpu::Cpu;
 use z80::registers::*;
 use z80::memory::PlainMemory;
 
-
-
-#[test]
-#[should_panic]
-fn test_not_implemented() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
-    cpu.state.mem.poke(0x0000, 0xff);
-
-    cpu.execute_instruction();
-}
-
 #[test]
 fn test_two_opcodes() {
     let mut cpu = Cpu::new(Box::new(PlainMemory::new()));

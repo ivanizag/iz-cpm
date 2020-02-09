@@ -88,6 +88,15 @@ fn test_call_z_no_jump() {
     assert_eq!(0x0003, cpu.state.reg.get_pc());
 }
 
+#[test]
+fn test_rst() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0xff);  // RST 38h    
+ 
+    cpu.execute_instruction();
+    assert_eq!(0x0038, cpu.state.reg.get_pc());
+    assert_eq!(0x0001, cpu.state.pop());
+}
 
 #[test]
 fn test_call_ret() {

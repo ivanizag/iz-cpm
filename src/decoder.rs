@@ -304,7 +304,7 @@ impl Decoder {
                         _ => panic!("Unreachable")
                     },
                     6 => None, // alu n
-                    7 => None, // RST
+                    7 => Some(build_rst(p.y as u8 * 8)), // RST
                     _ => panic!("Unreachable")
                     },
                 _ => panic!("Unreachable")
