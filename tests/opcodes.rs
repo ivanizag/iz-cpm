@@ -163,3 +163,19 @@ fn test_cpl() {
 
     assert_eq!(0xc2, cpu.state.reg.get8(Reg8::A));
 }
+
+#[test]
+fn test_push_pop_rr() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0xc5);  // PUSH BC
+    cpu.state.mem.poke(0x0001, 0xf1);  // POP AF
+    cpu.state.reg.set16(Reg16::BC, 0x1234);
+
+    cpu.execute_instruction();
+    assert_eq!(0x1234, cpu.state.reg.get16(Reg16::BC));
+    assert_eq!(0x0000, cpu.state.reg.get16(Reg16::AF));
+
+    cpu.execute_instruction();
+    assert_eq!(0x1234, cpu.state.reg.get16(Reg16::BC));
+    assert_eq!(0x1234, cpu.state.reg.get16(Reg16::AF));
+}

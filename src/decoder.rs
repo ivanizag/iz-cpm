@@ -255,7 +255,7 @@ impl Decoder {
                 1 => match p.y {
                     6 => match p.z {
                         6 => Some(build_halt()),
-                        0..=7 => None,
+                        0..=7 => None, // LD (HL), r -- 8 bit loading
                         _ => panic!("Unreachable")
                     },
                     0..=7 => match p.z {
@@ -267,14 +267,14 @@ impl Decoder {
                 },
                 2 => None,
                 3 => match p.z {
-                    0 => Some(build_ret_eq(CC[p.y])),
+                    0 => Some(build_ret_eq(CC[p.y])), // RET cc
                     1 => match p.q {
-                        0 => None, // POP rr
+                        0 => Some(build_pop_rr(RP2[p.p])), // POP rr
                         1 => match p.p {
                             0 => Some(build_ret()), // RET
                             1 => Some(build_exx()), // EXX
                             2 => None, // JP HL
-                            3 => Some(build_ld_rr_rr(Reg16::SP, Reg16::HL)),
+                            3 => Some(build_ld_rr_rr(Reg16::SP, Reg16::HL)), // LD SP, HL
                             _ => panic!("Unreacheable")
                         },
                         _ => panic!("Unreacheable")
@@ -293,7 +293,7 @@ impl Decoder {
                     }
                     4 => Some(build_call_eq(CC[p.y])),
                     5 => match p.q {
-                        0 => None, // PUSH rr
+                        0 => Some(build_push_rr(RP2[p.p])), // PUSH rr
                         1 => match p.p {
                             0 => Some(build_call()), // Call nn
                             1 => None, // DD prefix
@@ -434,7 +434,8 @@ impl DecodingHelper {
 }
 
 
-pub const RP: [Reg16; 4] = [Reg16::BC, Reg16::DE, Reg16::HL, Reg16::SP];
+pub const RP:  [Reg16; 4] = [Reg16::BC, Reg16::DE, Reg16::HL, Reg16::SP];
+pub const RP2: [Reg16; 4] = [Reg16::BC, Reg16::DE, Reg16::HL, Reg16::AF];
 pub const R:  [Reg8; 8] = [Reg8::B, Reg8::C, Reg8::D, Reg8::E, Reg8::H, Reg8::L, Reg8::_HL, Reg8::A];
 
 pub const CC: [(Flag, bool, &'static str); 8] = [
