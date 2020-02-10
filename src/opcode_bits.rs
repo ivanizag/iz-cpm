@@ -10,81 +10,55 @@ pub enum ShiftMode {
     RotateCarry
 }
 
-pub fn build_left_r(r: Reg8, mode: ShiftMode, fast: bool) -> Opcode {
-    let separator = if fast {""} else {" "};
-    let mnemonic = match mode {
-        ShiftMode::Arithmetic => "SLA",
-        ShiftMode::Logical => "SLL", // Undocumented
-        ShiftMode::Rotate => "RL",
-        ShiftMode::RotateCarry => "RLC"
-    };
-
-    Opcode {
-        name: format!("{}{}{:?}", mnemonic, separator, r),
-        bytes: 1,
-        cycles: if fast {4} else {8},
-        action: Box::new(move |state: &mut State| {
-            let mut v = state.reg.get8(r);
-            let upper_bit = v >= 0x80;
-            v = v << 1;
-            let set_lower_bit = match mode {
-                ShiftMode::Arithmetic => false, // always 0 in bit 0
-                ShiftMode::Logical => true, // always 1 in bit 0
-                ShiftMode::Rotate => state.reg.get_flag(Flag::C), // carry in bit 0
-                ShiftMode::RotateCarry => upper_bit, // bit 7 moves to bit 0
-            };
-            if set_lower_bit { // bit 0 is 0 already
-                v = v | 1;
-            }
-
-            println!("left {} {} {}", v, upper_bit, set_lower_bit);
-
-            state.reg.set8(r, v);
-            state.reg.put_flag(Flag::C, upper_bit);
-
-            state.reg.clear_flag(Flag::H);
-            state.reg.clear_flag(Flag::N);
-            if !fast {
-                state.reg.update_sz53_flags(v);
-                state.reg.update_p_flag(v);
-            }
-        })
-    }
+#[derive(Copy, Clone)]
+pub enum ShiftDir {
+    Left,
+    Right
 }
 
-pub fn build_right_r(r: Reg8, mode: ShiftMode, fast: bool) -> Opcode {
+pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast: bool) -> Opcode {
     let separator = if fast {""} else {" "};
-    let mnemonic = match mode {
-        ShiftMode::Arithmetic => "SRA",
-        ShiftMode::Logical => "SRL",
-        ShiftMode::Rotate => "RR",
-        ShiftMode::RotateCarry => "RRC",
-    };
-
     Opcode {
-        name: format!("{}{}{:?}", mnemonic, separator, r),
+        name: format!("{}{}{}", name, separator, r),
         bytes: 1,
         cycles: if fast {4} else {8},
         action: Box::new(move |state: &mut State| {
-            let mut v = state.reg.get8(r);
-            let upper_bit = v >= 0x80;
-            let lower_bit = (v & 1) == 1;
-            v = v >> 1;
-            let set_upper_bit = match mode {
-                ShiftMode::Arithmetic => upper_bit, // extend bit 7
-                ShiftMode::Logical => false, // always 0 in bit 7
-                ShiftMode::Rotate => state.reg.get_flag(Flag::C), // carry in bit 0
-                ShiftMode::RotateCarry => lower_bit, // bit 0 goes to bit 7
-            };
-            if set_upper_bit { // bit 7 is 0 already
-                v = v | 0x80;
+            let mut v = state.get_reg(r);
+            let carry: bool;
+
+            match dir {
+                ShiftDir::Left => {
+                    let upper_bit = v >= 0x80;
+                    v = v << 1;
+                    let set_lower_bit = match mode {
+                        ShiftMode::Arithmetic => false, // always 0 in bit 0
+                        ShiftMode::Logical => true, // always 1 in bit 0
+                        ShiftMode::Rotate => state.reg.get_flag(Flag::C), // carry in bit 0
+                        ShiftMode::RotateCarry => upper_bit, // bit 7 moves to bit 0
+                    };
+                    if set_lower_bit { // bit 0 is 0 already
+                        v = v | 1;
+                    }
+                    carry = upper_bit;
+                },
+                ShiftDir::Right => {
+                    let upper_bit = v >= 0x80;
+                    let lower_bit = (v & 1) == 1;
+                    v = v >> 1;
+                    let set_upper_bit = match mode {
+                        ShiftMode::Arithmetic => upper_bit, // extend bit 7
+                        ShiftMode::Logical => false, // always 0 in bit 7
+                        ShiftMode::Rotate => state.reg.get_flag(Flag::C), // carry in bit 0
+                        ShiftMode::RotateCarry => lower_bit, // bit 0 goes to bit 7
+                    };
+                    if set_upper_bit { // bit 7 is 0 already
+                        v = v | 0x80;
+                    }
+                    carry = lower_bit;
+                }
             }
-
-            println!("{} {} {} {}", v, upper_bit, lower_bit, set_upper_bit);
-
-            state.reg.set8(r, v);
-            state.reg.put_flag(Flag::C, lower_bit);
-
+            state.set_reg(r, v);
+            state.reg.put_flag(Flag::C, carry);
             state.reg.clear_flag(Flag::H);
             state.reg.clear_flag(Flag::N);
             if !fast {
@@ -97,11 +71,11 @@ pub fn build_right_r(r: Reg8, mode: ShiftMode, fast: bool) -> Opcode {
 
 pub fn build_bit_r(bit: u8, r: Reg8) -> Opcode {
     Opcode {
-        name: format!("BIT {}, {:?}", bit, r),
+        name: format!("BIT {}, {}", bit, r),
         bytes: 1,
-        cycles: 8,
+        cycles: 8, // (HL) 8, (IX+d) 20
         action: Box::new(move |state: &mut State| {
-            let v8 = state.reg.get8(r);
+            let v8 = state.get_reg(r);
             let v1 = (v8 & (1<<bit)) != 0;
             state.reg.put_flag(Flag::Z, v1);
         })
@@ -110,26 +84,26 @@ pub fn build_bit_r(bit: u8, r: Reg8) -> Opcode {
 
 pub fn build_set_r(bit: u8, r: Reg8) -> Opcode {
     Opcode {
-        name: format!("SET {}, {:?}", bit, r),
+        name: format!("SET {}, {}", bit, r),
         bytes: 1,
-        cycles: 8,
+        cycles: 8, // (HL) 15, (IX+d) 23
         action: Box::new(move |state: &mut State| {
-            let mut v = state.reg.get8(r);
+            let mut v = state.get_reg(r);
             v = v | (1<<bit);
-            state.reg.set8(r, v);
+            state.set_reg(r, v);
         })
     }
 }
 
 pub fn build_res_r(bit: u8, r: Reg8) -> Opcode {
     Opcode {
-        name: format!("RES {}, {:?}", bit, r),
+        name: format!("RES {}, {}", bit, r),
         bytes: 1,
-        cycles: 8,
+        cycles: 8, // (HL) 15, (IX+d) 23
         action: Box::new(move |state: &mut State| {
-            let mut v = state.reg.get8(r);
+            let mut v = state.get_reg(r);
             v = v & !(1<<bit);
-            state.reg.set8(r, v);
+            state.set_reg(r, v);
         })
     }
 }

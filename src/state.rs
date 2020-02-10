@@ -27,7 +27,6 @@ impl State {
         let pc = self.reg.get_pc();
         let value = self.mem.peek(pc);
         self.reg.set_pc(pc + 1); // TOOD: wrap
-        //println!("Read: 0x{:02x}, PC: 0x{:04x}", value, self.reg.get16(&Reg16::PC));
         value
     }
 
@@ -61,6 +60,27 @@ impl State {
         self.reg.set16(Reg16::SP, sp);
         (l as u16) + ((h as u16) << 8)
     }
+
+    pub fn get_reg(& self, reg: Reg8) -> u8 {
+        if reg == Reg8::_HL {
+            // Pseudo register (HL)
+            let address = self.reg.get16(Reg16::HL);
+            self.mem.peek(address)
+        } else {
+            self.reg.get8(reg)
+        }
+    }
+
+    pub fn set_reg(&mut self, reg: Reg8, value: u8) {
+        if reg == Reg8::_HL {
+            // Pseudo register (HL)
+            let address = self.reg.get16(Reg16::HL);
+            self.mem.poke(address, value);
+        } else {
+            self.reg.set8(reg, value);
+        }
+    }
+
 }
 
 #[cfg(test)]

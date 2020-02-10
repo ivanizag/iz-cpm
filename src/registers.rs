@@ -1,6 +1,7 @@
+use std::fmt;
 
 // 8 bit registers
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Reg8 {
     A,
     B,
@@ -48,6 +49,15 @@ pub enum Flag {
     S  = 128
 }
 
+impl fmt::Display for Reg8 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Reg8::_HL => write!(f, "(HL)"),
+            _ => write!(f, "{:?}", *self)
+        }
+    }
+}
+
 
 #[derive(Debug)]
 pub struct Registers {
@@ -68,10 +78,16 @@ impl Registers {
     }
 
     pub fn get8(&self, reg: Reg8) -> u8 {
+        if reg == Reg8::_HL {
+            panic!("Can't use the pseudo register (HL)");
+        }
         self.data[reg as usize]
     }
 
     pub fn set8(&mut self, reg: Reg8, value: u8) {
+        if reg == Reg8::_HL {
+            panic!("Can't use the pseudo register (HL)");
+        }
         self.data[reg as usize] = value;
     }
 

@@ -81,43 +81,18 @@ pub fn build_inc_dec_r(r: Reg8, inc: bool) -> Opcode {
     let overflow = if inc {0x80} else {0x7f};
     let half_overflow = if inc {0x00} else {0x0f};
     Opcode {
-        name: format!("{} {:?}", mnemonic, r),
+        name: format!("{} {}", mnemonic, r),
         bytes: 1,
-        cycles: 4,
+        cycles: 4, // (HL) 11, (IX+d) 23
         action: Box::new(move |state: &mut State| {
-            let mut v = state.reg.get8(r);
+            let mut v = state.get_reg(r);
             v = v.wrapping_add(delta);
-            state.reg.set8(r, v); 
+            state.set_reg(r, v); 
 
             state.reg.update_sz53_flags(v);
             state.reg.clear_flag(Flag::N);
             state.reg.put_flag(Flag::P, v == overflow);
             state.reg.put_flag(Flag::H, (v & 0x0F) == half_overflow);
-            // Flag::C is not affected
-        })
-    }        
-}
-
-pub fn build_inc_dec_phl(inc: bool) -> Opcode {
-    let delta = if inc {1} else {-1 as i8 as u8};
-    let mnemonic = if inc {"INC"} else {"DEC"};
-    let overflow = if inc {0x80} else {0x7f};
-    let half_overflow = if inc {0x00} else {0x0f};
-    Opcode {
-        name: format!("{} (HL)", mnemonic),
-        bytes: 1,
-        cycles: 11,
-        action: Box::new(move |state: &mut State| {
-            let p = state.reg.get16(Reg16::HL);
-            let mut v = state.mem.peek(p);
-            v = v.wrapping_add(delta);
-            state.mem.poke(p, v); 
-
-            state.reg.update_sz53_flags(v);
-            state.reg.clear_flag(Flag::N);
-            state.reg.put_flag(Flag::P, v == overflow);
-            state.reg.put_flag(Flag::H, (v & 0x0F) == half_overflow);
-            // Flag::C is not affected
         })
     }        
 }

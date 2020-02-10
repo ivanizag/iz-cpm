@@ -52,31 +52,31 @@ use super::registers::*;
 // 8 bit load
 pub fn build_ld_r_r(dst: Reg8, src: Reg8, special: bool) -> Opcode {
     Opcode {
-        name: format!("LD {:?}, {:?}", dst, src),
+        name: format!("LD {}, {}", dst, src),
         bytes: 1,
-        cycles: if special {9} else {4},
+        cycles: if special {9} else {4}, // (HL) 7, (IX+d) 19
         action: Box::new(move |state: &mut State| {
-            let value = state.reg.get8(src);
-            state.reg.set8(dst, value);
+            let value = state.get_reg(src);
+            state.set_reg(dst, value);
         })
     }
 }
 
 pub fn build_ld_r_n(r: Reg8) -> Opcode {
     Opcode {
-        name: format!("LD {:?}, X", r),
+        name: format!("LD {}, X", r),
         bytes: 2,
         cycles: 7,
         action: Box::new(move |state: &mut State| {
             let value = state.advance_pc();
-            state.reg.set8(r, value);
+            state.set_reg(r, value);
         })
     }
 }
 
 pub fn build_ld_r_prr(r: Reg8, rr: Reg16) -> Opcode {
     Opcode {
-        name: format!("LD {:?}, ({:?})", r, rr),
+        name: format!("LD {}, ({:?})", r, rr),
         bytes: 1,
         cycles: 7,
         action: Box::new(move |state: &mut State| {
@@ -89,7 +89,7 @@ pub fn build_ld_r_prr(r: Reg8, rr: Reg16) -> Opcode {
 
 pub fn build_ld_r_pnn(r: Reg8) -> Opcode {
     Opcode {
-        name: format!("LD {:?}, (XX)", r),
+        name: format!("LD {}, (XX)", r),
         bytes: 1,
         cycles: 13,
         action: Box::new(move |state: &mut State| {
@@ -102,7 +102,7 @@ pub fn build_ld_r_pnn(r: Reg8) -> Opcode {
 
 pub fn build_ld_prr_r(rr: Reg16, r: Reg8) -> Opcode {
     Opcode {
-        name: format!("LD {:?}, ({:?})", r, rr),
+        name: format!("LD {}, ({:?})", r, rr),
         bytes: 1,
         cycles: 7,
         action: Box::new(move |state: &mut State| {
@@ -130,7 +130,7 @@ pub fn build_ld_prr_n(rr: Reg16) -> Opcode {
 
 pub fn build_ld_pnn_r(r: Reg8) -> Opcode {
     Opcode {
-        name: format!("LD {:?}, (XX)", r),
+        name: format!("LD {}, (XX)", r),
         bytes: 1,
         cycles: 13,
         action: Box::new(move |state: &mut State| {

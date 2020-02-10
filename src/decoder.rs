@@ -224,26 +224,11 @@ impl Decoder {
                         1 =>  Some(build_inc_dec_rr(RP[p.p], false)), // DEC rr -- 16-bit dec
                         _ => panic!("Unreachable")                       
                     },
-                    4 => match p.y {
-                        6 => Some(build_inc_dec_phl(true)), // INC (HL) -- 8 bit inc
-                        0..=7 => Some(build_inc_dec_r(R[p.y], true)), // INC r -- 8 bit inc
-                        _ => panic!("Unreachable")
-                    },
-                    5 => match p.y {
-                        6 => Some(build_inc_dec_phl(false)), // DEC (HL) -- 8 bit dec
-                        0..=7 => Some(build_inc_dec_r(R[p.y], false)), // DEC r -- 8 bit dec
-                        _ => panic!("Unreachable")
-                    },
-                    6 => match p.y {
-                        6 => Some(build_ld_prr_n(Reg16::HL)), // LD (HL), n -- 8 bit load imm
-                        0..=7 => Some(build_ld_r_n(R[p.y])), // LD r, n -- 8 bit load imm
-                        _ => panic!("Unreachable")
-                    },
+                    4 => Some(build_inc_dec_r(R[p.y], true)), // INC r -- 8 bit inc
+                    5 => Some(build_inc_dec_r(R[p.y], false)), // DEC r -- 8 bit dec
+                    6 => Some(build_ld_r_n(R[p.y])), // LD r, n -- 8 bit load imm
                     7 => match p.y {
-                        0 => Some(build_left_r(Reg8::A, ShiftMode::RotateCarry, true)),
-                        1 => Some(build_right_r(Reg8::A, ShiftMode::RotateCarry, true)),
-                        2 => Some(build_left_r(Reg8::A, ShiftMode::Rotate, true)),
-                        3 => Some(build_right_r(Reg8::A, ShiftMode::Rotate, true)),
+                        0..=3 => Some(build_rot_r(Reg8::A, ROT[p.y], true)), // rotA
                         4 => None, // DAA, decimal adjust A
                         5 => Some(build_cpl()), // CPL, complement adjust A
                         6 => Some(build_scf()), // SCF, set carry flag
@@ -252,18 +237,9 @@ impl Decoder {
                     },
                     _ => panic!("Unreachable")
                 },
-                1 => match p.y {
-                    6 => match p.z {
-                        6 => Some(build_halt()),
-                        0..=7 => None, // LD (HL), r -- 8 bit loading
-                        _ => panic!("Unreachable")
-                    },
-                    0..=7 => match p.z {
-                        6 => Some(build_ld_r_prr(R[p.y], Reg16::HL)), // LD r, (HL) -- 8 bit loading
-                        0..=7 => Some(build_ld_r_r(R[p.y], R[p.z], false)), // LD r[y], r[z] -- 8 bit load imm
-                        _ => panic!("Unreachable")
-                    }
-                    _ => panic!("Unreachable")
+                1 => match (p.z, p.y) {
+                    (6, 6) => Some(build_halt()), // HALT, excetion instead of LD (HL), (HL)
+                    _ => Some(build_ld_r_r(R[p.y], R[p.z], false)), // LD r[y], r[z] -- 8 bit load imm
                 },
                 2 => None,
                 3 => match p.z {
@@ -321,26 +297,12 @@ impl Decoder {
     fn load_prefix_cb(&mut self) {
         for c in 0..=255 {
             let p = DecodingHelper::parts(c);
-            let opcode = match p.z {
-                6 => None, // (HL) bit manipulation
-                0..=7 =>  match p.x {
-                    0 => match p.y {
-                        0 => Some(build_left_r(R[p.z], ShiftMode::RotateCarry, false)), // RLC r
-                        1 => Some(build_right_r(R[p.z], ShiftMode::RotateCarry, false)), // RRC r
-                        2 => Some(build_left_r(R[p.z], ShiftMode::Rotate, false)), // RL r
-                        3 => Some(build_right_r(R[p.z], ShiftMode::Rotate, false)), // RR r
-                        4 => Some(build_left_r(R[p.z], ShiftMode::Arithmetic, false)), // SLA r
-                        5 => Some(build_right_r(R[p.z], ShiftMode::Arithmetic, false)), // SRA r
-                        6 => Some(build_left_r(R[p.z], ShiftMode::Logical, false)), // SSL r
-                        7 => Some(build_right_r(R[p.z], ShiftMode::Logical, false)), // SRL r
-                        _ => panic!("Unreachable")
-                    },
-                    1 => Some(build_bit_r(p.y as u8, R[p.z])), // BIT
-                    2 => Some(build_res_r(p.y as u8, R[p.z])), // RES
-                    3 => Some(build_set_r(p.y as u8, R[p.z])), // SET
-                    4..=7 => None, // Invalid instruction NONI + NOP
-                    _ => panic!("Unreachable")
-                },
+            let opcode = match p.x {
+                0 => Some(build_rot_r(R[p.z], ROT[p.y], false)), // Shifts
+                1 => Some(build_bit_r(p.y as u8, R[p.z])), // BIT
+                2 => Some(build_res_r(p.y as u8, R[p.z])), // RES
+                3 => Some(build_set_r(p.y as u8, R[p.z])), // SET
+                4..=7 => None, // Invalid instruction NONI + NOP
                 _ => panic!("Unreachable")
             };
 
@@ -435,4 +397,15 @@ pub const CC: [(Flag, bool, &'static str); 8] = [
     (Flag::P, true,  "PE"),
     (Flag::S, false, "P"),
     (Flag::S, true,  "N")
+];
+
+pub const ROT: [(ShiftDir, ShiftMode, &'static str); 8] = [
+    (ShiftDir::Left,  ShiftMode::RotateCarry, "RLC"),
+    (ShiftDir::Right, ShiftMode::RotateCarry, "RRC"),
+    (ShiftDir::Left,  ShiftMode::Rotate,      "RL" ),
+    (ShiftDir::Right, ShiftMode::Rotate,      "RR" ),
+    (ShiftDir::Left,  ShiftMode::Arithmetic,  "SLA"),
+    (ShiftDir::Right, ShiftMode::Arithmetic,  "SRA"),
+    (ShiftDir::Left,  ShiftMode::Logical,     "SLL"),
+    (ShiftDir::Right, ShiftMode::Logical,     "SRL"),
 ];
