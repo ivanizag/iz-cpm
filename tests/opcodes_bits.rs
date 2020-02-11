@@ -167,3 +167,14 @@ fn test_res_c() {
     assert_eq!(0b00010011, cpu.state.reg.get8(Reg8::C));
     assert_eq!(false, cpu.state.reg.get_flag(Flag::Z));
 }
+
+#[test]
+fn test_cpl() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0x2f);  // CPL
+    cpu.state.reg.set8(Reg8::A, 0x3d);
+
+    cpu.execute_instruction();
+
+    assert_eq!(0xc2, cpu.state.reg.get8(Reg8::A));
+}

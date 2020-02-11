@@ -1,4 +1,5 @@
 use super::opcode::*;
+use super::opcode_arith::*;
 use super::opcode_bits::*;
 use super::opcode_jumps::*;
 use super::opcode_ld::*;
