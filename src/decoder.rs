@@ -328,7 +328,7 @@ impl Decoder {
                         1 => Some(build_ld_rr_pnn(RP[p.p])), // LD rr, (nn) -- 16 bit loading
                         _ => panic!("Unreachable")
                     },
-                    4 => None,
+                    4 => Some(build_neg()), // NEG
                     5 => None,
                     6 => None,
                     7 => match p.y {

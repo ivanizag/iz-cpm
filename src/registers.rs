@@ -165,7 +165,8 @@ impl Registers {
     }
 
     pub fn update_p_flag(&mut self, reference: u8) {
-        self.put_flag(Flag::P, (reference & 1) == 0);
+        let bits = reference.count_ones();
+        self.put_flag(Flag::P, bits % 2 == 0);
     }
 
     pub fn get_pc(&self) -> u16 {

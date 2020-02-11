@@ -20,6 +20,19 @@ fn test_two_opcodes() {
 }
 
 #[test]
+fn test_neg_a() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0xed);  // NEG
+    cpu.state.mem.poke(0x0001, 0x44);
+    cpu.state.reg.set8(Reg8::A, 0xff);
+
+    cpu.execute_instruction();
+
+    assert_eq!(0x01, cpu.state.reg.get8(Reg8::A));
+}
+
+
+#[test]
 fn test_inc_a() {
     let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
     cpu.state.mem.poke(0x0000, 0x3c);  // INC A

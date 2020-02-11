@@ -91,6 +91,24 @@ pub fn build_inc_dec_r(r: Reg8, inc: bool) -> Opcode {
     }        
 }
 
+pub fn build_neg() -> Opcode {
+    Opcode {
+        name: "NEG".to_string(),
+        cycles: 8,
+        action: Box::new(move |state: &mut State| {
+            let mut v = state.reg.get8(Reg8::A);
+            v = (0 - (v as i8)) as u8;
+            state.reg.set8(Reg8::A, v);
+
+            state.reg.put_flag(Flag::C, v == 0);
+            state.reg.put_flag(Flag::H, v == 0x80); // NEG 0x80 is 0x80
+            state.reg.set_flag(Flag::N);
+            state.reg.update_sz53_flags(v);
+            state.reg.update_p_flag(v);
+        })
+    }
+}
+
 pub fn build_cpl() -> Opcode {
     Opcode {
         name: "CPL".to_string(),
