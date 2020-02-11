@@ -53,7 +53,6 @@ use super::registers::*;
 pub fn build_ld_r_r(dst: Reg8, src: Reg8, special: bool) -> Opcode {
     Opcode {
         name: format!("LD {}, {}", dst, src),
-        bytes: 1,
         cycles: if special {9} else {4}, // (HL) 7, (IX+d) 19
         action: Box::new(move |state: &mut State| {
             let value = state.get_reg(src);
@@ -65,7 +64,6 @@ pub fn build_ld_r_r(dst: Reg8, src: Reg8, special: bool) -> Opcode {
 pub fn build_ld_r_n(r: Reg8) -> Opcode {
     Opcode {
         name: format!("LD {}, X", r),
-        bytes: 2,
         cycles: 7,
         action: Box::new(move |state: &mut State| {
             let value = state.advance_pc();
@@ -77,7 +75,6 @@ pub fn build_ld_r_n(r: Reg8) -> Opcode {
 pub fn build_ld_r_prr(r: Reg8, rr: Reg16) -> Opcode {
     Opcode {
         name: format!("LD {}, ({:?})", r, rr),
-        bytes: 1,
         cycles: 7,
         action: Box::new(move |state: &mut State| {
             let address = state.reg.get16(rr);
@@ -90,7 +87,6 @@ pub fn build_ld_r_prr(r: Reg8, rr: Reg16) -> Opcode {
 pub fn build_ld_r_pnn(r: Reg8) -> Opcode {
     Opcode {
         name: format!("LD {}, (XX)", r),
-        bytes: 1,
         cycles: 13,
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
@@ -103,7 +99,6 @@ pub fn build_ld_r_pnn(r: Reg8) -> Opcode {
 pub fn build_ld_prr_r(rr: Reg16, r: Reg8) -> Opcode {
     Opcode {
         name: format!("LD {}, ({:?})", r, rr),
-        bytes: 1,
         cycles: 7,
         action: Box::new(move |state: &mut State| {
             let value = state.reg.get8(r);
@@ -117,7 +112,6 @@ pub fn build_ld_prr_r(rr: Reg16, r: Reg8) -> Opcode {
 pub fn build_ld_prr_n(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("LD ({:?}), XX", rr),
-        bytes: 1,
         cycles: 7,
         action: Box::new(move |state: &mut State| {
             let value = state.advance_pc();
@@ -131,7 +125,6 @@ pub fn build_ld_prr_n(rr: Reg16) -> Opcode {
 pub fn build_ld_pnn_r(r: Reg8) -> Opcode {
     Opcode {
         name: format!("LD {}, (XX)", r),
-        bytes: 1,
         cycles: 13,
         action: Box::new(move |state: &mut State| {
             let value = state.reg.get8(r);
@@ -147,7 +140,6 @@ pub fn build_ld_pnn_r(r: Reg8) -> Opcode {
 pub fn build_ld_rr_nn(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("LD {:?}, XX", rr),
-        bytes: 3,
         cycles: 10,
         action: Box::new(move |state: &mut State| {
             let value = state.advance_immediate16();
@@ -159,7 +151,6 @@ pub fn build_ld_rr_nn(rr: Reg16) -> Opcode {
 pub fn build_ld_rr_rr(dst: Reg16, src: Reg16) -> Opcode {
     Opcode {
         name: format!("LD {:?}, {:?}", dst, src),
-        bytes: 3,
         cycles: 6,
         action: Box::new(move |state: &mut State| {
             let value = state.reg.get16(src);
@@ -171,7 +162,6 @@ pub fn build_ld_rr_rr(dst: Reg16, src: Reg16) -> Opcode {
 pub fn build_ld_pnn_rr(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("LD (XX), {:?}", rr),
-        bytes: 3,
         cycles: 20,
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
@@ -184,7 +174,6 @@ pub fn build_ld_pnn_rr(rr: Reg16) -> Opcode {
 pub fn build_ld_rr_pnn(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("LD {:?}, (XX)", rr),
-        bytes: 3,
         cycles: 20,
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
@@ -197,7 +186,6 @@ pub fn build_ld_rr_pnn(rr: Reg16) -> Opcode {
 pub fn build_ex_af() -> Opcode {
     Opcode {
         name: "EX AF, AF'".to_string(),
-        bytes: 1,
         cycles: 4,
         action: Box::new(|state: &mut State| {
             state.reg.swap(Reg16::AF);
@@ -208,7 +196,6 @@ pub fn build_ex_af() -> Opcode {
 pub fn build_exx() -> Opcode {
     Opcode {
         name: "EXX".to_string(),
-        bytes: 1,
         cycles: 4,
         action: Box::new(|state: &mut State| {
             state.reg.swap(Reg16::BC);
@@ -221,7 +208,6 @@ pub fn build_exx() -> Opcode {
 pub fn build_ex_de_hl() -> Opcode {
     Opcode {
         name: "EX DE, HL".to_string(),
-        bytes: 1,
         cycles: 4,
         action: Box::new(move |state: &mut State| {
             let temp = state.reg.get16(Reg16::HL);
@@ -234,7 +220,6 @@ pub fn build_ex_de_hl() -> Opcode {
 pub fn build_ex_psp_rr(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("EX (SP), {:?}", rr),
-        bytes: 1,
         cycles: 19,
         action: Box::new(move |state: &mut State| {
             let address = state.reg.get16(Reg16::SP);

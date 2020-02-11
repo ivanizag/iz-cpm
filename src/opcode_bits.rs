@@ -20,7 +20,6 @@ pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast
     let separator = if fast {""} else {" "};
     Opcode {
         name: format!("{}{}{}", name, separator, r),
-        bytes: 1,
         cycles: if fast {4} else {8},
         action: Box::new(move |state: &mut State| {
             let mut v = state.get_reg(r);
@@ -72,7 +71,6 @@ pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast
 pub fn build_bit_r(bit: u8, r: Reg8) -> Opcode {
     Opcode {
         name: format!("BIT {}, {}", bit, r),
-        bytes: 1,
         cycles: 8, // (HL) 8, (IX+d) 20
         action: Box::new(move |state: &mut State| {
             let v8 = state.get_reg(r);
@@ -85,7 +83,6 @@ pub fn build_bit_r(bit: u8, r: Reg8) -> Opcode {
 pub fn build_set_r(bit: u8, r: Reg8) -> Opcode {
     Opcode {
         name: format!("SET {}, {}", bit, r),
-        bytes: 1,
         cycles: 8, // (HL) 15, (IX+d) 23
         action: Box::new(move |state: &mut State| {
             let mut v = state.get_reg(r);
@@ -98,7 +95,6 @@ pub fn build_set_r(bit: u8, r: Reg8) -> Opcode {
 pub fn build_res_r(bit: u8, r: Reg8) -> Opcode {
     Opcode {
         name: format!("RES {}, {}", bit, r),
-        bytes: 1,
         cycles: 8, // (HL) 15, (IX+d) 23
         action: Box::new(move |state: &mut State| {
             let mut v = state.get_reg(r);

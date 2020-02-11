@@ -6,7 +6,6 @@ use super::registers::*;
 pub fn build_djnz() -> Opcode {
     Opcode {
         name: "DJNZ d".to_string(),
-        bytes: 2,
         cycles: 8, // TODO: 13 jump,
         action: Box::new(move |state: &mut State| {
             let offset = state.advance_pc();
@@ -23,7 +22,6 @@ pub fn build_djnz() -> Opcode {
 pub fn build_jr_unconditional() -> Opcode {
     Opcode {
         name: "JR d".to_string(),
-        bytes: 2,
         cycles: 12,
         action: Box::new(move |state: &mut State| {
             let offset = state.advance_pc();
@@ -35,7 +33,6 @@ pub fn build_jr_unconditional() -> Opcode {
 pub fn build_jr_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
     Opcode {
         name: format!("JR {}, d", name),
-        bytes: 2,
         cycles: 7, // TODO: 12 jump,
         action: Box::new(move |state: &mut State| {
             let offset = state.advance_pc();
@@ -58,7 +55,6 @@ fn relative_jump(state: &mut State, offset: u8) {
 pub fn build_jp_unconditional() -> Opcode {
     Opcode {
         name: "JP d".to_string(),
-        bytes: 2,
         cycles: 10,
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
@@ -70,7 +66,6 @@ pub fn build_jp_unconditional() -> Opcode {
 pub fn build_jp_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
     Opcode {
         name: format!("JP {}, nn", name),
-        bytes: 2,
         cycles: 10, // TODO: 10 jump, review
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
@@ -85,7 +80,6 @@ pub fn build_jp_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
 pub fn build_call() -> Opcode {
     Opcode {
         name: "CALL nn".to_string(),
-        bytes: 3,
         cycles: 10,
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
@@ -98,7 +92,6 @@ pub fn build_call() -> Opcode {
 pub fn build_call_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
     Opcode {
         name: format!("CALL {}, nn", name),
-        bytes: 3,
         cycles: 10, // TODO: 17 calls,
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
@@ -113,7 +106,6 @@ pub fn build_call_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
 pub fn build_rst(d: u8) -> Opcode {
     Opcode {
         name: format!("RST {:02x}h", d),
-        bytes: 1,
         cycles: 11,
         action: Box::new(move |state: &mut State| {
             let address = d as u16;
@@ -127,7 +119,6 @@ pub fn build_rst(d: u8) -> Opcode {
 pub fn build_ret() -> Opcode {
     Opcode {
         name: "RET".to_string(),
-        bytes: 1,
         cycles: 10,
         action: Box::new(move |state: &mut State| {
             let pc = state.pop();
@@ -139,7 +130,6 @@ pub fn build_ret() -> Opcode {
 pub fn build_ret_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
     Opcode {
         name: format!("RET {}", name),
-        bytes: 1,
         cycles: 5, // TODO: 11 returns,
         action: Box::new(move |state: &mut State| {
             if state.reg.get_flag(flag) == value {

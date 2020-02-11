@@ -5,14 +5,13 @@ type OpcodeFn = dyn Fn(&mut State) -> ();
 
 pub struct Opcode {
     pub name: String,
-    pub bytes: usize,
     pub cycles: u64,
     pub action: Box<OpcodeFn>,
 }
 
 impl Opcode {
-    fn new (name: String, bytes: usize, cycles: u64, action: Box<OpcodeFn>) -> Opcode {
-        Opcode {name, bytes, cycles, action}
+    fn new (name: String, cycles: u64, action: Box<OpcodeFn>) -> Opcode {
+        Opcode {name, cycles, action}
     }
 
     pub fn execute(&self, state: &mut State) {
@@ -24,7 +23,6 @@ impl Opcode {
 pub fn build_nop() -> Opcode {
     Opcode {
         name: "NOP".to_string(),
-        bytes: 1,
         cycles: 4,
         action: Box::new(|_: &mut State| {
             // Nothing done
@@ -35,7 +33,6 @@ pub fn build_nop() -> Opcode {
 pub fn build_noni_nop() -> Opcode {
     Opcode {
         name: "NONINOP".to_string(),
-        bytes: 1,
         cycles: 4,
         action: Box::new(|_: &mut State| {
             // Nothing done
@@ -47,7 +44,6 @@ pub fn build_noni_nop() -> Opcode {
 pub fn build_add_hl_rr(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("ADD HL, {:?}", rr),
-        bytes: 1,
         cycles: 11,
         action: Box::new(move |state: &mut State| {
             let mut v = state.reg.get16(Reg16::HL);
@@ -64,7 +60,6 @@ pub fn build_inc_dec_rr(rr: Reg16, inc: bool) -> Opcode {
     let mnemonic = if inc {"INC"} else {"DEC"};
     Opcode {
         name: format!("{} {:?}", mnemonic, rr),
-        bytes: 1,
         cycles: 6,
         action: Box::new(move |state: &mut State| {
             let mut v = state.reg.get16(rr);
@@ -82,7 +77,6 @@ pub fn build_inc_dec_r(r: Reg8, inc: bool) -> Opcode {
     let half_overflow = if inc {0x00} else {0x0f};
     Opcode {
         name: format!("{} {}", mnemonic, r),
-        bytes: 1,
         cycles: 4, // (HL) 11, (IX+d) 23
         action: Box::new(move |state: &mut State| {
             let mut v = state.get_reg(r);
@@ -100,7 +94,6 @@ pub fn build_inc_dec_r(r: Reg8, inc: bool) -> Opcode {
 pub fn build_cpl() -> Opcode {
     Opcode {
         name: "CPL".to_string(),
-        bytes: 1,
         cycles: 4,
         action: Box::new(move |state: &mut State| {
             let mut v = state.reg.get8(Reg8::A);
@@ -116,7 +109,6 @@ pub fn build_cpl() -> Opcode {
 pub fn build_scf() -> Opcode {
     Opcode {
         name: "SCF".to_string(),
-        bytes: 1,
         cycles: 4,
         action: Box::new(move |state: &mut State| {
             state.reg.set_flag(Flag::C);
@@ -129,7 +121,6 @@ pub fn build_scf() -> Opcode {
 pub fn build_ccf() -> Opcode {
     Opcode {
         name: "SCF".to_string(),
-        bytes: 1,
         cycles: 4,
         action: Box::new(move |state: &mut State| {
             state.reg.put_flag(Flag::C, !state.reg.get_flag(Flag::C));
@@ -142,7 +133,6 @@ pub fn build_ccf() -> Opcode {
 pub fn build_halt() -> Opcode {
     Opcode {
         name: "HALT".to_string(),
-        bytes: 1,
         cycles: 4,
         action: Box::new(move |state: &mut State| {
             state.halted = true;
@@ -153,7 +143,6 @@ pub fn build_halt() -> Opcode {
 pub fn build_pop_rr(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("POP {:?}", rr),
-        bytes: 1,
         cycles: 10,
         action: Box::new(move |state: &mut State| {
             let value = state.pop();
@@ -165,7 +154,6 @@ pub fn build_pop_rr(rr: Reg16) -> Opcode {
 pub fn build_push_rr(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("PUSH {:?}", rr),
-        bytes: 1,
         cycles: 11,
         action: Box::new(move |state: &mut State| {
             let value = state.reg.get16(rr);
