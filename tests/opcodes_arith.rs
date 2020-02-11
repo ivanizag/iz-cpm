@@ -16,7 +16,6 @@ fn test_neg_a() {
     assert_eq!(0x01, cpu.state.reg.get8(Reg8::A));
 }
 
-
 #[test]
 fn test_inc_a() {
     let mut cpu = Cpu::new(Box::new(PlainMemory::new()));

@@ -143,3 +143,35 @@ pub fn build_ccf() -> Opcode {
     }
 }
 
+pub fn build_rxd(dir: ShiftDir, name: &str) -> Opcode {
+    Opcode {
+        name: name.to_string(),
+        cycles: 18,
+        action: Box::new(move |state: &mut State| {
+            let mut a = state.get_reg(Reg8::A);
+            let mut phl = state.get_reg(Reg8::_HL);
+            // a = 0xWX, phl = 0xYZ
+            match dir {
+                ShiftDir::Left => {
+                    // a= 0xWY, phl = 0xZX
+                    let temp = (a & 0xf0) | (phl >> 4);
+                    phl = (phl << 4) | (a & 0x0f);
+                    a = temp;
+                },
+                ShiftDir::Right => {
+                    // a= 0xWZ, phl = 0xXY
+                    let temp = (a & 0xf0) | (phl & 0x0f);
+                    phl = (a << 4) | (phl >> 4);
+                    a = temp;
+                }
+            }
+            state.set_reg(Reg8::A, a);
+            state.set_reg(Reg8::_HL, phl);
+
+            state.reg.clear_flag(Flag::H);
+            state.reg.clear_flag(Flag::N);
+            state.reg.update_sz53_flags(a);
+            state.reg.update_p_flag(a);
+        })
+    }
+}

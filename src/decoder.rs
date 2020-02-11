@@ -337,9 +337,10 @@ impl Decoder {
                         1 => Some(build_ld_r_r(Reg8::R, Reg8::A, true)), // LD R, A
                         2 => Some(build_ld_r_r(Reg8::A, Reg8::I, true)), // LD A, I
                         3 => Some(build_ld_r_r(Reg8::A, Reg8::R, true)), // LD A, R
-                        4 => None, // RRD
-                        5 => None, // RLD
-                        6 | 7 => Some(build_nop()), // NOP
+                        4 => Some(build_rxd(ShiftDir::Right, "RRD")), // RRD
+                        5 => Some(build_rxd(ShiftDir::Left, "RLD")),  // RLD
+                        6 => Some(build_nop()), // NOP
+                        7 => Some(build_nop()), // NOP
                         _ => panic!("Unreacheable")
                     },
                     _ => panic!("Unreacheable")

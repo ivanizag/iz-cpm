@@ -178,3 +178,33 @@ fn test_cpl() {
 
     assert_eq!(0xc2, cpu.state.reg.get8(Reg8::A));
 }
+
+#[test]
+fn test_rld() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0xed); // RLD
+    cpu.state.mem.poke(0x0001, 0x6f);
+    cpu.state.reg.set8(Reg8::A, 0xab);
+    cpu.state.reg.set16(Reg16::HL, 0xccdd);
+    cpu.state.mem.poke(0xccdd, 0xcd);
+
+    cpu.execute_instruction();
+
+    assert_eq!(0xac, cpu.state.reg.get8(Reg8::A));
+    assert_eq!(0xdb, cpu.state.mem.peek(0xccdd));
+}
+
+#[test]
+fn test_rrd() {
+    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    cpu.state.mem.poke(0x0000, 0xed); // RRD
+    cpu.state.mem.poke(0x0001, 0x67);
+    cpu.state.reg.set8(Reg8::A, 0xab);
+    cpu.state.reg.set16(Reg16::HL, 0xccdd);
+    cpu.state.mem.poke(0xccdd, 0xcd);
+
+    cpu.execute_instruction();
+
+    assert_eq!(0xad, cpu.state.reg.get8(Reg8::A));
+    assert_eq!(0xbc, cpu.state.mem.peek(0xccdd));
+}
