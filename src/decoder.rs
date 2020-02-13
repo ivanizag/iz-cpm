@@ -251,7 +251,7 @@ impl Decoder {
                         1 => match p.p {
                             0 => Some(build_ret()), // RET
                             1 => Some(build_exx()), // EXX
-                            2 => None, // JP HL
+                            2 => Some(build_jp_hl()), // JP HL
                             3 => Some(build_ld_rr_rr(Reg16::SP, Reg16::HL)), // LD SP, HL
                             _ => panic!("Unreachable")
                         },

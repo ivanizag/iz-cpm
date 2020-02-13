@@ -76,6 +76,17 @@ pub fn build_jp_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
     }
 }
 
+pub fn build_jp_hl() -> Opcode {
+    Opcode {
+        name: "JP (HL)".to_string(),
+        cycles: 4,
+        action: Box::new(move |state: &mut State| {
+            let address = state.reg.get16(Reg16::HL);
+            state.reg.set_pc(address);
+        })
+    }
+}
+
 // Calls to subroutine
 pub fn build_call() -> Opcode {
     Opcode {
