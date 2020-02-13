@@ -8,9 +8,18 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(memory: Box<dyn Memory>) -> Cpu {
+    pub fn new(memory: Box<dyn Memory>, io: Box<dyn Memory>) -> Cpu {
         Cpu {
-            state: State::new(memory),
+            state: State::new(memory, io),
+            decoder: Decoder::new()
+        }
+    }
+
+    pub fn new_plain() -> Cpu {
+        Cpu {
+            state: State::new(
+                Box::new(PlainMemory::new()),
+                Box::new(PlainMemory::new())),
             decoder: Decoder::new()
         }
     }

@@ -2,11 +2,10 @@ extern crate z80;
 
 use z80::cpu::Cpu;
 use z80::registers::*;
-use z80::memory::PlainMemory;
 
 #[test]
 fn test_two_opcodes() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x06);  // LD B, $34
     cpu.state.mem.poke(0x0001, 0x34); 
     cpu.state.mem.poke(0x0002, 0x78);  // LD A, B
@@ -21,7 +20,7 @@ fn test_two_opcodes() {
 
 #[test]
 fn test_push_pop_rr() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0xc5);  // PUSH BC
     cpu.state.mem.poke(0x0001, 0xf1);  // POP AF
     cpu.state.reg.set16(Reg16::BC, 0x1234);

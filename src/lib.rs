@@ -6,6 +6,7 @@ pub mod memory;
 mod opcode;
 mod opcode_arith;
 mod opcode_bits;
+mod opcode_io;
 mod opcode_jumps;
 mod opcode_ld;
 pub mod registers;

@@ -2,11 +2,10 @@ extern crate z80;
 
 use z80::cpu::Cpu;
 use z80::registers::*;
-use z80::memory::PlainMemory;
 
 #[test]
 fn test_neg_a() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0xed);  // NEG
     cpu.state.mem.poke(0x0001, 0x44);
     cpu.state.reg.set8(Reg8::A, 0xff);
@@ -18,7 +17,7 @@ fn test_neg_a() {
 
 #[test]
 fn test_inc_a() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x3c);  // INC A
     cpu.state.reg.set8(Reg8::A, 0xa4);
 
@@ -29,7 +28,7 @@ fn test_inc_a() {
 
 #[test]
 fn test_inc_a_overflow() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x3c);  // INC A
     cpu.state.reg.set8(Reg8::A, 0xff);
 
@@ -40,7 +39,7 @@ fn test_inc_a_overflow() {
 
 #[test]
 fn test_inc_e() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x1c);  // INC E
     cpu.state.reg.set8(Reg8::E, 0x14);
 
@@ -51,7 +50,7 @@ fn test_inc_e() {
 
 #[test]
 fn test_dec_a() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x3d);  // DEC A
     cpu.state.reg.set8(Reg8::A, 0xa4);
 
@@ -62,7 +61,7 @@ fn test_dec_a() {
 
 #[test]
 fn test_dec_a_underflow() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x3d);  // DEC A
     cpu.state.reg.set8(Reg8::A, 0x00);
 
@@ -73,7 +72,7 @@ fn test_dec_a_underflow() {
 
 #[test]
 fn test_inc_de() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x13);  // INC DE
     cpu.state.reg.set16(Reg16::DE, 0xcea4);
 
@@ -84,7 +83,7 @@ fn test_inc_de() {
 
 #[test]
 fn test_inc_de_overflow() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x13);  // INC DE
     cpu.state.reg.set16(Reg16::DE, 0xffff);
 
@@ -95,7 +94,7 @@ fn test_inc_de_overflow() {
 
 #[test]
 fn test_dec_de() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x1b);  // DEC A
     cpu.state.reg.set16(Reg16::DE, 0x1256);
 
@@ -106,7 +105,7 @@ fn test_dec_de() {
 
 #[test]
 fn test_dec_de_underflow() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x1b);  // DEC DE
     cpu.state.reg.set16(Reg16::DE, 0x0000);
 
@@ -117,7 +116,7 @@ fn test_dec_de_underflow() {
 
 #[test]
 fn test_dec_phl() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x35);  // DEC (HL)
     cpu.state.reg.set16(Reg16::HL, 0x23c4);
     cpu.state.mem.poke(0x23c4, 0x67);
@@ -129,7 +128,7 @@ fn test_dec_phl() {
 
 #[test]
 fn test_add_hl_de() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x19);  // ADD HL, DE
     cpu.state.reg.set16(Reg16::HL, 0x1234);
     cpu.state.reg.set16(Reg16::DE, 0x0101);

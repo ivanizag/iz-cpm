@@ -4,23 +4,20 @@ use super::registers::*;
 pub struct State {
     pub reg: Registers,
     pub mem: Box<dyn Memory>,
-    //pub io: xxx
+    pub io: Box<dyn Memory>,
     pub cycles: u64,
     pub halted: bool
 }
 
 impl State {
-    pub fn new(memory: Box<dyn Memory>) -> State {
+    pub fn new(mem: Box<dyn Memory>, io: Box<dyn Memory>) -> State {
         State {
             reg: Registers::new(),
-            mem: memory,
+            mem,
+            io,
             cycles: 0,
             halted: false
         }
-    }
-
-    fn new_plain() -> State {
-        State::new(Box::new(PlainMemory::new()))
     }
 
     pub fn advance_pc(&mut self) -> u8 {
@@ -81,18 +78,4 @@ impl State {
         }
     }
 
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn set_get_8bit_register() {
-        let mut s = State::new(Box::new(PlainMemory::new()));
-        const V:u8 = 23;
-
-        s.reg.set8(Reg8::A, V);
-        assert_eq!(V, s.reg.get8(Reg8::A));
-    }
 }

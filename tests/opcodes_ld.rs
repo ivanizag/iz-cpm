@@ -2,11 +2,10 @@ extern crate z80;
 
 use z80::cpu::Cpu;
 use z80::registers::*;
-use z80::memory::PlainMemory;
 
 #[test]
 fn test_ld_bc_nn() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x01);  // LD BC, $1234
     cpu.state.mem.poke(0x0001, 0x34); 
     cpu.state.mem.poke(0x0002, 0x12); 
@@ -19,7 +18,7 @@ fn test_ld_bc_nn() {
 
 #[test]
 fn test_ld_bc_pnn() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
 
     cpu.state.mem.poke(0x0000, 0xed);  // LD BC, ($1234)
     cpu.state.mem.poke(0x0001, 0x4b); 
@@ -36,7 +35,7 @@ fn test_ld_bc_pnn() {
 
 #[test]
 fn test_ld_pnn_bc() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
 
     cpu.state.mem.poke(0x0000, 0xed);  // LD ($1234), BC
     cpu.state.mem.poke(0x0001, 0x43); 
@@ -51,7 +50,7 @@ fn test_ld_pnn_bc() {
 
 #[test]
 fn test_ld_a_b() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x78);  // LD A, B
     cpu.state.reg.set8(Reg8::B, 0x23);
 
@@ -62,7 +61,7 @@ fn test_ld_a_b() {
 
 #[test]
 fn test_ld_b_n() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x06);  // LD B, $34
     cpu.state.mem.poke(0x0001, 0x34); 
     cpu.state.reg.set8(Reg8::B, 0x9e);
@@ -74,7 +73,7 @@ fn test_ld_b_n() {
 
 #[test]
 fn test_ld_d_e() {
-    let mut cpu = Cpu::new(Box::new(PlainMemory::new()));
+    let mut cpu = Cpu::new_plain();
     cpu.state.mem.poke(0x0000, 0x53);  // LD D, E
     cpu.state.mem.poke(0x0001, 0x34); 
     cpu.state.reg.set8(Reg8::D, 0xdd);

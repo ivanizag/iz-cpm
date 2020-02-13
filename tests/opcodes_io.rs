@@ -1,0 +1,30 @@
+extern crate z80;
+
+use z80::cpu::Cpu;
+use z80::registers::*;
+
+#[test]
+fn test_out_e() {
+    let mut cpu = Cpu::new_plain();
+    cpu.state.mem.poke(0x0000, 0xed); // OUT (C), E
+    cpu.state.mem.poke(0x0001, 0x59);
+    cpu.state.reg.set8(Reg8::E, 0x63);
+    cpu.state.reg.set16(Reg16::BC, 0x6345);
+
+    cpu.execute_instruction();
+
+    assert_eq!(0x63, cpu.state.io.peek(0x6345));
+}
+
+#[test]
+fn test_in_e() {
+    let mut cpu = Cpu::new_plain();
+    cpu.state.mem.poke(0x0000, 0xed); // IN E, (C)
+    cpu.state.mem.poke(0x0001, 0x58);
+    cpu.state.reg.set16(Reg16::BC, 0x6345);
+    cpu.state.io.poke(0x6345, 0x8a);
+
+    cpu.execute_instruction();
+
+    assert_eq!(0x8a, cpu.state.io.peek(0x6345));
+}

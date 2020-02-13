@@ -1,5 +1,6 @@
 use super::opcode::*;
 use super::opcode_arith::*;
+use super::opcode_io::*;
 use super::opcode_bits::*;
 use super::opcode_jumps::*;
 use super::opcode_ld::*;
@@ -260,8 +261,8 @@ impl Decoder {
                     3 => match p.y {
                         0 => Some(build_jp_unconditional()), // JP nn
                         1 => None, // CB prefix
-                        2 => None, // OUT
-                        3 => None, // IN
+                        2 => Some(build_out_n_a()), // OUT (n), A
+                        3 => Some(build_in_a_n()), // IN A, (n)
                         4 => Some(build_ex_psp_rr(Reg16::HL)), // EX (SP), HL
                         5 => Some(build_ex_de_hl()), // EX DE, HL
                         6 => None, // DI
@@ -303,7 +304,6 @@ impl Decoder {
                 1 => Some(build_bit_r(p.y as u8, R[p.z])), // BIT
                 2 => Some(build_res_r(p.y as u8, R[p.z])), // RES
                 3 => Some(build_set_r(p.y as u8, R[p.z])), // SET
-                4..=7 => None, // Invalid instruction NONI + NOP
                 _ => panic!("Unreachable")
             };
 
@@ -321,8 +321,14 @@ impl Decoder {
             let opcode = match p.x {
                 0 | 3 => Some(build_noni_nop()), // Invalid instruction NONI + NOP
                 1 => match p.z {
-                    0 => None,
-                    1 => None,
+                    0 => match p.y {
+                        6 => Some(build_in_0_c()), // IN (C)
+                        _ => Some(build_in_r_c(R[p.y])), // IN r, (C)
+                    }
+                    1 => match p.y {
+                        6 => Some(build_out_c_0()), // OUT (C), 0
+                        _ => Some(build_out_c_r(R[p.y])), // OUT (C), r
+                    }
                     2 => None,
                     3 => match p.q {
                         0 => Some(build_ld_pnn_rr(RP[p.p])), // LD (nn), rr -- 16 bit loading
