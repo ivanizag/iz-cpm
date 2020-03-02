@@ -13,7 +13,7 @@ fn test_out_e() {
 
     cpu.execute_instruction();
 
-    assert_eq!(0x63, cpu.state.io.peek(0x6345));
+    assert_eq!(0x63, cpu.state.port_in(0x6345));
 }
 
 #[test]
@@ -22,9 +22,9 @@ fn test_in_e() {
     cpu.state.mem.poke(0x0000, 0xed); // IN E, (C)
     cpu.state.mem.poke(0x0001, 0x58);
     cpu.state.reg.set16(Reg16::BC, 0x6345);
-    cpu.state.io.poke(0x6345, 0x8a);
+    cpu.state.port_out(0x6345, 0x8a);
 
     cpu.execute_instruction();
 
-    assert_eq!(0x8a, cpu.state.io.peek(0x6345));
+    assert_eq!(0x8a, cpu.state.port_in(0x6345));
 }

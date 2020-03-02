@@ -160,9 +160,9 @@ impl Decoder {
         decoder
     }
 
-    pub fn decode(&self, state: &mut State) -> &Option<Opcode> {
+    pub fn decode(&self, state: &mut State) -> &Opcode {
         let b0 = state.advance_pc();
-        match b0 {
+        let opcode = match b0 {
             0xcb => &self.prefix_cb[state.advance_pc() as usize],
             0xed => &self.prefix_ed[state.advance_pc() as usize],
             0xdd => {
@@ -183,6 +183,12 @@ impl Decoder {
             },
             _ => &self.no_prefix[b0 as usize]
             // TODO: verify how dddd, dded, ddfd, fddd, fded and fdfd work
+        };
+        match opcode {
+            Some(o) => o,
+            None => {
+                panic!("Opcode {:02x} not defined", b0);
+            }
         }
     }
 
@@ -288,10 +294,12 @@ impl Decoder {
                 _ => panic!("Unreachable")
             };
 
+/*
             match opcode.as_ref() {
                 None => println!("0x{:02x} {:20}: {:?}", c, "Pending", p),
                 Some(o) => println!("0x{:02x} {:20}: {:?}", c, o.name, p)
             }
+*/
             self.no_prefix[c as usize] = opcode;
         }
     }
@@ -307,10 +315,12 @@ impl Decoder {
                 _ => panic!("Unreachable")
             };
 
+/*
             match opcode.as_ref() {
                 None => println!("0x{:02x} 0x{:02x} {:15}: {:?}", 0xcb, c, "Pending", p),
                 Some(o) => println!("0x{:02x} 0x{:02x} {:15}: {:?}", 0xcb, c, o.name, p)
             }
+*/
             self.prefix_cb[c as usize] = opcode;
         }
     }
@@ -360,10 +370,12 @@ impl Decoder {
                 _ => panic!("Unreachable")
             };
 
+/*
             match opcode.as_ref() {
                 None => println!("0x{:02x} 0x{:02x} {:15}: {:?}", 0xed, c, "Pending", p),
                 Some(o) => println!("0x{:02x} 0x{:02x} {:15}: {:?}", 0xed, c, o.name, p)
             }
+*/
             self.prefix_ed[c as usize] = opcode;
         }
     }

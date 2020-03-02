@@ -9,7 +9,7 @@ pub fn build_out_c_r(r: Reg8) -> Opcode {
         action: Box::new(move |state: &mut State| {
             let address = state.reg.get16(Reg16::BC);
             let value = state.reg.get8(r);
-            state.io.poke(address, value);
+            state.port_out(address, value);
         })
     }
 }
@@ -20,7 +20,7 @@ pub fn build_out_c_0() -> Opcode {
         cycles: 12,
         action: Box::new(move |state: &mut State| {
             let address = state.reg.get16(Reg16::BC);
-            state.io.poke(address, 0);
+            state.port_out(address, 0);
         })
     }
 }
@@ -32,7 +32,7 @@ pub fn build_out_n_a() -> Opcode {
         action: Box::new(move |state: &mut State| {
             let address = state.advance_pc() as u16;
             let value = state.reg.get8(Reg8::A);
-            state.io.poke(address, value);
+            state.port_out(address, value);
         })
     }
 }
@@ -43,7 +43,7 @@ pub fn build_in_r_c(r: Reg8) -> Opcode {
         cycles: 12,
         action: Box::new(move |state: &mut State| {
             let address = state.reg.get16(Reg16::BC);
-            let value = state.io.peek(address);
+            let value = state.port_in(address);
             state.reg.set8(r, value);
 
             state.reg.clear_flag(Flag::N);
@@ -59,7 +59,7 @@ pub fn build_in_0_c() -> Opcode {
         cycles: 12,
         action: Box::new(move |state: &mut State| {
             let address = state.reg.get16(Reg16::BC);
-            let value = state.io.peek(address);
+            let value = state.port_in(address);
 
             state.reg.clear_flag(Flag::N);
             state.reg.update_sz53_flags(value);
@@ -73,9 +73,12 @@ pub fn build_in_a_n() -> Opcode {
         name: "IN A, (n)".to_string(),
         cycles: 11,
         action: Box::new(move |state: &mut State| {
-            let value = state.reg.get8(Reg8::A);
-            let address = state.advance_pc() as u16 + ((value as u16) << 8);
-            state.io.poke(address, value);
+            // The literal N is placed on lines A0 to A7
+            // A supplied bits A8 to A15
+            let high = state.reg.get8(Reg8::A);
+            let address = state.advance_pc() as u16 + ((high as u16) << 8);
+            let value = state.port_in(address);
+            state.reg.set8(Reg8::A, value);
         })
     }
 }

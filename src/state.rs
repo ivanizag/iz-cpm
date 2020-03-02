@@ -1,20 +1,21 @@
-use super::memory::*;
+use std::cell::RefCell;
+use super::memory_io::*;
 use super::registers::*;
 
 pub struct State {
     pub reg: Registers,
     pub mem: Box<dyn Memory>,
-    pub io: Box<dyn Memory>,
+    pub io: RefCell<Box<dyn Io>>,
     pub cycles: u64,
     pub halted: bool
 }
 
 impl State {
-    pub fn new(mem: Box<dyn Memory>, io: Box<dyn Memory>) -> State {
+    pub fn new(mem: Box<dyn Memory>, io: Box<dyn Io>) -> State {
         State {
             reg: Registers::new(),
             mem,
-            io,
+            io: RefCell::new(io),
             cycles: 0,
             halted: false
         }
@@ -78,4 +79,11 @@ impl State {
         }
     }
 
+    pub fn port_in(&self, address: u16) -> u8 {
+        self.io.borrow().port_in(self, address)
+    }
+
+    pub fn port_out(&self, address: u16, value: u8) {
+        self.io.borrow().port_out(self, address, value);
+    }
 }

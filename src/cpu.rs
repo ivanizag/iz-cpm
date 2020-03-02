@@ -1,5 +1,5 @@
 use super::decoder::*;
-use super::memory::*;
+use super::memory_io::*;
 use super::state::*;
 
 pub struct Cpu {
@@ -8,7 +8,7 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(memory: Box<dyn Memory>, io: Box<dyn Memory>) -> Cpu {
+    pub fn new(memory: Box<dyn Memory>, io: Box<dyn Io>) -> Cpu {
         Cpu {
             state: State::new(memory, io),
             decoder: Decoder::new()
@@ -16,16 +16,22 @@ impl Cpu {
     }
 
     pub fn new_plain() -> Cpu {
+        let memory = Box::new(PlainMemoryIo::new());
+        let io = Box::new(PlainMemoryIo::new());
         Cpu {
             state: State::new(
-                Box::new(PlainMemory::new()),
-                Box::new(PlainMemory::new())),
+                memory,
+                io),
             decoder: Decoder::new()
         }
     }
 
     pub fn execute_instruction(&mut self) {
+        let pc = self.state.reg.get_pc();
         let opcode = self.decoder.decode(&mut self.state);
-        opcode.as_ref().unwrap().execute(&mut self.state)
+        println!("{:04x} {}", pc, opcode.name);
+        opcode.execute(&mut self.state)        
     }
 }
+
+

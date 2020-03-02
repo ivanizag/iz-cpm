@@ -2,7 +2,7 @@
 
 pub mod cpu;
 mod decoder;
-pub mod memory;
+pub mod memory_io;
 mod opcode;
 mod opcode_arith;
 mod opcode_bits;
