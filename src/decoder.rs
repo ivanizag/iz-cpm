@@ -1,4 +1,5 @@
 use super::opcode::*;
+use super::opcode_alu::*;
 use super::opcode_arith::*;
 use super::opcode_io::*;
 use super::opcode_bits::*;
@@ -249,8 +250,18 @@ impl Decoder {
                     (6, 6) => Some(build_halt()), // HALT, excetion instead of LD (HL), (HL)
                     _ => Some(build_ld_r_r(R[p.y], R[p.z], false)), // LD r[y], r[z] -- 8 bit load imm
                 },
-                2 => None,
-                3 => match p.z {
+            2 => match p.y {
+                0 => None, // ADD A, r
+                1 => None, // ADC A, r
+                2 => None, // SUB A, r
+                3 => None, // SBC A, r
+                4 => None, // AND r
+                5 => None, // XOR r
+                6 => Some(build_or_a_r(R[p.z])), // OR r
+                7 => None, // CP r
+                _ => panic!("Unreachable")
+            },
+            3 => match p.z {
                     0 => Some(build_ret_eq(CC[p.y])), // RET cc
                     1 => match p.q {
                         0 => Some(build_pop_rr(RP2[p.p])), // POP rr
@@ -287,13 +298,12 @@ impl Decoder {
                         },
                         _ => panic!("Unreachable")
                     },
-                    6 => None, // alu n
+                    6 => None,
                     7 => Some(build_rst(p.y as u8 * 8)), // RST
                     _ => panic!("Unreachable")
                     },
                 _ => panic!("Unreachable")
             };
-
 /*
             match opcode.as_ref() {
                 None => println!("0x{:02x} {:20}: {:?}", c, "Pending", p),

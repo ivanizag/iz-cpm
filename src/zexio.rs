@@ -5,18 +5,14 @@ use super::registers::*;
 pub struct ZexIo {}
 
 impl Io for ZexIo {
-    fn port_in(&self, state: &State, address: u16) -> u8 {
-        println!("IO address IN {:04x}", address);
-        match address as u8 {
-            5 => ZexIo::bdos(state),
-            _ => {}
-        }
-        0
+    fn port_in(&self, state: &State, _address: u16) -> u8 {
+        //println!("IO address IN {:04x}", address);
+        ZexIo::bdos(state);
+        0xff
     }
 
-    fn port_out(&self, _state: &State, address: u16, value: u8) {
-        println!("IO address OUT {:04x}: {:02x}", address, value);
-        
+    fn port_out(&self, _state: &State, _address: u16, _value: u8) {
+        //println!("IO address OUT {:04x}: {:02x}", address, value);
     }
 }
 
@@ -30,7 +26,6 @@ impl ZexIo {
     }
 
     fn bdos_c_writestr(state: &State) {
-        print!("**** ");
         let mut address = state.reg.get16(Reg16::DE);
         let mut ch = state.mem.peek(address) as char;
         while ch != '$' {

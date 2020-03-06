@@ -4,6 +4,7 @@ pub mod cpu;
 mod decoder;
 pub mod memory_io;
 mod opcode;
+mod opcode_alu;
 mod opcode_arith;
 mod opcode_bits;
 mod opcode_io;

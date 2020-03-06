@@ -3,6 +3,7 @@
 mod decoder;
 mod memory_io;
 mod opcode;
+mod opcode_alu;
 mod opcode_arith;
 mod opcode_bits;
 mod opcode_io;
@@ -19,6 +20,7 @@ use cpu::Cpu;
 use state::State;
 use memory_io::PlainMemoryIo;
 use decoder::Decoder;
+use registers::Reg16;
 use zexio::ZexIo;
 
 fn mainold() {
@@ -42,16 +44,32 @@ fn main() {
     }
 
     // Prepare system calls
-    cpu.state.mem.poke(5, 0xdb); // IN A, $5
-    cpu.state.mem.poke(6, 0x05);
+    cpu.state.mem.poke(5, 0xdb); // IN A, 0
+    cpu.state.mem.poke(6, 0x00);
     cpu.state.mem.poke(7, 0xc9); // RET
 
-
+    println!("Testing \"testfiles/zexdoc.com\"...");
     cpu.state.reg.set_pc(0x100);
     loop {
-        cpu.execute_instruction();
-    }
 
+        //printf("PC(%04x) AF(%04x) BC(%04x) DE(%04x) HL(%04x) SP(%04x) IX(%04x) IY(%04x)\n", pc-1, AF, BC, DE, HL, SP, IX, IY);
+        println!("PC({:04x}) AF({:04x}) BC({:04x}) DE({:04x}) HL({:04x}) SP({:04x}) IX({:04x}) IY({:04x})",
+            cpu.state.reg.get_pc(),
+            cpu.state.reg.get16(Reg16::AF),
+            cpu.state.reg.get16(Reg16::BC),
+            cpu.state.reg.get16(Reg16::DE),
+            cpu.state.reg.get16(Reg16::HL),
+            cpu.state.reg.get16(Reg16::SP),
+            cpu.state.reg.get16(Reg16::IX),
+            cpu.state.reg.get16(Reg16::IX)
+        );
+
+        cpu.execute_instruction();
+        if cpu.state.peek16_pc() == 0xfff0 {
+            return;
+        }
+        //println!("Z: {}", cpu.state.reg.get_flag(Flag::C));
+    }
 }
 
 

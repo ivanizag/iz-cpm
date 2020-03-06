@@ -18,6 +18,27 @@ impl Opcode {
         (self.action)(state);
         state.cycles += self.cycles 
     }
+
+    pub fn disasm(&self, state: &State) -> String {
+        if self.name.contains("nn") {
+            // Immediate argument 16 bits
+            let nn = state.peek16_pc();
+            let nn_str = format!("{:04x}h", nn);
+            self.name.replace("nn", &nn_str)
+        } else if self.name.contains("n") {
+            // Immediate argument 8 bits
+            let n = state.peek_pc();
+            let n_str = format!("{:02x}h", n);
+            self.name.replace("n", &n_str)
+        } else if self.name.contains("n") {
+            // Immediate argument 8 bits signed
+            let d = state.peek_pc() as i8;
+            let d_str = format!("{}", d);
+            self.name.replace("d", &d_str)
+        } else {
+            self.name.clone()
+        }
+    }
 }
 
 pub fn build_nop() -> Opcode {

@@ -63,18 +63,22 @@ impl fmt::Display for Reg8 {
 pub struct Registers {
     data: [u8; REG_COUNT8],
     shadow: [u8; REG_COUNT8],
-    sp: u16,
     pc: u16
 }
 
 impl Registers {
     pub fn new() -> Registers {
-        Registers {
+        let mut reg = Registers {
             data: [0; REG_COUNT8],
             shadow: [0; REG_COUNT8],
-            sp: 0,
             pc: 0
-        }
+        };
+
+        //Init z80 registers
+        reg.set16(Reg16::AF, 0xffff);
+        reg.set16(Reg16::SP, 0xffff);
+
+        reg
     }
 
     pub fn get8(&self, reg: Reg8) -> u8 {
@@ -154,9 +158,9 @@ impl Registers {
 
         // Zero
         if reference == 0 {
-            *f &= !(Flag::Z as u8)
-        } else {
             *f |= Flag::Z as u8
+        } else {
+            *f &= !(Flag::Z as u8)
         }
 
         // Bits 7, 5, and 3 are copied

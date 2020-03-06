@@ -21,11 +21,21 @@ impl State {
         }
     }
 
+    pub fn peek_pc(&self) -> u8 {
+        let pc = self.reg.get_pc();
+        self.mem.peek(pc)
+    }
+
     pub fn advance_pc(&mut self) -> u8 {
         let pc = self.reg.get_pc();
         let value = self.mem.peek(pc);
         self.reg.set_pc(pc + 1); // TOOD: wrap
         value
+    }
+
+    pub fn peek16_pc(&self) -> u16 {
+        let pc = self.reg.get_pc();
+        self.mem.peek(pc) as u16 + ((self.mem.peek(pc+1) as u16) << 8)
     }
 
     pub fn advance_immediate16(&mut self) -> u16 {

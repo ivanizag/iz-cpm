@@ -1,0 +1,178 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'z80'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=z80"
+                ],
+                "filter": {
+                    "name": "z80",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'z80'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=z80",
+                    "--package=z80"
+                ],
+                "filter": {
+                    "name": "z80",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'z80'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=z80",
+                    "--package=z80"
+                ],
+                "filter": {
+                    "name": "z80",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'opcodes_arith'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=opcodes_arith",
+                    "--package=z80"
+                ],
+                "filter": {
+                    "name": "opcodes_arith",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'opcodes_bits'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=opcodes_bits",
+                    "--package=z80"
+                ],
+                "filter": {
+                    "name": "opcodes_bits",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'opcodes_jumps'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=opcodes_jumps",
+                    "--package=z80"
+                ],
+                "filter": {
+                    "name": "opcodes_jumps",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'opcodes_io'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=opcodes_io",
+                    "--package=z80"
+                ],
+                "filter": {
+                    "name": "opcodes_io",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'opcodes_ld'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=opcodes_ld",
+                    "--package=z80"
+                ],
+                "filter": {
+                    "name": "opcodes_ld",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'opcodes'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=opcodes",
+                    "--package=z80"
+                ],
+                "filter": {
+                    "name": "opcodes",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
