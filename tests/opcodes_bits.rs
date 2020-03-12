@@ -134,6 +134,7 @@ fn test_bit_a() {
     cpu.state.mem.poke(0x0000, 0xcb); // BIT 1, A
     cpu.state.mem.poke(0x0001, 0x4f);
     cpu.state.reg.set8(Reg8::A, 0b00010010);
+    cpu.state.reg.clear_flag(Flag::Z);
 
     cpu.execute_instruction();
 
@@ -147,6 +148,7 @@ fn test_set_b() {
     cpu.state.mem.poke(0x0000, 0xcb); // SET 0, B
     cpu.state.mem.poke(0x0001, 0xc0);
     cpu.state.reg.set8(Reg8::B, 0b00010010);
+    cpu.state.reg.clear_flag(Flag::Z);
 
     cpu.execute_instruction();
 
@@ -160,6 +162,7 @@ fn test_res_c() {
     cpu.state.mem.poke(0x0000, 0xcb); // RES 7, C
     cpu.state.mem.poke(0x0001, 0xb9);
     cpu.state.reg.set8(Reg8::C, 0b10010011);
+    cpu.state.reg.clear_flag(Flag::Z);
 
     cpu.execute_instruction();
 

@@ -209,7 +209,6 @@ mod tests {
     fn set_get_flag() {
         let mut r = Registers::new();
  
-        assert_eq!(false, r.get_flag(Flag::P));
         r.set_flag(Flag::P);
         assert_eq!(true, r.get_flag(Flag::P));
         r.clear_flag(Flag::P);
