@@ -373,7 +373,20 @@ impl Decoder {
                 },
                 2 =>
                     if p.z <= 3 && p.y >= 4 {
-                        None // bli[y,z] -- block instruction
+                        // Table "bli"
+                        match p.z {
+                            0 => match p.y {
+                                4 => Some(build_ld_block(true,  false)), // LDI
+                                5 => Some(build_ld_block(false, false)), // LDD
+                                6 => Some(build_ld_block(true,  true)),  // LDIR
+                                7 => Some(build_ld_block(false, true)),  // LDDR
+                                _ => panic!("Unreacheable")
+                            },
+                            1 => None,
+                            2 => None,
+                            3 => None,
+                            _ => panic!("Unreacheable")
+                        }
                     } else {
                         Some(build_noni_nop()) // NONI + NOP
                     },

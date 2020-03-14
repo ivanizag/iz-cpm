@@ -230,3 +230,53 @@ pub fn build_ex_psp_rr(rr: Reg16) -> Opcode {
         })         
     }
 }
+
+
+pub fn build_ld_block(inc: bool, repeat: bool) -> Opcode {
+    let n1 = if inc {"I"} else {"D"};
+    let n2 = if repeat {"R"} else {""};
+    Opcode {
+        name: format!("LD{}{}", n1, n2),
+        cycles: 16, // 21 if PC is changed
+        action: Box::new(move |state: &mut State| {
+            let value = state.get_reg(Reg8::_HL);
+            let address = state.reg.get16(Reg16::DE);
+            state.mem.poke(address, value);
+
+            if inc {
+                state.reg.set16(Reg16::DE, state.reg.get16(Reg16::DE).wrapping_add(1));
+                state.reg.set16(Reg16::HL, state.reg.get16(Reg16::HL).wrapping_add(1));
+            } else {
+                state.reg.set16(Reg16::DE, state.reg.get16(Reg16::DE).wrapping_sub(1));
+                state.reg.set16(Reg16::HL, state.reg.get16(Reg16::HL).wrapping_sub(1));
+            }
+            let bc = state.reg.get16(Reg16::BC).wrapping_sub(1);
+            state.reg.set16(Reg16::BC, bc);
+
+            state.reg.put_flag(Flag::P, bc == 0);
+            if repeat && bc != 0 {
+                // Back to redo the instruction
+                let pc = state.reg.get_pc().wrapping_sub(2);
+                state.reg.set_pc(pc);
+            }
+        })         
+    }
+}
+
+pub fn build_ldi() -> Opcode {
+    Opcode {
+        name: "LDI".to_string(),
+        cycles: 16,
+        action: Box::new(move |state: &mut State| {
+            let value = state.get_reg(Reg8::_HL);
+            let address = state.reg.get16(Reg16::DE);
+            state.mem.poke(address, value);
+
+            state.reg.set16(Reg16::DE, state.reg.get16(Reg16::DE).wrapping_add(1));
+            state.reg.set16(Reg16::HL, state.reg.get16(Reg16::HL).wrapping_add(1));
+            state.reg.set16(Reg16::BC, state.reg.get16(Reg16::BC).wrapping_sub(1));
+
+            state.reg.put_flag(Flag::P, state.reg.get16(Reg16::BC) == 0)
+        })         
+    }
+}

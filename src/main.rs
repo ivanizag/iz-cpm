@@ -48,11 +48,11 @@ fn main() {
     cpu.state.mem.poke(6, 0x00);
     cpu.state.mem.poke(7, 0xc9); // RET
 
-    println!("Testing \"testfiles/zexdoc.com\"...");
+    //println!("Testing \"testfiles/zexdoc.com\"...");
     cpu.state.reg.set_pc(0x100);
     loop {
+        cpu.execute_instruction();
 
-        //printf("PC(%04x) AF(%04x) BC(%04x) DE(%04x) HL(%04x) SP(%04x) IX(%04x) IY(%04x)\n", pc-1, AF, BC, DE, HL, SP, IX, IY);
         println!("PC({:04x}) AF({:04x}) BC({:04x}) DE({:04x}) HL({:04x}) SP({:04x}) IX({:04x}) IY({:04x})",
             cpu.state.reg.get_pc(),
             cpu.state.reg.get16(Reg16::AF),
@@ -64,7 +64,6 @@ fn main() {
             cpu.state.reg.get16(Reg16::IX)
         );
 
-        cpu.execute_instruction();
         if cpu.state.peek16_pc() == 0xfff0 {
             return;
         }
