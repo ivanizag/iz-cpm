@@ -255,8 +255,8 @@ impl Decoder {
                 1 => None, // ADC A, r
                 2 => None, // SUB A, r
                 3 => None, // SBC A, r
-                4 => None, // AND r
-                5 => None, // XOR r
+                4 => Some(build_and_a_r(R[p.z])), // AND r
+                5 => Some(build_xor_a_r(R[p.z])), // XOR r
                 6 => Some(build_or_a_r(R[p.z])), // OR r
                 7 => None, // CP r
                 _ => panic!("Unreachable")
