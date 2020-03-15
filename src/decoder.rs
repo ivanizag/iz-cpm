@@ -234,8 +234,8 @@ impl Decoder {
                         1 =>  Some(build_inc_dec_rr(RP[p.p], false)), // DEC rr -- 16-bit dec
                         _ => panic!("Unreachable")                       
                     },
-                    4 => Some(build_inc_dec_r(R[p.y], true)), // INC r -- 8 bit inc
-                    5 => Some(build_inc_dec_r(R[p.y], false)), // DEC r -- 8 bit dec
+                    4 => Some(build_inc_r(R[p.y])), // INC r -- 8 bit inc
+                    5 => Some(build_dec_r(R[p.y])), // DEC r -- 8 bit dec
                     6 => Some(build_ld_r_n(R[p.y])), // LD r, n -- 8 bit load imm
                     7 => match p.y {
                         0..=3 => Some(build_rot_r(Reg8::A, ROT[p.y], true)), // rotA
@@ -340,7 +340,11 @@ impl Decoder {
                         6 => Some(build_out_c_0()), // OUT (C), 0
                         _ => Some(build_out_c_r(R[p.y])), // OUT (C), r
                     }
-                    2 => None,
+                    2 => match p.q {
+                        0 => Some(build_sbc_hl_rr(RP[p.p])), // SBC HL, rr
+                        1 => Some(build_adc_hl_rr(RP[p.p])), // ADC HL, rr
+                        _ => panic!("Unreachable")
+                    },
                     3 => match p.q {
                         0 => Some(build_ld_pnn_rr(RP[p.p])), // LD (nn), rr -- 16 bit loading
                         1 => Some(build_ld_rr_pnn(RP[p.p])), // LD rr, (nn) -- 16 bit loading

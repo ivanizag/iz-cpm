@@ -177,6 +177,21 @@ impl Registers {
         self.put_flag(Flag::P, bits % 2 == 0);
     }
 
+    pub fn update_vh_flags(&mut self, xored: u16) {
+        let carry_bit = (xored >> 8 & 1) != 0;
+        let top_xor   = (xored >> 7 & 1) != 0;
+        let half_bit  = (xored >> 4 & 1) != 0;
+
+        self.put_flag(Flag::H, half_bit);
+        self.put_flag(Flag::P, carry_bit == top_xor); // As overflow flag
+    }
+
+    pub fn update_cvh_flags(&mut self, xored: u16) {
+        let carry_bit = (xored >> 8 & 1) != 0;
+        self.put_flag(Flag::C, carry_bit);
+        self.update_vh_flags(xored);
+    }
+
     pub fn get_pc(&self) -> u16 {
         self.pc
     }
