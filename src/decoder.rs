@@ -347,8 +347,11 @@ impl Decoder {
                         _ => panic!("Unreachable")
                     },
                     4 => Some(build_neg()), // NEG
-                    5 => None,
-                    6 => None,
+                    5 => match p.y {
+                        1 => Some(build_reti()), // RETI
+                        _ => Some(build_retn())  // RETN
+                    }
+                    6 => Some(build_im(IM[p.y])), // IM #
                     7 => match p.y {
                         0 => Some(build_ld_r_r(Reg8::I, Reg8::A, true)), // LD I, A
                         1 => Some(build_ld_r_r(Reg8::R, Reg8::A, true)), // LD R, A
@@ -421,6 +424,7 @@ impl DecodingHelper {
 pub const RP:  [Reg16; 4] = [Reg16::BC, Reg16::DE, Reg16::HL, Reg16::SP];
 pub const RP2: [Reg16; 4] = [Reg16::BC, Reg16::DE, Reg16::HL, Reg16::AF];
 pub const R:  [Reg8; 8] = [Reg8::B, Reg8::C, Reg8::D, Reg8::E, Reg8::H, Reg8::L, Reg8::_HL, Reg8::A];
+pub const IM: [u8; 8] = [0, 0, 1, 2, 0, 0, 1, 2];
 
 pub const CC: [(Flag, bool, &'static str); 8] = [
     (Flag::Z, false, "NZ"),

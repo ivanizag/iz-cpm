@@ -103,3 +103,13 @@ pub fn build_conf_interrupts(enable: bool) -> Opcode {
         })
     }
 }
+
+pub fn build_im(im: u8) -> Opcode {
+    Opcode {
+        name: format!("IM {}", im),
+        cycles: 8,
+        action: Box::new(move |state: &mut State| {
+            state.reg.set_interrup_mode(im);
+        })
+    }
+}

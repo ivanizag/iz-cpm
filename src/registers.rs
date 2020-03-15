@@ -64,7 +64,8 @@ pub struct Registers {
     data: [u8; REG_COUNT8],
     shadow: [u8; REG_COUNT8],
     pc: u16,
-    iff: bool
+    iff: bool,
+    im: u8
 }
 
 impl Registers {
@@ -73,7 +74,8 @@ impl Registers {
             data: [0; REG_COUNT8],
             shadow: [0; REG_COUNT8],
             pc: 0,
-            iff: true
+            iff: true,
+            im: 0
         };
 
         //Init z80 registers
@@ -185,6 +187,10 @@ impl Registers {
 
     pub fn set_interrupts(&mut self, v: bool) {
         self.iff = v;
+    }
+
+    pub fn set_interrup_mode(&mut self, im: u8) {
+        self.im = im;
     }
 }
 

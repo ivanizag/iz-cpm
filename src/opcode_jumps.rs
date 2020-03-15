@@ -127,13 +127,39 @@ pub fn build_rst(d: u8) -> Opcode {
 }
 
 // Returns
+fn operation_return(state: &mut State) {
+    let pc = state.pop();
+    state.reg.set_pc(pc);
+}
+
 pub fn build_ret() -> Opcode {
     Opcode {
         name: "RET".to_string(),
         cycles: 10,
         action: Box::new(move |state: &mut State| {
-            let pc = state.pop();
-            state.reg.set_pc(pc);
+            operation_return(state);
+        })
+    }
+}
+
+pub fn build_reti() -> Opcode {
+    Opcode {
+        name: "RETI".to_string(),
+        cycles: 14,
+        action: Box::new(move |state: &mut State| {
+            operation_return(state);
+        })
+    }
+}
+
+pub fn build_retn() -> Opcode {
+    Opcode {
+        name: "RETN".to_string(),
+        cycles: 14,
+        action: Box::new(move |state: &mut State| {
+            operation_return(state);
+
+            // TODO: "The contents of IIF2 is copied back into IIF1"
         })
     }
 }
@@ -144,8 +170,7 @@ pub fn build_ret_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
         cycles: 5, // TODO: 11 returns,
         action: Box::new(move |state: &mut State| {
             if state.reg.get_flag(flag) == value {
-                let pc = state.pop();
-                state.reg.set_pc(pc);
+                operation_return(state);
             }
         })
     }
