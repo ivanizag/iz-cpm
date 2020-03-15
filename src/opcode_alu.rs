@@ -30,3 +30,17 @@ pub fn build_operator_a_n((op, name): (Operator, &str)) -> Opcode {
         })
     }
 }
+
+pub fn build_cp_block((inc, repeat, postfix) : (bool, bool, &'static str)) -> Opcode {
+    Opcode {
+        name: format!("CP{}", postfix),
+        cycles: 16, // 21 if PC is changed
+        action: Box::new(move |state: &mut State| {
+            let a = state.reg.get8(Reg8::A);
+            let b = state.get_reg(Reg8::_HL);
+            operator_cp(state, a, b);
+            operation_block(state, inc, repeat, true);
+            state.reg.put_flag(Flag::Z, a == b);
+        })
+    }
+}

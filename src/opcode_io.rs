@@ -83,44 +83,37 @@ pub fn build_in_a_n() -> Opcode {
     }
 }
 
-pub fn build_inout_block(dir_in: bool, (inc, repeat): (bool, bool)) -> Opcode {
-    let n0 = if dir_in {"IN"} else {"OUT"};
-    let n1 = if inc {"I"} else {"D"};
-    let n2 = if repeat {"R"} else {""};
+pub fn build_in_block((inc, repeat, postfix) : (bool, bool, &'static str)) -> Opcode {
     Opcode {
-        name: format!("{}{}{}", n0, n1, n2),
+        name: format!("IN{}", postfix),
         cycles: 16, // 21 if PC is changed
         action: Box::new(move |state: &mut State| {
-            if dir_in {
-                let address = state.reg.get16(Reg16::BC);
-                let value = state.port_in(address);
-                state.set_reg(Reg8::_HL, value);
-            } else {
-                let address = state.reg.get16(Reg16::BC); 
-                let value = state.get_reg(Reg8::_HL);
-                state.port_out(address, value);    
-            }
-            let value = state.get_reg(Reg8::_HL);
-            let address = state.reg.get16(Reg16::DE);
-            state.mem.poke(address, value);
+            let address = state.reg.get16(Reg16::BC);
+            let value = state.port_in(address);
+            state.set_reg(Reg8::_HL, value);
 
-            if inc {
-                state.reg.set16(Reg16::HL, state.reg.get16(Reg16::HL).wrapping_add(1));
-            } else {
-                state.reg.set16(Reg16::HL, state.reg.get16(Reg16::HL).wrapping_sub(1));
-            }
-            let b = state.reg.get8(Reg8::B).wrapping_sub(1);
-            state.reg.set8(Reg8::B, b);
+            operation_block(state, inc, repeat, false);
 
             state.reg.set_flag(Flag::N);
-            state.reg.put_flag(Flag::Z, b == 0);
             // Flags H, S and P/V are undefined
+        })
+    }
+}
 
-            if repeat && b != 0 {
-                // Back to redo the instruction
-                let pc = state.reg.get_pc().wrapping_sub(2);
-                state.reg.set_pc(pc);
-            }
+pub fn build_out_block((inc, repeat, postfix) : (bool, bool, &'static str)) -> Opcode {
+    let n0 = if repeat {"OT"} else {"OUT"};
+    Opcode {
+        name: format!("{}{}", n0, postfix),
+        cycles: 16, // 21 if PC is changed
+        action: Box::new(move |state: &mut State| {
+            let address = state.reg.get16(Reg16::BC);
+            let value = state.get_reg(Reg8::_HL);
+            state.port_out(address, value);
+
+            operation_block(state, inc, repeat, false);
+
+            state.reg.set_flag(Flag::N);
+            // Flags H, S and P/V are undefined
         })
     }
 }

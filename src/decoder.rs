@@ -369,10 +369,10 @@ impl Decoder {
                     if p.z <= 3 && p.y >= 4 {
                         // Table "bli"
                         match p.z {
-                            0 => Some(build_ld_block(BLI_A[p.y-4])), // Block LDxx
-                            1 => None,
-                            2 => Some(build_inout_block(true,  BLI_A[p.y-4])), // Block INxx
-                            3 => Some(build_inout_block(false, BLI_A[p.y-4])), // Block OUTxx
+                            0 => Some(build_ld_block( BLI_A[p.y-4])), // Block LDxx
+                            1 => Some(build_cp_block( BLI_A[p.y-4])), // Block CPxx
+                            2 => Some(build_in_block( BLI_A[p.y-4])), // Block INxx
+                            3 => Some(build_out_block(BLI_A[p.y-4])), // Block OUTxx
                             _ => panic!("Unreacheable")
                         }
                     } else {
@@ -454,9 +454,9 @@ pub const ALU: [(Operator, &'static str); 8] = [
     (operator_cp,  "CP")
 ];
 
-pub const BLI_A: [(bool, bool); 4] = [
-    (true,  false), // I
-    (false, false), // D
-    (true,  true),  // ID
-    (false, true)   // DR
+pub const BLI_A: [(bool, bool, &'static str); 4] = [
+    (true,  false, "I"),
+    (false, false, "D"),
+    (true,  true, "IR"),
+    (false, true, "DR")
 ];
