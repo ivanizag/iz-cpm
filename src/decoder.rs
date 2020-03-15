@@ -5,6 +5,7 @@ use super::opcode_io::*;
 use super::opcode_bits::*;
 use super::opcode_jumps::*;
 use super::opcode_ld::*;
+use super::operators::*;
 use super::registers::*;
 use super::state::*;
 
@@ -250,17 +251,7 @@ impl Decoder {
                     (6, 6) => Some(build_halt()), // HALT, excetion instead of LD (HL), (HL)
                     _ => Some(build_ld_r_r(R[p.y], R[p.z], false)), // LD r[y], r[z] -- 8 bit load imm
                 },
-            2 => match p.y {
-                0 => None, // ADD A, r
-                1 => None, // ADC A, r
-                2 => None, // SUB A, r
-                3 => None, // SBC A, r
-                4 => Some(build_and_a_r(R[p.z])), // AND r
-                5 => Some(build_xor_a_r(R[p.z])), // XOR r
-                6 => Some(build_or_a_r(R[p.z])), // OR r
-                7 => None, // CP r
-                _ => panic!("Unreachable")
-            },
+            2 => Some(build_operator_a_r(R[p.z], ALU[p.y])), // alu A, r
             3 => match p.z {
                     0 => Some(build_ret_eq(CC[p.y])), // RET cc
                     1 => match p.q {
@@ -298,7 +289,7 @@ impl Decoder {
                         },
                         _ => panic!("Unreachable")
                     },
-                    6 => None,
+                    6 => Some(build_operator_a_n(ALU[p.y])), // alu A, n
                     7 => Some(build_rst(p.y as u8 * 8)), // RST
                     _ => panic!("Unreachable")
                     },
@@ -451,4 +442,16 @@ pub const ROT: [(ShiftDir, ShiftMode, &'static str); 8] = [
     (ShiftDir::Right, ShiftMode::Arithmetic,  "SRA"),
     (ShiftDir::Left,  ShiftMode::Logical,     "SLL"),
     (ShiftDir::Right, ShiftMode::Logical,     "SRL"),
+];
+
+//pub const ALU: [(fn(&mut State, u8, u8) -> u8, &'static str); 8] = [
+pub const ALU: [(Operator, &'static str); 8] = [
+    (operator_add, "ADD"),
+    (operator_adc, "ADC"),
+    (operator_sub, "SUB"),
+    (operator_sbc, "SBC"),
+    (operator_and, "AND"),
+    (operator_xor, "XOR"),
+    (operator_or,  "OR"),
+    (operator_cp,  "CP")
 ];

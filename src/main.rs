@@ -9,6 +9,7 @@ mod opcode_bits;
 mod opcode_io;
 mod opcode_jumps;
 mod opcode_ld;
+mod operators;
 mod registers;
 mod state;
 mod cpu;
