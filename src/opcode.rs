@@ -92,3 +92,14 @@ pub fn build_push_rr(rr: Reg16) -> Opcode {
         })
     }
 }
+
+pub fn build_conf_interrupts(enable: bool) -> Opcode {
+    let name = if enable {"EI"} else  {"DI"};
+    Opcode {
+        name: name.to_string(),
+        cycles: 4,
+        action: Box::new(move |state: &mut State| {
+            state.reg.set_interrupts(enable);
+        })
+    }
+}

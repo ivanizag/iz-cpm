@@ -63,7 +63,8 @@ impl fmt::Display for Reg8 {
 pub struct Registers {
     data: [u8; REG_COUNT8],
     shadow: [u8; REG_COUNT8],
-    pc: u16
+    pc: u16,
+    iff: bool
 }
 
 impl Registers {
@@ -71,7 +72,8 @@ impl Registers {
         let mut reg = Registers {
             data: [0; REG_COUNT8],
             shadow: [0; REG_COUNT8],
-            pc: 0
+            pc: 0,
+            iff: true
         };
 
         //Init z80 registers
@@ -179,6 +181,10 @@ impl Registers {
 
     pub fn set_pc(&mut self, value: u16) {
         self.pc = value;
+    }
+
+    pub fn set_interrupts(&mut self, v: bool) {
+        self.iff = v;
     }
 }
 

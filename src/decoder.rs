@@ -273,8 +273,8 @@ impl Decoder {
                         3 => Some(build_in_a_n()), // IN A, (n)
                         4 => Some(build_ex_psp_rr(Reg16::HL)), // EX (SP), HL
                         5 => Some(build_ex_de_hl()), // EX DE, HL
-                        6 => None, // DI
-                        7 => None, // EI
+                        6 => Some(build_conf_interrupts(false)), // DI
+                        7 => Some(build_conf_interrupts(true)), // EI
                         _ => panic!("Unreachable")
                     }
                     4 => Some(build_call_eq(CC[p.y])),
