@@ -214,15 +214,15 @@ impl Decoder {
                     },
                     2 => match p.q {
                         0 =>  match p.p {
-                            0 => Some(build_ld_prr_r(Reg16::BC, Reg8::A)), // LD (BC), A
-                            1 => Some(build_ld_prr_r(Reg16::DE, Reg8::A)), // LD (DE), A
+                            0 => Some(build_ld_prr_a(Reg16::BC)), // LD (BC), A
+                            1 => Some(build_ld_prr_a(Reg16::DE)), // LD (DE), A
                             2 => Some(build_ld_pnn_rr(Reg16::HL)), // LD (nn), HL
                             3 => Some(build_ld_pnn_r(Reg8::A)), // LD (nn), A
                             _ => panic!("Unreachable")
                         },
                         1 =>  match p.p {
-                            0 => Some(build_ld_r_prr(Reg8::A, Reg16::BC)), // LD A, (BC)
-                            1 => Some(build_ld_r_prr(Reg8::A, Reg16::DE)), // LD A, (DE)
+                            0 => Some(build_ld_a_prr(Reg16::BC)), // LD A, (BC)
+                            1 => Some(build_ld_a_prr(Reg16::DE)), // LD A, (DE)
                             2 => Some(build_ld_rr_pnn(Reg16::HL)), // LD HL, (nn)
                             3 => Some(build_ld_r_pnn(Reg8::A)), // LD A, (nn)
                             _ => panic!("Unreachable")

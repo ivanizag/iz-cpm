@@ -64,25 +64,35 @@ pub struct Registers {
     data: [u8; REG_COUNT8],
     shadow: [u8; REG_COUNT8],
     pc: u16,
-    iff: bool,
+    iff1: bool,
+    iff2: bool,
     im: u8
 }
 
 impl Registers {
     pub fn new() -> Registers {
+        //Init z80 registers (TUZD-2.4)
         let mut reg = Registers {
             data: [0; REG_COUNT8],
             shadow: [0; REG_COUNT8],
             pc: 0,
-            iff: true,
+            iff1: false,
+            iff2: false,
             im: 0
         };
 
-        //Init z80 registers
         reg.set16(Reg16::AF, 0xffff);
         reg.set16(Reg16::SP, 0xffff);
 
         reg
+    }
+
+    pub fn get_a(&self) -> u8 {
+        self.data[Reg8::A as usize]
+    }
+
+    pub fn set_a(&mut self, value: u8) {
+        self.data[Reg8::A as usize] = value;
     }
 
     pub fn get8(&self, reg: Reg8) -> u8 {
@@ -99,22 +109,44 @@ impl Registers {
         self.data[reg as usize] = value;
     }
 
-    pub fn get16(&self, reg: Reg16) -> u16 {
-        let (h, l) = Registers::get_pair(reg);
+    pub fn inc_dec8(&mut self, reg: Reg8, inc: bool) -> u8 {
+        let mut v = self.get8(reg);
+        if inc {
+            v = v.wrapping_add(1);
+        } else {
+            v = v.wrapping_sub(1);
+        }
+        self.set8(reg, v);
+        v
+    }
+
+    pub fn get16(&self, rr: Reg16) -> u16 {
+        let (h, l) = Registers::get_pair(rr);
 
         self.data[l] as u16
         + ((self.data[h] as u16) << 8)
     }
 
-    pub fn set16(&mut self, reg: Reg16, value: u16) {
-        let (h, l) = Registers::get_pair(reg);
+    pub fn set16(&mut self, rr: Reg16, value: u16) {
+        let (h, l) = Registers::get_pair(rr);
 
         self.data[l] = value as u8;
         self.data[h] = (value >> 8) as u8;
     }
 
-    pub fn swap(&mut self, reg: Reg16) {
-        let (h, l) = Registers::get_pair(reg);
+    pub fn inc_dec16(&mut self, rr: Reg16, inc: bool) -> u16 {
+        let mut v = self.get16(rr);
+        if inc {
+            v = v.wrapping_add(1);
+        } else {
+            v = v.wrapping_sub(1);
+        }
+        self.set16(rr, v);
+        v
+    }
+
+    pub fn swap(&mut self, rr: Reg16) {
+        let (h, l) = Registers::get_pair(rr);
 
         let temp = self.data[l];
         self.data[l] = self.shadow[l];
@@ -125,8 +157,8 @@ impl Registers {
         self.shadow[h] = temp;
     }
 
-    fn get_pair(reg: Reg16) -> (usize, usize) {
-        match reg {
+    fn get_pair(rr: Reg16) -> (usize, usize) {
+        match rr {
             Reg16::AF => (Reg8::A as usize, Reg8::F as usize),
             Reg16::BC => (Reg8::B as usize, Reg8::C as usize),
             Reg16::DE => (Reg8::D as usize, Reg8::E as usize),
@@ -155,6 +187,11 @@ impl Registers {
         } else {
             self.clear_flag(flag);
         }
+    }
+
+    pub fn update_sz53p_flags(&mut self, reference: u8) {
+        self.update_sz53_flags(reference);
+        self.update_p_flag(reference);
     }
 
     pub fn update_sz53_flags(&mut self, reference: u8) {
@@ -201,7 +238,7 @@ impl Registers {
     }
 
     pub fn set_interrupts(&mut self, v: bool) {
-        self.iff = v;
+        self.iff2 = v;
     }
 
     pub fn set_interrup_mode(&mut self, im: u8) {

@@ -61,8 +61,7 @@ pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast
             state.reg.clear_flag(Flag::H);
             state.reg.clear_flag(Flag::N);
             if !fast {
-                state.reg.update_sz53_flags(v);
-                state.reg.update_p_flag(v);
+                state.reg.update_sz53p_flags(v);
             }
         })
     }
@@ -74,8 +73,8 @@ pub fn build_bit_r(bit: u8, r: Reg8) -> Opcode {
         cycles: 8, // (HL) 8, (IX+d) 20
         action: Box::new(move |state: &mut State| {
             let v8 = state.get_reg(r);
-            let v1 = (v8 & (1<<bit)) != 0;
-            state.reg.put_flag(Flag::Z, v1);
+            let z = v8 & (1<<bit);
+            state.reg.update_sz53p_flags(z); // TUZD-4.1, exceptions for (HL)
         })
     }
 }
@@ -109,9 +108,9 @@ pub fn build_cpl() -> Opcode {
         name: "CPL".to_string(),
         cycles: 4,
         action: Box::new(move |state: &mut State| {
-            let mut v = state.reg.get8(Reg8::A);
+            let mut v = state.reg.get_a();
             v = !v;
-            state.reg.set8(Reg8::A, v); 
+            state.reg.set_a(v);
 
             state.reg.set_flag(Flag::H);
             state.reg.set_flag(Flag::N);
@@ -148,7 +147,7 @@ pub fn build_rxd(dir: ShiftDir, name: &str) -> Opcode {
         name: name.to_string(),
         cycles: 18,
         action: Box::new(move |state: &mut State| {
-            let mut a = state.get_reg(Reg8::A);
+            let mut a = state.reg.get_a();
             let mut phl = state.get_reg(Reg8::_HL);
             // a = 0xWX, phl = 0xYZ
             match dir {
@@ -165,13 +164,12 @@ pub fn build_rxd(dir: ShiftDir, name: &str) -> Opcode {
                     a = temp;
                 }
             }
-            state.set_reg(Reg8::A, a);
+            state.reg.set_a(a);
             state.set_reg(Reg8::_HL, phl);
 
             state.reg.clear_flag(Flag::H);
             state.reg.clear_flag(Flag::N);
-            state.reg.update_sz53_flags(a);
-            state.reg.update_p_flag(a);
+            state.reg.update_sz53p_flags(a);
         })
     }
 }

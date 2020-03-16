@@ -72,14 +72,14 @@ pub fn build_ld_r_n(r: Reg8) -> Opcode {
     }
 }
 
-pub fn build_ld_r_prr(r: Reg8, rr: Reg16) -> Opcode {
+pub fn build_ld_a_prr(rr: Reg16) -> Opcode {
     Opcode {
-        name: format!("LD {}, ({:?})", r, rr),
+        name: format!("LD A, ({:?})", rr),
         cycles: 7,
         action: Box::new(move |state: &mut State| {
             let address = state.reg.get16(rr);
             let value = state.mem.peek(address);
-            state.reg.set8(r, value);
+            state.reg.set_a(value);
         })
     }
 }
@@ -96,12 +96,12 @@ pub fn build_ld_r_pnn(r: Reg8) -> Opcode {
     }
 }
 
-pub fn build_ld_prr_r(rr: Reg16, r: Reg8) -> Opcode {
+pub fn build_ld_prr_a(rr: Reg16) -> Opcode {
     Opcode {
-        name: format!("LD {:?}, ({})", rr, r),
+        name: format!("LD ({:?}), A", rr),
         cycles: 7,
         action: Box::new(move |state: &mut State| {
-            let value = state.reg.get8(r);
+            let value = state.reg.get_a();
             let address = state.reg.get16(rr);
             state.mem.poke(address, value);
         })
@@ -240,13 +240,23 @@ pub fn build_ld_block((inc, repeat, postfix) : (bool, bool, &'static str)) -> Op
             let address = state.reg.get16(Reg16::DE);
             state.mem.poke(address, value);
 
-            if inc {
-                state.reg.set16(Reg16::DE, state.reg.get16(Reg16::DE).wrapping_add(1));
-            } else {
-                state.reg.set16(Reg16::DE, state.reg.get16(Reg16::DE).wrapping_sub(1));
-            }
+            state.reg.inc_dec16(Reg16::DE, inc);
+            state.reg.inc_dec16(Reg16::HL, inc);
+            let bc = state.reg.inc_dec16(Reg16::BC, false /*decrement*/);
 
-            operation_block(state, inc, repeat, true);
+            // TUZD-4.2
+            let n = value & state.reg.get_a();
+            state.reg.put_flag(Flag::_5, n & 1 != 0);
+            state.reg.clear_flag(Flag::H);
+            state.reg.put_flag(Flag::_3, n & 0x08 != 0);
+            state.reg.put_flag(Flag::P, bc != 0);
+            // S, Z and C unchanged. What about N?
+
+            if repeat && bc != 0 {
+                // Back to redo the instruction
+                let pc = state.reg.get_pc().wrapping_sub(2);
+                state.reg.set_pc(pc);
+            }
         })         
     }
 }

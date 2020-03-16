@@ -56,7 +56,7 @@ fn test_ld_a_b() {
 
     cpu.execute_instruction();
 
-    assert_eq!(0x23, cpu.state.reg.get8(Reg8::A));
+    assert_eq!(0x23, cpu.state.reg.get_a());
 }
 
 #[test]

@@ -41,33 +41,6 @@ impl Opcode {
     }
 }
 
-pub fn operation_block(state: &mut State, inc: bool, repeat: bool, wide_b: bool) {
-    if inc {
-        state.reg.set16(Reg16::HL, state.reg.get16(Reg16::HL).wrapping_add(1));
-    } else {
-        state.reg.set16(Reg16::HL, state.reg.get16(Reg16::HL).wrapping_sub(1));
-    }
-
-    let repeat_cond: bool;
-    if wide_b { // LDxx and CPxx
-        let bc = state.reg.get16(Reg16::BC).wrapping_sub(1);
-        state.reg.set16(Reg16::BC, bc);
-        state.reg.put_flag(Flag::P, bc == 0);
-        repeat_cond = bc != 0;
-    } else { // INxx and OUTxx
-        let b = state.reg.get8(Reg8::B).wrapping_sub(1);
-        state.reg.set8(Reg8::B, b);
-        state.reg.put_flag(Flag::Z, b == 0);
-        repeat_cond = b != 0;
-    }
-
-    if repeat && repeat_cond {
-        // Back to redo the instruction
-        let pc = state.reg.get_pc().wrapping_sub(2);
-        state.reg.set_pc(pc);
-    }
-}
-
 pub fn build_nop() -> Opcode {
     Opcode {
         name: "NOP".to_string(),

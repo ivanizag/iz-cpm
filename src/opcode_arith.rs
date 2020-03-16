@@ -97,9 +97,9 @@ pub fn build_neg() -> Opcode {
         name: "NEG".to_string(),
         cycles: 8,
         action: Box::new(move |state: &mut State| {
-            let b = state.reg.get8(Reg8::A);
+            let b = state.reg.get_a();
             let v = operator_sub(state, 0, b);
-            state.reg.set8(Reg8::A, v);
+            state.reg.set_a(v);
         })
     }
 }

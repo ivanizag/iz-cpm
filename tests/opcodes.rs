@@ -15,7 +15,7 @@ fn test_two_opcodes() {
 
     println!("Registers: {:?}", cpu.state.reg);
 
-    assert_eq!(0x34, cpu.state.reg.get8(Reg8::A));
+    assert_eq!(0x34, cpu.state.reg.get_a());
 }
 
 #[test]
