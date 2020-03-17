@@ -6,7 +6,7 @@ use super::operators::*;
 pub fn build_operator_a_r(r: Reg8, (op, name): (Operator, &str)) -> Opcode {
     Opcode {
         name: format!("{} A, {:?}", name, r),
-        cycles: 4, // (HL) 7
+        cycles: 4, // (HL) 7, (ix+d) 19
         action: Box::new(move |state: &mut State| {
             let a = state.reg.get_a();
             let b = state.get_reg(r);
@@ -20,7 +20,7 @@ pub fn build_operator_a_r(r: Reg8, (op, name): (Operator, &str)) -> Opcode {
 pub fn build_operator_a_n((op, name): (Operator, &str)) -> Opcode {
     Opcode {
         name: format!("{} A, n", name),
-        cycles: 4, // (HL) 7
+        cycles: 7,
         action: Box::new(move |state: &mut State| {
             let a = state.reg.get_a();
             let b = state.advance_pc();

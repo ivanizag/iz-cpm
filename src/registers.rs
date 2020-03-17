@@ -25,7 +25,7 @@ pub const REG_COUNT8: usize = 16;
 
 
 // 16 bit registers, composed from 8 bit registers
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Reg16 {
     AF,
     BC,

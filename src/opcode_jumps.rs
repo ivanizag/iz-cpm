@@ -78,10 +78,10 @@ pub fn build_jp_eq((flag, value, name): (Flag, bool, &str)) -> Opcode {
 
 pub fn build_jp_hl() -> Opcode {
     Opcode {
-        name: "JP (HL)".to_string(),
-        cycles: 4,
+        name: "JP HL".to_string(), // Note: it is usaully written as JP (HL)
+        cycles: 4, // IX/IY: 9
         action: Box::new(move |state: &mut State| {
-            let address = state.reg.get16(Reg16::HL);
+            let address = state.get_index_value();
             state.reg.set_pc(address);
         })
     }

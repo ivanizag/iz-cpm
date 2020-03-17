@@ -107,6 +107,7 @@ pub fn build_in_block((inc, repeat, postfix) : (bool, bool, &'static str)) -> Op
             let address = state.reg.get16(Reg16::BC);
 
             let value = state.port_in(address);
+            // We won't have IX and IY cases to consider
             state.set_reg(Reg8::_HL, value);
             state.reg.inc_dec16(Reg16::HL, inc);
 
@@ -139,6 +140,7 @@ pub fn build_out_block((inc, repeat, postfix) : (bool, bool, &'static str)) -> O
             let address = state.reg.get16(Reg16::BC);
             let b = state.reg.inc_dec8(Reg8::B, false /* decrement */);
 
+            // We won't have IX and IY cases to consider
             let value = state.get_reg(Reg8::_HL);
             state.port_out(address, value);
             state.reg.inc_dec16(Reg16::HL, inc);

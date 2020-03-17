@@ -216,15 +216,15 @@ impl Decoder {
                         0 =>  match p.p {
                             0 => Some(build_ld_prr_a(Reg16::BC)), // LD (BC), A
                             1 => Some(build_ld_prr_a(Reg16::DE)), // LD (DE), A
-                            2 => Some(build_ld_pnn_rr(Reg16::HL)), // LD (nn), HL
-                            3 => Some(build_ld_pnn_r(Reg8::A)), // LD (nn), A
+                            2 => Some(build_ld_pnn_rr(Reg16::HL, true)), // LD (nn), HL
+                            3 => Some(build_ld_pnn_a()), // LD (nn), A
                             _ => panic!("Unreachable")
                         },
                         1 =>  match p.p {
                             0 => Some(build_ld_a_prr(Reg16::BC)), // LD A, (BC)
                             1 => Some(build_ld_a_prr(Reg16::DE)), // LD A, (DE)
-                            2 => Some(build_ld_rr_pnn(Reg16::HL)), // LD HL, (nn)
-                            3 => Some(build_ld_r_pnn(Reg8::A)), // LD A, (nn)
+                            2 => Some(build_ld_rr_pnn(Reg16::HL, true)), // LD HL, (nn)
+                            3 => Some(build_ld_a_pnn()), // LD A, (nn)
                             _ => panic!("Unreachable")
                         }
                         _ => panic!("Unreachable")
@@ -260,7 +260,7 @@ impl Decoder {
                             0 => Some(build_ret()), // RET
                             1 => Some(build_exx()), // EXX
                             2 => Some(build_jp_hl()), // JP HL
-                            3 => Some(build_ld_rr_rr(Reg16::SP, Reg16::HL)), // LD SP, HL
+                            3 => Some(build_ld_sp_hl()), // LD SP, HL
                             _ => panic!("Unreachable")
                         },
                         _ => panic!("Unreachable")
@@ -269,12 +269,12 @@ impl Decoder {
                     3 => match p.y {
                         0 => Some(build_jp_unconditional()), // JP nn
                         1 => None, // CB prefix
-                        2 => Some(build_out_n_a()), // OUT (n), A
-                        3 => Some(build_in_a_n()), // IN A, (n)
-                        4 => Some(build_ex_psp_rr(Reg16::HL)), // EX (SP), HL
-                        5 => Some(build_ex_de_hl()), // EX DE, HL
+                        2 => Some(build_out_n_a()),  // OUT (n), A
+                        3 => Some(build_in_a_n()),   // IN A, (n)
+                        4 => Some(build_ex_psp_hl()), // EX (SP), HL
+                        5 => Some(build_ex_de_hl()),  // EX DE, HL
                         6 => Some(build_conf_interrupts(false)), // DI
-                        7 => Some(build_conf_interrupts(true)), // EI
+                        7 => Some(build_conf_interrupts(true)),  // EI
                         _ => panic!("Unreachable")
                     }
                     4 => Some(build_call_eq(CC[p.y])),
@@ -346,8 +346,8 @@ impl Decoder {
                         _ => panic!("Unreachable")
                     },
                     3 => match p.q {
-                        0 => Some(build_ld_pnn_rr(RP[p.p])), // LD (nn), rr -- 16 bit loading
-                        1 => Some(build_ld_rr_pnn(RP[p.p])), // LD rr, (nn) -- 16 bit loading
+                        0 => Some(build_ld_pnn_rr(RP[p.p], false)), // LD (nn), rr -- 16 bit loading
+                        1 => Some(build_ld_rr_pnn(RP[p.p], false)), // LD rr, (nn) -- 16 bit loading
                         _ => panic!("Unreachable")
                     },
                     4 => Some(build_neg()), // NEG

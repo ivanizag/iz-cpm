@@ -16,11 +16,12 @@ pub enum ShiftDir {
     Right
 }
 
+// TODO: special cases for DDCB and FDCB prefix
 pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast: bool) -> Opcode {
     let separator = if fast {""} else {" "};
     Opcode {
         name: format!("{}{}{}", name, separator, r),
-        cycles: if fast {4} else {8},
+        cycles: if fast {4} else {8}, // The one byte opcodes are faster // (HL): 15, (IX+d): 23
         action: Box::new(move |state: &mut State| {
             let mut v = state.get_reg(r);
             let carry: bool;
@@ -67,18 +68,20 @@ pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast
     }
 }
 
+// TODO: special cases for DDCB and FDCB prefix
 pub fn build_bit_r(bit: u8, r: Reg8) -> Opcode {
     Opcode {
         name: format!("BIT {}, {}", bit, r),
-        cycles: 8, // (HL) 8, (IX+d) 20
+        cycles: 8, // (HL) 12, (IX+d) 20
         action: Box::new(move |state: &mut State| {
             let v8 = state.get_reg(r);
             let z = v8 & (1<<bit);
-            state.reg.update_sz53p_flags(z); // TUZD-4.1, exceptions for (HL)
+            state.reg.update_sz53p_flags(z); // TUZD-4.1, TOOD: exceptions for (HL)
         })
     }
 }
 
+// TODO: special cases for DDCB and FDCB prefix
 pub fn build_set_r(bit: u8, r: Reg8) -> Opcode {
     Opcode {
         name: format!("SET {}, {}", bit, r),
@@ -91,6 +94,7 @@ pub fn build_set_r(bit: u8, r: Reg8) -> Opcode {
     }
 }
 
+// TODO: special cases for DDCB and FDCB prefix
 pub fn build_res_r(bit: u8, r: Reg8) -> Opcode {
     Opcode {
         name: format!("RES {}, {}", bit, r),

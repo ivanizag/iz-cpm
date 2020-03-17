@@ -74,10 +74,10 @@ pub fn build_halt() -> Opcode {
 pub fn build_pop_rr(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("POP {:?}", rr),
-        cycles: 10,
+        cycles: 10, // IX/IY: 14
         action: Box::new(move |state: &mut State| {
             let value = state.pop();
-            state.reg.set16(rr, value);
+            state.set_reg16(rr, value);
         })
     }
 }
@@ -85,7 +85,7 @@ pub fn build_pop_rr(rr: Reg16) -> Opcode {
 pub fn build_push_rr(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("PUSH {:?}", rr),
-        cycles: 11,
+        cycles: 11, // IX/IY: 15
         action: Box::new(move |state: &mut State| {
             let value = state.reg.get16(rr);
             state.push(value);
