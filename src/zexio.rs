@@ -20,9 +20,15 @@ impl ZexIo {
     fn bdos(state: &State) {
         let f = state.reg.get8(Reg8::C);
         match f {
+            2 => ZexIo::bdos_c_write(state),
             9 => ZexIo::bdos_c_writestr(state),
             _ => panic!("BDOS command not implemented")
         }
+    }
+
+    fn bdos_c_write(state: &State) {
+        let ch = state.reg.get8(Reg8::E);
+        print!("{}", ch);
     }
 
     fn bdos_c_writestr(state: &State) {
