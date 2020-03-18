@@ -22,11 +22,19 @@ use state::State;
 use memory_io::PlainMemoryIo;
 use decoder::Decoder;
 use registers::Reg16;
+use registers::Reg8;
 use zexio::ZexIo;
 
 fn mainold() {
     Cpu::new_plain();
 }
+
+/*
+ Profile with:
+RUSTFLAGS='-g' perf record --call-graph=dwarf cargo run --release
+perf report
+
+*/
 
 fn main() {
     let mut cpu = Cpu {
@@ -51,12 +59,12 @@ fn main() {
 
     //println!("Testing \"testfiles/zexdoc.com\"...");
     cpu.state.reg.set_pc(0x100);
-    let trace = false;
+    let trace = true;
     loop {
         cpu.execute_instruction();
 
         if trace {
-            println!("PC({:04x}) AF({:04x}) BC({:04x}) DE({:04x}) HL({:04x}) SP({:04x}) IX({:04x}) IY({:04x})",
+            println!("PC({:04x}) AF({:04x}) BC({:04x}) DE({:04x}) HL({:04x}) SP({:04x}) IX({:04x}) IY({:04x}) Flags({:08b})",
                 cpu.state.reg.get_pc(),
                 cpu.state.reg.get16(Reg16::AF),
                 cpu.state.reg.get16(Reg16::BC),
@@ -64,7 +72,8 @@ fn main() {
                 cpu.state.reg.get16(Reg16::HL),
                 cpu.state.reg.get16(Reg16::SP),
                 cpu.state.reg.get16(Reg16::IX),
-                cpu.state.reg.get16(Reg16::IX)
+                cpu.state.reg.get16(Reg16::IY),
+                cpu.state.reg.get8(Reg8::F)
             );
         }
 

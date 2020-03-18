@@ -27,7 +27,7 @@ impl Cpu {
     }
 
     pub fn execute_instruction(&mut self) {
-        let trace = false;
+        let trace = true;
         if trace {
             let pc = self.state.reg.get_pc();
             let opcode_index = self.state.peek_pc();
