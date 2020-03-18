@@ -19,10 +19,6 @@ pub struct Decoder {
     no_prefix: [Option<Opcode>; 256],
     prefix_cb: [Option<Opcode>; 256],
     prefix_ed: [Option<Opcode>; 256],
-    prefix_dd: [Option<Opcode>; 256],
-    prefix_ddcb: [Option<Opcode>; 256],
-    prefix_fd: [Option<Opcode>; 256],
-    prefix_fdcb: [Option<Opcode>; 256],
 }
 
 impl Decoder {
@@ -83,78 +79,6 @@ impl Decoder {
                 None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
                 None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
             ],
-            prefix_dd: [
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-            ],
-            prefix_ddcb: [
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-            ],
-            prefix_fd: [
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-            ],
-            prefix_fdcb: [
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
-            ],
         };
         decoder.load_no_prefix();
         decoder.load_prefix_cb();
@@ -165,23 +89,10 @@ impl Decoder {
     pub fn decode(&self, state: &mut State) -> &Opcode {
         let b0 = state.advance_pc();
         let opcode = match b0 {
-            0xcb => &self.prefix_cb[state.advance_pc() as usize],
-            0xed => &self.prefix_ed[state.advance_pc() as usize],
-            0xdd => {
-                let b1 = state.advance_pc();
-                if b1 == 0xcb {
-                    &self.prefix_ddcb[state.advance_pc() as usize]
-                } else {
-                    &self.prefix_dd[b1 as usize]
-                }
-            },
-            0xfd => {
-                let b1 = state.advance_pc();
-                if b1 == 0xcb {
-                    &self.prefix_fdcb[state.advance_pc() as usize]
-                } else {
-                    &self.prefix_fd[b1 as usize]
-                }
+            0xcb => &self.prefix_cb[state.advance_pc() as usize], // TODO, alt index
+            0xed => {
+                state.clear_index(); // With ed, the current prefix is ignored
+                &self.prefix_ed[state.advance_pc() as usize]
             },
             _ => &self.no_prefix[b0 as usize]
             // TODO: verify how dddd, dded, ddfd, fddd, fded and fdfd work
@@ -282,9 +193,9 @@ impl Decoder {
                         0 => Some(build_push_rr(RP2[p.p])), // PUSH rr
                         1 => match p.p {
                             0 => Some(build_call()), // Call nn
-                            1 => None, // DD prefix
+                            1 => Some(build_prefix(Reg16::IX)), // DD prefix
                             2 => None, // ED prefix
-                            3 => None, // FD prefix
+                            3 => Some(build_prefix(Reg16::IY)), // FD prefix
                             _ => panic!("Unreachable")
                         },
                         _ => panic!("Unreachable")

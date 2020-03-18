@@ -41,6 +41,18 @@ impl Opcode {
     }
 }
 
+pub fn build_prefix(index: Reg16) -> Opcode {
+    Opcode {
+        name: "".to_string(),
+        cycles: 0,
+        action: Box::new(move |state: &mut State| {
+            // Change the index mode to IX or IY
+            let d = state.advance_pc() as i8;
+            state.set_index(index, d);
+        })
+    }
+}
+
 pub fn build_nop() -> Opcode {
     Opcode {
         name: "NOP".to_string(),

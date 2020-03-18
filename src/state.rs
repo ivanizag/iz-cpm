@@ -8,8 +8,10 @@ pub struct State {
     pub io: RefCell<Box<dyn Io>>,
     pub cycles: u64,
     pub halted: bool,
+    // Alternate index management
     pub index: Reg16, // Using HL, IX or IY
-    pub displacement: i8 // Used for (IX+d) and (iY+d)
+    pub displacement: i8, // Used for (IX+d) and (iY+d)
+    pub index_changed: bool, // Use the index change for the next opcode, reset afterwards
 }
 
 impl State {
@@ -21,7 +23,8 @@ impl State {
             cycles: 0,
             halted: false,
             index: Reg16::HL,
-            displacement: 0
+            displacement: 0,
+            index_changed: false
         }
     }
 
@@ -71,6 +74,24 @@ impl State {
 
         self.reg.set16(Reg16::SP, sp);
         (l as u16) + ((h as u16) << 8)
+    }
+
+    pub fn set_index(&mut self, index: Reg16, d: i8) {
+        self.index = index;
+        self.displacement = d;
+        self.index_changed = true;
+    }
+
+    pub fn step(&mut self) {
+        if !self.index_changed {
+            self.clear_index()
+        }
+    }
+
+    pub fn clear_index(&mut self) {
+        self.index = Reg16::HL;
+        self.displacement = 0;
+        self.index_changed = false;
     }
 
     pub fn get_index_value(& self) -> u16 {

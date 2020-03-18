@@ -27,12 +27,18 @@ impl Cpu {
     }
 
     pub fn execute_instruction(&mut self) {
-        let pc = self.state.reg.get_pc();
-        let opcode_index = self.state.peek_pc();
-        print!("==== {:04x}: {:02x} ", pc, opcode_index);
+        let trace = false;
+        if trace {
+            let pc = self.state.reg.get_pc();
+            let opcode_index = self.state.peek_pc();
+            print!("==== {:04x}: {:02x} ", pc, opcode_index);
+        }
         let opcode = self.decoder.decode(&mut self.state);
-        println!("{}", opcode.disasm(&self.state));
-        opcode.execute(&mut self.state)
+        if trace && opcode.name != "" {
+            println!("{}", opcode.disasm(&self.state));
+        }
+        opcode.execute(&mut self.state);
+        self.state.step();
     }
 }
 

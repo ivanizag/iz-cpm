@@ -51,19 +51,22 @@ fn main() {
 
     //println!("Testing \"testfiles/zexdoc.com\"...");
     cpu.state.reg.set_pc(0x100);
+    let trace = false;
     loop {
         cpu.execute_instruction();
 
-        println!("PC({:04x}) AF({:04x}) BC({:04x}) DE({:04x}) HL({:04x}) SP({:04x}) IX({:04x}) IY({:04x})",
-            cpu.state.reg.get_pc(),
-            cpu.state.reg.get16(Reg16::AF),
-            cpu.state.reg.get16(Reg16::BC),
-            cpu.state.reg.get16(Reg16::DE),
-            cpu.state.reg.get16(Reg16::HL),
-            cpu.state.reg.get16(Reg16::SP),
-            cpu.state.reg.get16(Reg16::IX),
-            cpu.state.reg.get16(Reg16::IX)
-        );
+        if trace {
+            println!("PC({:04x}) AF({:04x}) BC({:04x}) DE({:04x}) HL({:04x}) SP({:04x}) IX({:04x}) IY({:04x})",
+                cpu.state.reg.get_pc(),
+                cpu.state.reg.get16(Reg16::AF),
+                cpu.state.reg.get16(Reg16::BC),
+                cpu.state.reg.get16(Reg16::DE),
+                cpu.state.reg.get16(Reg16::HL),
+                cpu.state.reg.get16(Reg16::SP),
+                cpu.state.reg.get16(Reg16::IX),
+                cpu.state.reg.get16(Reg16::IX)
+            );
+        }
 
         if cpu.state.peek16_pc() == 0xfff0 {
             return;
