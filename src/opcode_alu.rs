@@ -8,6 +8,8 @@ pub fn build_operator_a_r(r: Reg8, (op, name): (Operator, &str)) -> Opcode {
         name: format!("{} A, {:?}", name, r),
         cycles: 4, // (HL) 7, (ix+d) 19
         action: Box::new(move |state: &mut State| {
+            state.load_displacement(r);
+
             let a = state.reg.get_a();
             let b = state.get_reg(r);
             let v = op(state, a, b);

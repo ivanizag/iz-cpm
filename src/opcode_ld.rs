@@ -58,7 +58,12 @@ pub fn build_ld_r_r(dst: Reg8, src: Reg8, special: bool) -> Opcode {
         name: format!("LD {}, {}", dst, src),
         cycles: if special {9} else {4}, // (HL): 7, IXL/IXH/IYH/IYL: 8, (IX+d): 19
         action: Box::new(move |state: &mut State| {
+            state.load_displacement(src);
+            state.load_displacement(dst);
 
+            let value = state.get_reg(src);
+            state.set_reg(dst, value);
+            /*
             let value = if dst == Reg8::_HL {
                 state.reg.get8(src)
             } else {
@@ -69,6 +74,7 @@ pub fn build_ld_r_r(dst: Reg8, src: Reg8, special: bool) -> Opcode {
             } else {
                 state.set_reg(dst, value);
             }
+            */
         })
     }
 }
@@ -78,6 +84,7 @@ pub fn build_ld_r_n(r: Reg8) -> Opcode {
         name: format!("LD {}, n", r),
         cycles: 7, // (HL): 10, IXL/IXH/IYH/IYL: 11,  (IX+d): 19
         action: Box::new(move |state: &mut State| {
+            state.load_displacement(r);
             let value = state.advance_pc();
             state.set_reg(r, value);
         })
@@ -246,6 +253,7 @@ pub fn build_ld_block((inc, repeat, postfix) : (bool, bool, &'static str)) -> Op
             let bc = state.reg.inc_dec16(Reg16::BC, false /*decrement*/);
 
             // TUZD-4.2
+            //println!("LDIR {:02x} {:02x} {:02b}", value, state.reg.get_a(), value.wrapping_add(state.reg.get_a()));
             let n = value.wrapping_add(state.reg.get_a());
             state.reg.put_flag(Flag::_5, n & 1 != 0);
             state.reg.clear_flag(Flag::H);

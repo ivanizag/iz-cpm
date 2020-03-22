@@ -23,6 +23,8 @@ pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast
         name: format!("{}{}{}", name, separator, r),
         cycles: if fast {4} else {8}, // The one byte opcodes are faster // (HL): 15, (IX+d): 23
         action: Box::new(move |state: &mut State| {
+            state.load_displacement(r);
+
             let mut v = state.get_reg(r);
             let carry: bool;
 
@@ -76,6 +78,8 @@ pub fn build_bit_r(bit: u8, r: Reg8) -> Opcode {
         name: format!("BIT {}, {}", bit, r),
         cycles: 8, // (HL) 12, (IX+d) 20
         action: Box::new(move |state: &mut State| {
+            state.load_displacement(r);
+
             let v8 = state.get_reg(r);
             let z = v8 & (1<<bit);
             state.reg.update_sz53p_flags(z); // TUZD-4.1, TOOD: exceptions for (HL)
@@ -89,6 +93,7 @@ pub fn build_set_r(bit: u8, r: Reg8) -> Opcode {
         name: format!("SET {}, {}", bit, r),
         cycles: 8, // (HL) 15, (IX+d) 23
         action: Box::new(move |state: &mut State| {
+            state.load_displacement(r);
             let mut v = state.get_reg(r);
             v = v | (1<<bit);
             state.set_reg(r, v);

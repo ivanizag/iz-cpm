@@ -53,6 +53,7 @@ pub fn build_inc_r(r: Reg8) -> Opcode {
         name: format!("INC {}", r),
         cycles: 4, // (HL) 11, (IX+d) 23, IXH/IXL,IYH,IYL: 8
         action: Box::new(move |state: &mut State| {
+            state.load_displacement(r);
             let a = state.get_reg(r);
             let v = operator_inc(state, a);
             state.set_reg(r, v);
@@ -65,6 +66,7 @@ pub fn build_dec_r(r: Reg8) -> Opcode {
         name: format!("DEC {}", r),
         cycles: 4, // (HL) 11, (IX+d) 23, IXH/IXL,IYH,IYL: 8
         action: Box::new(move |state: &mut State| {
+            state.load_displacement(r);
             let a = state.get_reg(r);
             let v = operator_dec(state, a);
             state.set_reg(r, v);

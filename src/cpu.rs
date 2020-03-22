@@ -30,11 +30,13 @@ impl Cpu {
         let trace = true;
         if trace {
             let pc = self.state.reg.get_pc();
-            let opcode_index = self.state.peek_pc();
-            print!("==== {:04x}: {:02x} ", pc, opcode_index);
+            let opcode_index = self.state.mem.peek(pc);
+            //print!("==== {:04x}: {:02x} ", pc, opcode_index);
+            print!("==== {:04x}: {:02x} {:02x} {:02x} ", pc, opcode_index,
+                self.state.mem.peek(pc+1), self.state.mem.peek(pc+2));
         }
         let opcode = self.decoder.decode(&mut self.state);
-        if trace && opcode.name != "" {
+        if trace {
             println!("{}", opcode.disasm(&self.state));
         }
         opcode.execute(&mut self.state);

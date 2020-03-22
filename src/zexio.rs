@@ -8,7 +8,8 @@ impl Io for ZexIo {
     fn port_in(&self, state: &State, _address: u16) -> u8 {
         //println!("IO address IN {:04x}", address);
         ZexIo::bdos(state);
-        0xff
+        // Return the current value in A
+        state.reg.get_a()
     }
 
     fn port_out(&self, _state: &State, _address: u16, _value: u8) {

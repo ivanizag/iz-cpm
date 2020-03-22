@@ -11,6 +11,7 @@ pub struct State {
     // Alternate index management
     pub index: Reg16, // Using HL, IX or IY
     pub displacement: i8, // Used for (IX+d) and (iY+d)
+    pub displacement_loaded: bool, // TODO: remove
     pub index_changed: bool, // Use the index change for the next opcode, reset afterwards
 }
 
@@ -24,6 +25,7 @@ impl State {
             halted: false,
             index: Reg16::HL,
             displacement: 0,
+            displacement_loaded: false,
             index_changed: false
         }
     }
@@ -76,32 +78,65 @@ impl State {
         (l as u16) + ((h as u16) << 8)
     }
 
-    pub fn set_index(&mut self, index: Reg16, d: i8) {
+    pub fn set_index(&mut self, index: Reg16) {
         self.index = index;
-        self.displacement = d;
         self.index_changed = true;
     }
 
     pub fn step(&mut self) {
-        if !self.index_changed {
-            self.clear_index()
+        if self.index_changed {
+            self.index_changed = false;
+        } else {
+            self.clear_index();
         }
     }
 
     pub fn clear_index(&mut self) {
         self.index = Reg16::HL;
-        self.displacement = 0;
+        self.displacement_loaded = false;
         self.index_changed = false;
+    }
+
+    pub fn get_index_description(&self) -> String {
+        if self.index == Reg16::HL {
+            "".to_string()
+        } else if self.displacement_loaded {
+            format!("{:?} ({})", self.index, self.displacement_loaded)
+        } else {
+            format!("{:?}", self.index)
+        }
+    }
+
+    pub fn load_displacement(&mut self, reg: Reg8) {
+        /*
+        The displacement byte is a signed 8-bit integer (-128..+127) used
+        in some instructions to specifiy a displacement added to a given
+        memory address. Its presence or absence depends on the instruction
+        at hand, therefore, after reading the prefix and opcode, one has
+        enough information to figure out whether to expect a displacement
+        byte or not.
+        */
+        if reg == Reg8::_HL && self.index != Reg16::HL {
+            self.displacement = self.advance_pc() as i8;
+            self.displacement_loaded = true;
+        }
     }
 
     pub fn get_index_value(& self) -> u16 {
         self.reg.get16(self.index)
     }
 
-    fn get_index_address(& self) -> u16 {
+    fn get_index_address(&self) -> u16 {
         // Pseudo register (HL), (IX+d), (IY+d)
         let address = self.reg.get16(self.index);
-        (address as i16).wrapping_add(self.displacement as i16) as u16
+        if self.index != Reg16::HL {
+            if !self.displacement_loaded {
+                panic!("Displacement used but not loaded")
+            }
+            (address as i16).wrapping_add(self.displacement as i16) as u16
+        } else {
+            address
+        }
     }
 
     fn translate_reg(&self, reg: Reg8) -> Reg8 {

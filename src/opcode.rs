@@ -20,35 +20,38 @@ impl Opcode {
     }
 
     pub fn disasm(&self, state: &State) -> String {
+        let name = format!("{} {}",
+            state.get_index_description(), self.name);
+
         if self.name.contains("nn") {
             // Immediate argument 16 bits
             let nn = state.peek16_pc();
             let nn_str = format!("{:04x}h", nn);
-            self.name.replace("nn", &nn_str)
+            name.replace("nn", &nn_str)
         } else if self.name.contains("n") {
             // Immediate argument 8 bits
             let n = state.peek_pc();
             let n_str = format!("{:02x}h", n);
-            self.name.replace("n", &n_str)
+            name.replace("n", &n_str)
         } else if self.name.contains("n") {
             // Immediate argument 8 bits signed
             let d = state.peek_pc() as i8;
             let d_str = format!("{}", d);
-            self.name.replace("d", &d_str)
+            name.replace("d", &d_str)
         } else {
-            self.name.clone()
+            name
         }
     }
 }
 
 pub fn build_prefix(index: Reg16) -> Opcode {
     Opcode {
-        name: "".to_string(),
+        name: "PREFIX".to_string(),
         cycles: 0,
         action: Box::new(move |state: &mut State| {
             // Change the index mode to IX or IY
-            let d = state.advance_pc() as i8;
-            state.set_index(index, d);
+            //let d = state.advance_pc() as i8;
+            state.set_index(index /*, d*/);
         })
     }
 }
