@@ -9,10 +9,10 @@ pub fn build_add_hl_rr(rr: Reg16) -> Opcode {
         name: format!("ADD HL, {:?}", rr),
         cycles: 11, // IX or IY: 15
         action: Box::new(move |state: &mut State| {
-            let mut v = state.get_index_value();
-            v = v.wrapping_add(state.get_reg16(rr));
-            state.reg.set16(Reg16::HL, v);
-            // TODO: flags
+            let aa = state.get_index_value();
+            let bb = state.get_reg16(rr);
+            let vv = operator_add16(state, aa, bb);
+            state.reg.set16(Reg16::HL, vv);
         })
     }
 }
@@ -22,13 +22,10 @@ pub fn build_adc_hl_rr(rr: Reg16) -> Opcode {
         name: format!("ADC HL, {:?}", rr),
         cycles: 15,
         action: Box::new(move |state: &mut State| {
-            let mut v = state.get_index_value(); // This will always be HL.
-            v = v.wrapping_add(state.get_reg16(rr));
-            if state.reg.get_flag(Flag::C) {
-                v = v.wrapping_add(1);
-            }
-            state.reg.set16(Reg16::HL, v);
-            // TODO: flags
+            let aa = state.get_index_value(); // This will always be HL.
+            let bb = state.get_reg16(rr);
+            let vv = operator_adc16(state, aa, bb);
+            state.reg.set16(Reg16::HL, vv);
         })
     }
 }

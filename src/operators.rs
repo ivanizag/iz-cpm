@@ -23,6 +23,40 @@ pub fn operator_adc(state: &mut State, a: u8, b: u8) -> u8 {
     v
 }
 
+pub fn operator_add16(state: &mut State, aa: u16, bb: u16) -> u16 {
+    let aaaa = aa as u32;
+    let bbbb = bb as u32;
+    let vvvv = aaaa + bbbb;
+
+    let vv = vvvv as u16;
+
+    // TUZD-8.6
+    // Flags are affected by the high order byte.
+    // S, Z and P/V are not updated
+    state.reg.update_53_flags((vv >> 8) as u8);
+    state.reg.update_ch_flags(((aaaa ^ bbbb ^ vvvv) >> 8) as u16);
+    state.reg.clear_flag(Flag::N);
+    vv
+}
+
+pub fn operator_adc16(state: &mut State, aa: u16, bb: u16) -> u16 {
+    let aaaa = aa as u32;
+    let bbbb = bb as u32;
+    let mut vvvv = aaaa + bbbb;
+    if state.reg.get_flag(Flag::C) {
+        vvvv += 1;
+    }
+    let vv = vvvv as u16;
+
+    // TUZD-8.6
+    // Flags are affected by the high order byte, except Z.
+    state.reg.update_sz53_flags((vv >> 8) as u8);
+    state.reg.update_cvh_flags(((aaaa ^ bbbb ^ vvvv) >> 8) as u16);
+    state.reg.put_flag(Flag::Z, vv == 0);
+    state.reg.clear_flag(Flag::N);
+    vv
+}
+
 pub fn operator_inc(state: &mut State, a: u8) -> u8 {
     let aa = a as u16;
     let vv = aa + 1;
