@@ -195,8 +195,9 @@ impl Registers {
     }
 
     pub fn update_sz53_flags(&mut self, reference: u8) {
-        let f: &mut u8 = &mut self.data[Reg8::F as usize];
+        self.update_53_flags(reference);
 
+        let f: &mut u8 = &mut self.data[Reg8::F as usize];
         // Zero
         if reference == 0 {
             *f |= Flag::Z as u8
@@ -204,9 +205,17 @@ impl Registers {
             *f &= !(Flag::Z as u8)
         }
 
-        // Bits 7, 5, and 3 are copied
-        const MASK_S53: u8 = Flag::S as u8 + Flag::_5 as u8 + Flag::_3 as u8;
-        *f = (*f & !MASK_S53) + (reference & MASK_S53);
+        // Sign is copied
+        const MASK_S: u8 = Flag::S as u8;
+        *f = (*f & !MASK_S) + (reference & MASK_S);
+    }
+
+    pub fn update_53_flags(&mut self, reference: u8) {
+        let f: &mut u8 = &mut self.data[Reg8::F as usize];
+
+        // Bits 5, and 3 are copied
+        const MASK_53: u8 = Flag::_5 as u8 + Flag::_3 as u8;
+        *f = (*f & !MASK_53) + (reference & MASK_53);
     }
 
     pub fn update_p_flag(&mut self, reference: u8) {
@@ -220,7 +229,7 @@ impl Registers {
         let half_bit  = (xored >> 4 & 1) != 0;
 
         self.put_flag(Flag::H, half_bit);
-        self.put_flag(Flag::P, carry_bit == top_xor); // As overflow flag
+        self.put_flag(Flag::P, carry_bit != top_xor); // As overflow flag
     }
 
     pub fn update_cvh_flags(&mut self, xored: u16) {

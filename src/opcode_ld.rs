@@ -246,7 +246,7 @@ pub fn build_ld_block((inc, repeat, postfix) : (bool, bool, &'static str)) -> Op
             let bc = state.reg.inc_dec16(Reg16::BC, false /*decrement*/);
 
             // TUZD-4.2
-            let n = value & state.reg.get_a();
+            let n = value.wrapping_add(state.reg.get_a());
             state.reg.put_flag(Flag::_5, n & 1 != 0);
             state.reg.clear_flag(Flag::H);
             state.reg.put_flag(Flag::_3, n & 0x08 != 0);

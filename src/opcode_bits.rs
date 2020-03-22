@@ -61,7 +61,9 @@ pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast
             state.reg.put_flag(Flag::C, carry);
             state.reg.clear_flag(Flag::H);
             state.reg.clear_flag(Flag::N);
-            if !fast {
+            if fast {
+                state.reg.update_53_flags(v);
+            } else {
                 state.reg.update_sz53p_flags(v);
             }
         })
