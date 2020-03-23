@@ -81,6 +81,7 @@ pub fn build_jp_hl() -> Opcode {
         name: "JP HL".to_string(), // Note: it is usaully written as JP (HL)
         cycles: 4, // IX/IY: 9
         action: Box::new(move |state: &mut State| {
+            // Note: no displacement added to the index
             let address = state.get_index_value();
             state.reg.set_pc(address);
         })

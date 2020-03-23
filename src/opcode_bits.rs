@@ -94,6 +94,7 @@ pub fn build_set_r(bit: u8, r: Reg8) -> Opcode {
         cycles: 8, // (HL) 15, (IX+d) 23
         action: Box::new(move |state: &mut State| {
             state.load_displacement(r);
+
             let mut v = state.get_reg(r);
             v = v | (1<<bit);
             state.set_reg(r, v);
@@ -107,6 +108,8 @@ pub fn build_res_r(bit: u8, r: Reg8) -> Opcode {
         name: format!("RES {}, {}", bit, r),
         cycles: 8, // (HL) 15, (IX+d) 23
         action: Box::new(move |state: &mut State| {
+            state.load_displacement(r);
+
             let mut v = state.get_reg(r);
             v = v & !(1<<bit);
             state.set_reg(r, v);

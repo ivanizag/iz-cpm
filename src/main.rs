@@ -64,6 +64,7 @@ fn main() {
         cpu.execute_instruction();
 
         if trace {
+            // CPU regs
             println!("PC({:04x}) AF({:04x}) BC({:04x}) DE({:04x}) HL({:04x}) SP({:04x}) IX({:04x}) IY({:04x}) Flags({:08b})",
                 cpu.state.reg.get_pc(),
                 cpu.state.reg.get16(Reg16::AF),
@@ -75,6 +76,13 @@ fn main() {
                 cpu.state.reg.get16(Reg16::IY),
                 cpu.state.reg.get8(Reg8::F)
             );
+
+            // Test state
+            print!("Zex state: ");
+            for i in 0..0x10 {
+                print!("{:02x} ", cpu.state.mem.peek(0x0100 + i));
+            }
+            println!("");
         }
 
         if cpu.state.peek16_pc() == 0xfff0 {

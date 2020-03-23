@@ -83,9 +83,9 @@ pub fn build_inc_dec_rr(rr: Reg16, inc: bool) -> Opcode {
         name: format!("{} {:?}", mnemonic, rr),
         cycles: 6, // IX, IY: 10
         action: Box::new(move |state: &mut State| {
-            let mut v = state.reg.get16(rr);
+            let mut v = state.get_reg16(rr);
             v = v.wrapping_add(delta);
-            state.reg.set16(rr, v);
+            state.set_reg16(rr, v);
             // Note: flags not affected on the 16 bit INC and DEC
         })
     }    

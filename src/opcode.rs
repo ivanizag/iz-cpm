@@ -102,7 +102,7 @@ pub fn build_push_rr(rr: Reg16) -> Opcode {
         name: format!("PUSH {:?}", rr),
         cycles: 11, // IX/IY: 15
         action: Box::new(move |state: &mut State| {
-            let value = state.reg.get16(rr);
+            let value = state.get_reg16(rr);
             state.push(value);
         })
     }

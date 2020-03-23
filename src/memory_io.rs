@@ -6,15 +6,13 @@ pub trait Memory {
     fn poke(&mut self, address: u16, value: u8);
 
     fn peek16(&self, address: u16) -> u16 {
-        // Todo: wrapping
         self.peek(address) as u16
-        + ((self.peek(address + 1) as u16) << 8)
+        + ((self.peek(address.wrapping_add(1)) as u16) << 8)
     }
 
     fn poke16(&mut self, address: u16, value: u16) {
-        // Todo: wrapping
         self.poke(address, value as u8 );
-        self.poke(address+1, (value >> 8) as u8);
+        self.poke(address.wrapping_add(1), (value >> 8) as u8);
     }
 }
 
