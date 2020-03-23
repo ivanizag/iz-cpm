@@ -85,6 +85,7 @@ pub fn build_ld_r_n(r: Reg8) -> Opcode {
         cycles: 7, // (HL): 10, IXL/IXH/IYH/IYL: 11,  (IX+d): 19
         action: Box::new(move |state: &mut State| {
             state.load_displacement(r);
+
             let value = state.advance_pc();
             state.set_reg(r, value);
         })

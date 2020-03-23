@@ -36,7 +36,7 @@ pub fn build_sbc_hl_rr(rr: Reg16) -> Opcode {
         cycles: 15,
         action: Box::new(move |state: &mut State| {
             let mut v = state.get_index_value(); // This will always be HL.
-            v = v.wrapping_add(state.get_reg16(rr));
+            v = v.wrapping_sub(state.get_reg16(rr));
             if state.reg.get_flag(Flag::C) {
                 v = v.wrapping_sub(1);
             }
@@ -54,6 +54,7 @@ pub fn build_inc_r(r: Reg8) -> Opcode {
         cycles: 4, // (HL) 11, (IX+d) 23, IXH/IXL,IYH,IYL: 8
         action: Box::new(move |state: &mut State| {
             state.load_displacement(r);
+
             let a = state.get_reg(r);
             let v = operator_inc(state, a);
             state.set_reg(r, v);
@@ -67,6 +68,7 @@ pub fn build_dec_r(r: Reg8) -> Opcode {
         cycles: 4, // (HL) 11, (IX+d) 23, IXH/IXL,IYH,IYL: 8
         action: Box::new(move |state: &mut State| {
             state.load_displacement(r);
+
             let a = state.get_reg(r);
             let v = operator_dec(state, a);
             state.set_reg(r, v);

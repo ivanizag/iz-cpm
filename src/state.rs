@@ -57,10 +57,10 @@ impl State {
         let mut sp = self.reg.get16(Reg16::SP);
 
         sp = sp.wrapping_sub(1);
-        self.mem.poke(sp, (value >> 8) as u8);
+        self.mem.poke(sp, value as u8);
 
         sp = sp.wrapping_sub(1);
-        self.mem.poke(sp, value as u8);
+        self.mem.poke(sp, (value >> 8) as u8);
 
         self.reg.set16(Reg16::SP, sp);
     }
@@ -68,10 +68,10 @@ impl State {
     pub fn pop(&mut self) -> u16 {
         let mut sp = self.reg.get16(Reg16::SP);
 
-        let l = self.mem.peek(sp);
+        let h = self.mem.peek(sp);
         sp = sp.wrapping_add(1);
 
-        let h = self.mem.peek(sp);
+        let l = self.mem.peek(sp);
         sp = sp.wrapping_add(1);
 
         self.reg.set16(Reg16::SP, sp);
