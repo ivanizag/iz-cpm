@@ -12,7 +12,7 @@ pub fn build_add_hl_rr(rr: Reg16) -> Opcode {
             let aa = state.get_index_value();
             let bb = state.get_reg16(rr);
             let vv = operator_add16(state, aa, bb);
-            state.reg.set16(Reg16::HL, vv);
+            state.set_reg16(Reg16::HL, vv);
         })
     }
 }
@@ -35,13 +35,10 @@ pub fn build_sbc_hl_rr(rr: Reg16) -> Opcode {
         name: format!("SBC HL, {:?}", rr),
         cycles: 15,
         action: Box::new(move |state: &mut State| {
-            let mut v = state.get_index_value(); // This will always be HL.
-            v = v.wrapping_sub(state.get_reg16(rr));
-            if state.reg.get_flag(Flag::C) {
-                v = v.wrapping_sub(1);
-            }
-            state.reg.set16(Reg16::HL, v);
-            // TODO: flags
+            let aa = state.get_index_value(); // This will always be HL.
+            let bb = state.get_reg16(rr);
+            let vv = operator_sbc16(state, aa, bb);
+            state.reg.set16(Reg16::HL, vv);
         })
     }
 }

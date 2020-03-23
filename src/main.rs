@@ -59,7 +59,7 @@ fn main() {
 
     //println!("Testing \"testfiles/zexdoc.com\"...");
     cpu.state.reg.set_pc(0x100);
-    let trace = true;
+    let trace = false;
     loop {
         cpu.execute_instruction();
 
@@ -78,9 +78,10 @@ fn main() {
             );
 
             // Test state
-            print!("Zex state: ");
+            let addr = 0x1d80 as u16;
+            print!("Zex state 0x{:04x}: ", addr);
             for i in 0..0x10 {
-                print!("{:02x} ", cpu.state.mem.peek(0x0100 + i));
+                print!("{:02x} ", cpu.state.mem.peek(addr + i));
             }
             println!("");
         }
