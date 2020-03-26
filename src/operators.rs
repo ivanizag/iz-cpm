@@ -152,7 +152,7 @@ pub fn operator_or(state: &mut State, a: u8, b: u8) -> u8 {
 
 pub fn operator_cp(state: &mut State, a: u8, b: u8) -> u8 {
     state.reg.clear_flag(Flag::C);
-    operator_sbc(state, a, b);
+    operator_sub(state, a, b);
 
     // Note: flags 3 and 5 are taken from b. TUZD-8.4
     state.reg.update_53_flags(b);

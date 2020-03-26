@@ -145,6 +145,7 @@ pub fn build_cpl() -> Opcode {
 
             state.reg.set_flag(Flag::H);
             state.reg.set_flag(Flag::N);
+            state.reg.update_53_flags(v);
         })
     }
 }
@@ -154,21 +155,28 @@ pub fn build_scf() -> Opcode {
         name: "SCF".to_string(),
         cycles: 4,
         action: Box::new(move |state: &mut State| {
+            let a = state.reg.get_a();
+
             state.reg.set_flag(Flag::C);
             state.reg.clear_flag(Flag::H);
             state.reg.clear_flag(Flag::N);
+            state.reg.update_53_flags(a);
         })
     }
 }
 
 pub fn build_ccf() -> Opcode {
     Opcode {
-        name: "SCF".to_string(),
+        name: "CCF".to_string(),
         cycles: 4,
         action: Box::new(move |state: &mut State| {
-            state.reg.put_flag(Flag::C, !state.reg.get_flag(Flag::C));
-            state.reg.put_flag(Flag::H, !state.reg.get_flag(Flag::H));
+            let a = state.reg.get_a();
+            let c = state.reg.get_flag(Flag::C);
+
+            state.reg.put_flag(Flag::C, !c);
+            state.reg.put_flag(Flag::H, c);
             state.reg.clear_flag(Flag::N);
+            state.reg.update_53_flags(a);
         })
     }
 }
