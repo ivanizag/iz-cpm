@@ -72,7 +72,6 @@ pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast
     }
 }
 
-// TODO: special cases for DDCB and FDCB prefix
 pub fn build_bit_r(bit: u8, r: Reg8) -> Opcode {
     Opcode {
         name: format!("BIT {}, {}", bit, r),
@@ -82,7 +81,25 @@ pub fn build_bit_r(bit: u8, r: Reg8) -> Opcode {
 
             let v8 = state.get_reg(r);
             let z = v8 & (1<<bit);
-            state.reg.update_sz53p_flags(z); // TUZD-4.1, TOOD: exceptions for (HL)
+            state.reg.update_sz53p_flags(z); // TUZD-4.1
+            state.reg.set_flag(Flag::H);
+            state.reg.put_flag(Flag::P, z == 0);
+            state.reg.clear_flag(Flag::N);
+
+            if r == Reg8::_HL {
+                if state.index == Reg16::HL {
+                    // Exceptions for (HL) TUZD-4-1
+                    /* Things get more bizarre with the BIT n,(HL)
+                    instruction. Again, except for YF and XF the flags
+                    are the same. YF and XF are copied from some sort
+                    of internal register */
+                } else {
+                    // Exceptions for (IX+d) TUZD-4-1
+                    let address = state.get_index_address();
+                    state.reg.update_53_flags((address >> 8) as u8);
+
+                }
+            }
         })
     }
 }
