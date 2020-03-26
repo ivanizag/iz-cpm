@@ -52,7 +52,7 @@ fn main() {
     }
 
     /*
-    Prepare system call
+    System call 5
 
     .org $5
         push af
@@ -67,7 +67,6 @@ fn main() {
         ret
 
     F579D3027AD3037BD304DB00F1C9
-      79D3027AD3037BD304DB00  C9
     Compiled with http://clrhome.org/asm/
 
     */
@@ -83,11 +82,6 @@ fn main() {
     for i in 0..code.len() {
         cpu.state.sys.poke(5 + i as u16, code[i]);
     }
-
-    //cpu.state.sys.poke(5, 0xdb); // IN A, 0
-    //cpu.state.sys.poke(6, 0x00);
-    //cpu.state.sys.poke(7, 0xc9); // RET
-
 
     //println!("Testing \"testfiles/zexdoc.com\"...");
     cpu.state.reg.set_pc(0x100);
@@ -118,10 +112,10 @@ fn main() {
             println!("");
         }
 
-        if cpu.state.peek16_pc() == 0xfff0 {
+        if cpu.state.reg.get_pc() == 0x0000 {
+            println!("");
             return;
         }
-        //println!("Z: {}", cpu.state.reg.get_flag(Flag::C));
     }
 }
 

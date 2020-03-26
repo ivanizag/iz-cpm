@@ -150,7 +150,7 @@ impl Decoder {
                     6 => Some(build_ld_r_n(R[p.y])), // LD r, n -- 8 bit load imm
                     7 => match p.y {
                         0..=3 => Some(build_rot_r(Reg8::A, ROT[p.y], true)), // rotA
-                        4 => None, // DAA, decimal adjust A
+                        4 => Some(build_nop()), // TODO: DAA, decimal adjust A
                         5 => Some(build_cpl()), // CPL, complement adjust A
                         6 => Some(build_scf()), // SCF, set carry flag
                         7 => Some(build_ccf()), // CCF, clear carry flag
