@@ -6,8 +6,8 @@ use z80::registers::*;
 #[test]
 fn test_out_e() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xed); // OUT (C), E
-    cpu.state.mem.poke(0x0001, 0x59);
+    cpu.state.sys.poke(0x0000, 0xed); // OUT (C), E
+    cpu.state.sys.poke(0x0001, 0x59);
     cpu.state.reg.set8(Reg8::E, 0x63);
     cpu.state.reg.set16(Reg16::BC, 0x6345);
 
@@ -19,8 +19,8 @@ fn test_out_e() {
 #[test]
 fn test_in_e() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xed); // IN E, (C)
-    cpu.state.mem.poke(0x0001, 0x58);
+    cpu.state.sys.poke(0x0000, 0xed); // IN E, (C)
+    cpu.state.sys.poke(0x0001, 0x58);
     cpu.state.reg.set16(Reg16::BC, 0x6345);
     cpu.state.port_out(0x6345, 0x8a);
 

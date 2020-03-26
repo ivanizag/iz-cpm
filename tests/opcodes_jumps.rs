@@ -6,8 +6,8 @@ use z80::registers::*;
 #[test]
 fn test_djnz_jump() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x10);  // DJNZ +$06
-    cpu.state.mem.poke(0x0001, 0x06); 
+    cpu.state.sys.poke(0x0000, 0x10);  // DJNZ +$06
+    cpu.state.sys.poke(0x0001, 0x06); 
     cpu.state.reg.set8(Reg8::B, 0x23);
 
     cpu.execute_instruction();
@@ -18,8 +18,8 @@ fn test_djnz_jump() {
 #[test]
 fn test_djnz_no_jump() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x10);  // DJNZ +$06
-    cpu.state.mem.poke(0x0001, 0x06); 
+    cpu.state.sys.poke(0x0000, 0x10);  // DJNZ +$06
+    cpu.state.sys.poke(0x0001, 0x06); 
     cpu.state.reg.set8(Reg8::B, 0x01);
 
     cpu.execute_instruction();
@@ -30,8 +30,8 @@ fn test_djnz_no_jump() {
 #[test]
 fn test_jr_z_jump() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x10);  // JR -$02
-    cpu.state.mem.poke(0x0001, 0xfe); 
+    cpu.state.sys.poke(0x0000, 0x10);  // JR -$02
+    cpu.state.sys.poke(0x0001, 0xfe); 
     cpu.state.reg.set_flag(Flag::Z);
 
     cpu.execute_instruction();
@@ -41,9 +41,9 @@ fn test_jr_z_jump() {
 #[test]
 fn test_jp() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xc3);  // JP $2000
-    cpu.state.mem.poke(0x0001, 0x00); 
-    cpu.state.mem.poke(0x0002, 0x20);
+    cpu.state.sys.poke(0x0000, 0xc3);  // JP $2000
+    cpu.state.sys.poke(0x0001, 0x00); 
+    cpu.state.sys.poke(0x0002, 0x20);
     
     cpu.execute_instruction();
     assert_eq!(0x2000, cpu.state.reg.get_pc());
@@ -52,9 +52,9 @@ fn test_jp() {
 #[test]
 fn test_call() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcd);  // CALL $2000
-    cpu.state.mem.poke(0x0001, 0x00); 
-    cpu.state.mem.poke(0x0002, 0x20);
+    cpu.state.sys.poke(0x0000, 0xcd);  // CALL $2000
+    cpu.state.sys.poke(0x0001, 0x00); 
+    cpu.state.sys.poke(0x0002, 0x20);
     
  
     cpu.execute_instruction();
@@ -65,9 +65,9 @@ fn test_call() {
 #[test]
 fn test_call_z_jump() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcc);  // CALL Z $2000
-    cpu.state.mem.poke(0x0001, 0x00); 
-    cpu.state.mem.poke(0x0002, 0x20);
+    cpu.state.sys.poke(0x0000, 0xcc);  // CALL Z $2000
+    cpu.state.sys.poke(0x0001, 0x00); 
+    cpu.state.sys.poke(0x0002, 0x20);
     cpu.state.reg.set_flag(Flag::Z);
      
     cpu.execute_instruction();
@@ -78,9 +78,9 @@ fn test_call_z_jump() {
 #[test]
 fn test_call_z_no_jump() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcc);  // CALL Z $2000
-    cpu.state.mem.poke(0x0001, 0x00); 
-    cpu.state.mem.poke(0x0002, 0x20);
+    cpu.state.sys.poke(0x0000, 0xcc);  // CALL Z $2000
+    cpu.state.sys.poke(0x0001, 0x00); 
+    cpu.state.sys.poke(0x0002, 0x20);
     cpu.state.reg.clear_flag(Flag::Z);
      
     cpu.execute_instruction();
@@ -90,7 +90,7 @@ fn test_call_z_no_jump() {
 #[test]
 fn test_rst() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xff);  // RST 38h    
+    cpu.state.sys.poke(0x0000, 0xff);  // RST 38h    
  
     cpu.execute_instruction();
     assert_eq!(0x0038, cpu.state.reg.get_pc());
@@ -100,11 +100,11 @@ fn test_rst() {
 #[test]
 fn test_call_ret() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcd);  // CALL $2000
-    cpu.state.mem.poke(0x0001, 0x00); 
-    cpu.state.mem.poke(0x0002, 0x20);
+    cpu.state.sys.poke(0x0000, 0xcd);  // CALL $2000
+    cpu.state.sys.poke(0x0001, 0x00); 
+    cpu.state.sys.poke(0x0002, 0x20);
 
-    cpu.state.mem.poke(0x2000, 0xc9);  // RET
+    cpu.state.sys.poke(0x2000, 0xc9);  // RET
     
     cpu.execute_instruction();
     assert_eq!(0x2000, cpu.state.reg.get_pc());

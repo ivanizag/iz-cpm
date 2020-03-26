@@ -1,44 +1,72 @@
-use super::memory_io::Io;
-use super::state::State;
-use super::registers::*;
+use super::memory_io::*;
 
-pub struct ZexIo {}
+pub struct ZexMachine {
+    mem: [u8; PLAIN_MEMORY_SIZE],
 
-impl Io for ZexIo {
-    fn port_in(&self, state: &State, _address: u16) -> u8 {
-        //println!("IO address IN {:04x}", address);
-        ZexIo::bdos(state);
-        // Return the current value in A
-        state.reg.get_a()
+    step: u16,
+    c: u8,
+    d: u8,
+    e: u8
+}
+
+impl Machine for ZexMachine {
+    fn peek(&self, address: u16) -> u8 {
+        self.mem[address as usize]
     }
 
-    fn port_out(&self, _state: &State, _address: u16, _value: u8) {
-        //println!("IO address OUT {:04x}: {:02x}", address, value);
+    fn poke(&mut self, address: u16, value: u8) {
+        self.mem[address as usize] = value;
+    }
+
+    fn port_in(&mut self, _address: u16) -> u8 {
+        self.bdos();
+        0
+    }
+
+    fn port_out(&mut self, address: u16, value: u8) {
+        let port = address & 0xff;
+        match port {
+            2 => self.c = value,
+            3 => self.d = value,
+            4 => self.e = value,
+            _ => {}
+        }
     }
 }
 
-impl ZexIo {
-    fn bdos(state: &State) {
-        let f = state.reg.get8(Reg8::C);
-        match f {
-            2 => ZexIo::bdos_c_write(state),
-            9 => ZexIo::bdos_c_writestr(state),
+impl ZexMachine {
+
+    pub fn new() -> ZexMachine {
+        ZexMachine {
+            mem: [0; PLAIN_MEMORY_SIZE],
+            step: 0,
+            c: 0, d: 0, e: 0
+        }
+    }
+
+
+    fn bdos(&mut self) {
+        match self.c {
+            2 => self.bdos_c_write(),
+            9 => self.bdos_c_writestr(),
             _ => panic!("BDOS command not implemented")
         }
     }
 
-    fn bdos_c_write(state: &State) {
-        let ch = state.reg.get8(Reg8::E);
-        print!("{}", ch);
+    fn bdos_c_write(&self) {
+        print!("{}", self.e);
     }
 
-    fn bdos_c_writestr(state: &State) {
-        let mut address = state.reg.get16(Reg16::DE);
-        let mut ch = state.mem.peek(address) as char;
+    fn bdos_c_writestr(&mut self) {
+        self.step += 1;
+        let mut address = ((self.d as u16) << 8) + self.e as u16;
+        let mut ch = self.peek(address) as char;
+        //print!("<<");
         while ch != '$' {
             print!("{}", ch);
             address += 1;
-            ch = state.mem.peek(address) as char;
+            ch = self.peek(address) as char;
         }
+        //print!(">>");
     }
 }

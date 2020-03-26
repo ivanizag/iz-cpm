@@ -6,9 +6,9 @@ use z80::registers::*;
 #[test]
 fn test_two_opcodes() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x06);  // LD B, $34
-    cpu.state.mem.poke(0x0001, 0x34); 
-    cpu.state.mem.poke(0x0002, 0x78);  // LD A, B
+    cpu.state.sys.poke(0x0000, 0x06);  // LD B, $34
+    cpu.state.sys.poke(0x0001, 0x34);
+    cpu.state.sys.poke(0x0002, 0x78);  // LD A, B
  
     cpu.execute_instruction();
     cpu.execute_instruction();
@@ -21,8 +21,8 @@ fn test_two_opcodes() {
 #[test]
 fn test_push_pop_rr() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xc5);  // PUSH BC
-    cpu.state.mem.poke(0x0001, 0xf1);  // POP AF
+    cpu.state.sys.poke(0x0000, 0xc5);  // PUSH BC
+    cpu.state.sys.poke(0x0001, 0xf1);  // POP AF
     cpu.state.reg.set16(Reg16::AF, 0x5678);
     cpu.state.reg.set16(Reg16::BC, 0x1234);
 

@@ -6,7 +6,7 @@ use z80::registers::*;
 #[test]
 fn test_rrca_fast() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x0f); // RRCA
+    cpu.state.sys.poke(0x0000, 0x0f); // RRCA
     cpu.state.reg.set_a(0b10010011);
     cpu.state.reg.set_flag(Flag::C);
 
@@ -19,8 +19,8 @@ fn test_rrca_fast() {
 #[test]
 fn test_rrc_a() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcb); // RRC A
-    cpu.state.mem.poke(0x0001, 0x0f);
+    cpu.state.sys.poke(0x0000, 0xcb); // RRC A
+    cpu.state.sys.poke(0x0001, 0x0f);
     cpu.state.reg.set_a(0b10010011);
     cpu.state.reg.set_flag(Flag::C);
 
@@ -33,8 +33,8 @@ fn test_rrc_a() {
 #[test]
 fn test_rr_b() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcb); // RR B
-    cpu.state.mem.poke(0x0001, 0x18);
+    cpu.state.sys.poke(0x0000, 0xcb); // RR B
+    cpu.state.sys.poke(0x0001, 0x18);
     cpu.state.reg.set8(Reg8::B, 0b10010010);
     cpu.state.reg.set_flag(Flag::C);
 
@@ -47,8 +47,8 @@ fn test_rr_b() {
 #[test]
 fn test_sra_c() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcb); // SRA C
-    cpu.state.mem.poke(0x0001, 0x29);
+    cpu.state.sys.poke(0x0000, 0xcb); // SRA C
+    cpu.state.sys.poke(0x0001, 0x29);
     cpu.state.reg.set8(Reg8::C, 0b10010011);
     cpu.state.reg.clear_flag(Flag::C);
 
@@ -61,8 +61,8 @@ fn test_sra_c() {
 #[test]
 fn test_srl_d() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcb); // SRL D
-    cpu.state.mem.poke(0x0001, 0x3a);
+    cpu.state.sys.poke(0x0000, 0xcb); // SRL D
+    cpu.state.sys.poke(0x0001, 0x3a);
     cpu.state.reg.set8(Reg8::D, 0b10010011);
     cpu.state.reg.clear_flag(Flag::C);
 
@@ -75,8 +75,8 @@ fn test_srl_d() {
 #[test]
 fn test_rlc_a() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcb); // RLC A
-    cpu.state.mem.poke(0x0001, 0x07);
+    cpu.state.sys.poke(0x0000, 0xcb); // RLC A
+    cpu.state.sys.poke(0x0001, 0x07);
     cpu.state.reg.set_a(0b00010011);
     cpu.state.reg.set_flag(Flag::C);
 
@@ -89,8 +89,8 @@ fn test_rlc_a() {
 #[test]
 fn test_rl_b() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcb); // RL B
-    cpu.state.mem.poke(0x0001, 0x10);
+    cpu.state.sys.poke(0x0000, 0xcb); // RL B
+    cpu.state.sys.poke(0x0001, 0x10);
     cpu.state.reg.set8(Reg8::B, 0b00010011);
     cpu.state.reg.set_flag(Flag::C);
 
@@ -103,8 +103,8 @@ fn test_rl_b() {
 #[test]
 fn test_sla_c() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcb); // SLA C
-    cpu.state.mem.poke(0x0001, 0x21);
+    cpu.state.sys.poke(0x0000, 0xcb); // SLA C
+    cpu.state.sys.poke(0x0001, 0x21);
     cpu.state.reg.set8(Reg8::C, 0b10010011);
     cpu.state.reg.clear_flag(Flag::C);
 
@@ -117,8 +117,8 @@ fn test_sla_c() {
 #[test]
 fn test_sll_d() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcb); // SLL D
-    cpu.state.mem.poke(0x0001, 0x32);
+    cpu.state.sys.poke(0x0000, 0xcb); // SLL D
+    cpu.state.sys.poke(0x0001, 0x32);
     cpu.state.reg.set8(Reg8::D, 0b10010011);
     cpu.state.reg.clear_flag(Flag::C);
 
@@ -131,8 +131,8 @@ fn test_sll_d() {
 #[test]
 fn test_bit_a() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcb); // BIT 1, A
-    cpu.state.mem.poke(0x0001, 0x4f);
+    cpu.state.sys.poke(0x0000, 0xcb); // BIT 1, A
+    cpu.state.sys.poke(0x0001, 0x4f);
     cpu.state.reg.set_a(0b00010010);
     cpu.state.reg.set_flag(Flag::Z);
 
@@ -145,8 +145,8 @@ fn test_bit_a() {
 #[test]
 fn test_set_b() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcb); // SET 0, B
-    cpu.state.mem.poke(0x0001, 0xc0);
+    cpu.state.sys.poke(0x0000, 0xcb); // SET 0, B
+    cpu.state.sys.poke(0x0001, 0xc0);
     cpu.state.reg.set8(Reg8::B, 0b00010010);
     cpu.state.reg.clear_flag(Flag::Z);
 
@@ -159,8 +159,8 @@ fn test_set_b() {
 #[test]
 fn test_res_c() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xcb); // RES 7, C
-    cpu.state.mem.poke(0x0001, 0xb9);
+    cpu.state.sys.poke(0x0000, 0xcb); // RES 7, C
+    cpu.state.sys.poke(0x0001, 0xb9);
     cpu.state.reg.set8(Reg8::C, 0b10010011);
     cpu.state.reg.clear_flag(Flag::Z);
 
@@ -173,7 +173,7 @@ fn test_res_c() {
 #[test]
 fn test_cpl() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x2f);  // CPL
+    cpu.state.sys.poke(0x0000, 0x2f);  // CPL
     cpu.state.reg.set_a(0x3d);
 
     cpu.execute_instruction();
@@ -184,29 +184,29 @@ fn test_cpl() {
 #[test]
 fn test_rld() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xed); // RLD
-    cpu.state.mem.poke(0x0001, 0x6f);
+    cpu.state.sys.poke(0x0000, 0xed); // RLD
+    cpu.state.sys.poke(0x0001, 0x6f);
     cpu.state.reg.set_a(0xab);
     cpu.state.reg.set16(Reg16::HL, 0xccdd);
-    cpu.state.mem.poke(0xccdd, 0xcd);
+    cpu.state.sys.poke(0xccdd, 0xcd);
 
     cpu.execute_instruction();
 
     assert_eq!(0xac, cpu.state.reg.get_a());
-    assert_eq!(0xdb, cpu.state.mem.peek(0xccdd));
+    assert_eq!(0xdb, cpu.state.sys.peek(0xccdd));
 }
 
 #[test]
 fn test_rrd() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xed); // RRD
-    cpu.state.mem.poke(0x0001, 0x67);
+    cpu.state.sys.poke(0x0000, 0xed); // RRD
+    cpu.state.sys.poke(0x0001, 0x67);
     cpu.state.reg.set_a(0xab);
     cpu.state.reg.set16(Reg16::HL, 0xccdd);
-    cpu.state.mem.poke(0xccdd, 0xcd);
+    cpu.state.sys.poke(0xccdd, 0xcd);
 
     cpu.execute_instruction();
 
     assert_eq!(0xad, cpu.state.reg.get_a());
-    assert_eq!(0xbc, cpu.state.mem.peek(0xccdd));
+    assert_eq!(0xbc, cpu.state.sys.peek(0xccdd));
 }

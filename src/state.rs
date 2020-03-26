@@ -1,11 +1,9 @@
-use std::cell::RefCell;
 use super::memory_io::*;
 use super::registers::*;
 
 pub struct State {
     pub reg: Registers,
-    pub mem: Box<dyn Memory>,
-    pub io: RefCell<Box<dyn Io>>,
+    pub sys: Box<dyn Machine>,
     pub cycles: u64,
     pub halted: bool,
     // Alternate index management
@@ -16,11 +14,10 @@ pub struct State {
 }
 
 impl State {
-    pub fn new(mem: Box<dyn Memory>, io: Box<dyn Io>) -> State {
+    pub fn new(sys: Box<dyn Machine>) -> State {
         State {
             reg: Registers::new(),
-            mem,
-            io: RefCell::new(io),
+            sys,
             cycles: 0,
             halted: false,
             index: Reg16::HL,
@@ -32,19 +29,19 @@ impl State {
 
     pub fn peek_pc(&self) -> u8 {
         let pc = self.reg.get_pc();
-        self.mem.peek(pc)
+        self.sys.peek(pc)
     }
 
     pub fn advance_pc(&mut self) -> u8 {
         let pc = self.reg.get_pc();
-        let value = self.mem.peek(pc);
+        let value = self.sys.peek(pc);
         self.reg.set_pc(pc.wrapping_add(1));
         value
     }
 
     pub fn peek16_pc(&self) -> u16 {
         let pc = self.reg.get_pc();
-        self.mem.peek(pc) as u16 + ((self.mem.peek(pc+1) as u16) << 8)
+        self.sys.peek(pc) as u16 + ((self.sys.peek(pc+1) as u16) << 8)
     }
 
     pub fn advance_immediate16(&mut self) -> u16 {
@@ -60,10 +57,10 @@ impl State {
         let l = value as u8;
 
         sp = sp.wrapping_sub(1);
-        self.mem.poke(sp, h);
+        self.sys.poke(sp, h);
 
         sp = sp.wrapping_sub(1);
-        self.mem.poke(sp, l);
+        self.sys.poke(sp, l);
 
         self.reg.set16(Reg16::SP, sp);
     }
@@ -71,10 +68,10 @@ impl State {
     pub fn pop(&mut self) -> u16 {
         let mut sp = self.reg.get16(Reg16::SP);
 
-        let l = self.mem.peek(sp);
+        let l = self.sys.peek(sp);
         sp = sp.wrapping_add(1);
 
-        let h = self.mem.peek(sp);
+        let h = self.sys.peek(sp);
         sp = sp.wrapping_add(1);
 
         self.reg.set16(Reg16::SP, sp);
@@ -129,7 +126,7 @@ impl State {
         self.reg.get16(self.index)
     }
 
-    fn get_index_address(&self) -> u16 {
+    pub fn get_index_address(&self) -> u16 {
         // Pseudo register (HL), (IX+d), (IY+d)
         let address = self.reg.get16(self.index);
         if self.index != Reg16::HL {
@@ -161,7 +158,7 @@ impl State {
 
     pub fn get_reg(& self, reg: Reg8) -> u8 {
         if reg == Reg8::_HL {
-            self.mem.peek(self.get_index_address())
+            self.sys.peek(self.get_index_address())
         } else {
             self.reg.get8(self.translate_reg(reg))
         }
@@ -177,7 +174,7 @@ impl State {
 
     pub fn set_reg(&mut self, reg: Reg8, value: u8) {
         if reg == Reg8::_HL {
-            self.mem.poke(self.get_index_address(), value);
+            self.sys.poke(self.get_index_address(), value);
         } else {
             self.reg.set8(reg, value);
         }
@@ -191,11 +188,11 @@ impl State {
         }
     }
 
-    pub fn port_in(&self, address: u16) -> u8 {
-        self.io.borrow().port_in(self, address)
+    pub fn port_in(&mut self, address: u16) -> u8 {
+        self.sys.port_in(address)
     }
 
-    pub fn port_out(&self, address: u16, value: u8) {
-        self.io.borrow().port_out(self, address, value);
+    pub fn port_out(&mut self, address: u16, value: u8) {
+        self.sys.port_out(address, value);
     }
 }

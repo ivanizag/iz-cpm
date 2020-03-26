@@ -6,8 +6,8 @@ use z80::registers::*;
 #[test]
 fn test_neg_a() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0xed);  // NEG
-    cpu.state.mem.poke(0x0001, 0x44);
+    cpu.state.sys.poke(0x0000, 0xed);  // NEG
+    cpu.state.sys.poke(0x0001, 0x44);
     cpu.state.reg.set_a(0xff);
 
     cpu.execute_instruction();
@@ -18,7 +18,7 @@ fn test_neg_a() {
 #[test]
 fn test_inc_a() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x3c);  // INC A
+    cpu.state.sys.poke(0x0000, 0x3c);  // INC A
     cpu.state.reg.set_a(0xa4);
 
     cpu.execute_instruction();
@@ -29,7 +29,7 @@ fn test_inc_a() {
 #[test]
 fn test_inc_a_overflow() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x3c);  // INC A
+    cpu.state.sys.poke(0x0000, 0x3c);  // INC A
     cpu.state.reg.set_a(0xff);
 
     cpu.execute_instruction();
@@ -40,7 +40,7 @@ fn test_inc_a_overflow() {
 #[test]
 fn test_inc_e() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x1c);  // INC E
+    cpu.state.sys.poke(0x0000, 0x1c);  // INC E
     cpu.state.reg.set8(Reg8::E, 0x14);
 
     cpu.execute_instruction();
@@ -51,7 +51,7 @@ fn test_inc_e() {
 #[test]
 fn test_dec_a() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x3d);  // DEC A
+    cpu.state.sys.poke(0x0000, 0x3d);  // DEC A
     cpu.state.reg.set_a(0xa4);
 
     cpu.execute_instruction();
@@ -62,7 +62,7 @@ fn test_dec_a() {
 #[test]
 fn test_dec_a_underflow() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x3d);  // DEC A
+    cpu.state.sys.poke(0x0000, 0x3d);  // DEC A
     cpu.state.reg.set_a(0x00);
 
     cpu.execute_instruction();
@@ -73,7 +73,7 @@ fn test_dec_a_underflow() {
 #[test]
 fn test_inc_de() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x13);  // INC DE
+    cpu.state.sys.poke(0x0000, 0x13);  // INC DE
     cpu.state.reg.set16(Reg16::DE, 0xcea4);
 
     cpu.execute_instruction();
@@ -84,7 +84,7 @@ fn test_inc_de() {
 #[test]
 fn test_inc_de_overflow() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x13);  // INC DE
+    cpu.state.sys.poke(0x0000, 0x13);  // INC DE
     cpu.state.reg.set16(Reg16::DE, 0xffff);
 
     cpu.execute_instruction();
@@ -95,7 +95,7 @@ fn test_inc_de_overflow() {
 #[test]
 fn test_dec_de() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x1b);  // DEC A
+    cpu.state.sys.poke(0x0000, 0x1b);  // DEC A
     cpu.state.reg.set16(Reg16::DE, 0x1256);
 
     cpu.execute_instruction();
@@ -106,7 +106,7 @@ fn test_dec_de() {
 #[test]
 fn test_dec_de_underflow() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x1b);  // DEC DE
+    cpu.state.sys.poke(0x0000, 0x1b);  // DEC DE
     cpu.state.reg.set16(Reg16::DE, 0x0000);
 
     cpu.execute_instruction();
@@ -117,19 +117,19 @@ fn test_dec_de_underflow() {
 #[test]
 fn test_dec_phl() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x35);  // DEC (HL)
+    cpu.state.sys.poke(0x0000, 0x35);  // DEC (HL)
     cpu.state.reg.set16(Reg16::HL, 0x23c4);
-    cpu.state.mem.poke(0x23c4, 0x67);
+    cpu.state.sys.poke(0x23c4, 0x67);
 
     cpu.execute_instruction();
 
-    assert_eq!(0x66, cpu.state.mem.peek(0x23c4));
+    assert_eq!(0x66, cpu.state.sys.peek(0x23c4));
 }
 
 #[test]
 fn test_add_hl_de() {
     let mut cpu = Cpu::new_plain();
-    cpu.state.mem.poke(0x0000, 0x19);  // ADD HL, DE
+    cpu.state.sys.poke(0x0000, 0x19);  // ADD HL, DE
     cpu.state.reg.set16(Reg16::HL, 0x1234);
     cpu.state.reg.set16(Reg16::DE, 0x0101);
 

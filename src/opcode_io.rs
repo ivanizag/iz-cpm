@@ -44,7 +44,7 @@ pub fn build_out_n_a() -> Opcode {
         cycles: 11,
         action: Box::new(move |state: &mut State| {
             let a = state.reg.get_a();
-            let address = (a as u16) << 8 + state.advance_pc() as u16;
+            let address = ((a as u16) << 8) + state.advance_pc() as u16;
             state.port_out(address, a);
         })
     }
@@ -85,7 +85,7 @@ pub fn build_in_a_n() -> Opcode {
         cycles: 11,
         action: Box::new(move |state: &mut State| {
             let a = state.reg.get_a();
-            let address = (a as u16) << 8 + state.advance_pc() as u16;
+            let address = ((a as u16) << 8) + state.advance_pc() as u16;
             let value = state.port_in(address);
             state.reg.set_a(value);
         })

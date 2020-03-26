@@ -1,7 +1,4 @@
-use std::cell::RefCell;
-use super::state::State;
-
-pub trait Memory {
+pub trait Machine {
     fn peek(&self, address: u16) -> u8;
     fn poke(&mut self, address: u16, value: u8);
 
@@ -14,43 +11,39 @@ pub trait Memory {
         self.poke(address, value as u8 );
         self.poke(address.wrapping_add(1), (value >> 8) as u8);
     }
+
+    fn port_in(&mut self, address: u16) -> u8;
+    fn port_out(&mut self, address: u16, value: u8);
 }
 
-pub trait Io {
-    fn port_in(&self, state: &State, address: u16) -> u8;
-    fn port_out(&self, state: &State, address: u16, value: u8);
-}
-
-const PLAIN_MEMORY_SIZE: usize = 65536;
-pub struct PlainMemoryIo {
+pub const PLAIN_MEMORY_SIZE: usize = 65536;
+pub struct PlainMachine {
     mem: [u8; PLAIN_MEMORY_SIZE],
-    io: RefCell<[u8; PLAIN_MEMORY_SIZE]>
+    io: [u8; PLAIN_MEMORY_SIZE]
 }
 
-impl PlainMemoryIo {
-    pub fn new() -> PlainMemoryIo {
-        PlainMemoryIo {
+impl PlainMachine {
+    pub fn new() -> PlainMachine {
+        PlainMachine {
             mem: [0; PLAIN_MEMORY_SIZE],
-            io: RefCell::new([0; PLAIN_MEMORY_SIZE])
+            io: [0; PLAIN_MEMORY_SIZE]
         }
     }
 }
 
-impl Memory for PlainMemoryIo {
+impl Machine for PlainMachine {
     fn peek(&self, address: u16) -> u8 {
         self.mem[address as usize]
     }
     fn poke(&mut self, address: u16, value: u8) {
         self.mem[address as usize] = value;
     }
-}
 
-impl Io for PlainMemoryIo {
-    fn port_in(&self, _: &State, address: u16) -> u8 {
-        self.io.borrow()[address as usize]
+    fn port_in(&mut self, address: u16) -> u8 {
+        self.io[address as usize]
     }
-    fn port_out(&self, _: &State, address: u16, value: u8) {
-        self.io.borrow_mut()[address as usize] = value;
+    fn port_out(&mut self, address: u16, value: u8) {
+        self.io[address as usize] = value;
     }
 }
 
@@ -62,7 +55,7 @@ mod tests {
 
     #[test]
     fn set_get_byte() {
-        let mut m = PlainMemoryIo::new();
+        let mut m = PlainMachine::new();
         const A:u16 = 0x2345;
         const V:u8 = 0xa0;
 

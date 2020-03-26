@@ -99,7 +99,7 @@ pub fn build_ld_a_prr(rr: Reg16) -> Opcode {
         cycles: 7,
         action: Box::new(move |state: &mut State| {
             let address = state.reg.get16(rr);
-            let value = state.mem.peek(address);
+            let value = state.sys.peek(address);
             state.reg.set_a(value);
         })
     }
@@ -111,7 +111,7 @@ pub fn build_ld_a_pnn() -> Opcode {
         cycles: 13,
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
-            let value = state.mem.peek(address);
+            let value = state.sys.peek(address);
             state.reg.set_a(value);
         })
     }
@@ -125,7 +125,7 @@ pub fn build_ld_prr_a(rr: Reg16) -> Opcode {
         action: Box::new(move |state: &mut State| {
             let value = state.reg.get_a();
             let address = state.reg.get16(rr);
-            state.mem.poke(address, value);
+            state.sys.poke(address, value);
         })
     }
     
@@ -138,7 +138,7 @@ pub fn build_ld_pnn_a() -> Opcode {
         action: Box::new(move |state: &mut State| {
             let value = state.reg.get_a();
             let address = state.advance_immediate16();
-            state.mem.poke(address, value);
+            state.sys.poke(address, value);
         })
     }
     
@@ -175,7 +175,7 @@ pub fn build_ld_pnn_rr(rr: Reg16, fast: bool) -> Opcode {
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
             let value = state.get_reg16(rr);
-            state.mem.poke16(address, value);
+            state.sys.poke16(address, value);
         })
     }
 }
@@ -186,7 +186,7 @@ pub fn build_ld_rr_pnn(rr: Reg16, fast: bool) -> Opcode {
         cycles: if fast {20} else {16},  // HL(fast): 16 , IX/IY: 20,
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
-            let value = state.mem.peek16(address);
+            let value = state.sys.peek16(address);
             state.reg.set16(rr, value);
         })
     }
@@ -234,8 +234,8 @@ pub fn build_ex_psp_hl() -> Opcode {
             let address = state.reg.get16(Reg16::SP);
 
             let temp = state.get_reg16(Reg16::HL);
-            state.set_reg16(Reg16::HL, state.mem.peek16(address));
-            state.mem.poke16(address, temp);
+            state.set_reg16(Reg16::HL, state.sys.peek16(address));
+            state.sys.poke16(address, temp);
         })         
     }
 }
@@ -247,7 +247,7 @@ pub fn build_ld_block((inc, repeat, postfix) : (bool, bool, &'static str)) -> Op
         action: Box::new(move |state: &mut State| {
             let value = state.get_reg(Reg8::_HL);
             let address = state.reg.get16(Reg16::DE);
-            state.mem.poke(address, value);
+            state.sys.poke(address, value);
 
             state.reg.inc_dec16(Reg16::DE, inc);
             state.reg.inc_dec16(Reg16::HL, inc);

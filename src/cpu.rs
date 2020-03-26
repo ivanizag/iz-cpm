@@ -8,20 +8,17 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new(memory: Box<dyn Memory>, io: Box<dyn Io>) -> Cpu {
+    pub fn new(sys: Box<dyn Machine>) -> Cpu {
         Cpu {
-            state: State::new(memory, io),
+            state: State::new(sys),
             decoder: Decoder::new()
         }
     }
 
     pub fn new_plain() -> Cpu {
-        let memory = Box::new(PlainMemoryIo::new());
-        let io = Box::new(PlainMemoryIo::new());
+        let sys = Box::new(PlainMachine::new());
         Cpu {
-            state: State::new(
-                memory,
-                io),
+            state: State::new(sys),
             decoder: Decoder::new()
         }
     }
@@ -30,10 +27,10 @@ impl Cpu {
         let trace = false;
         if trace {
             let pc = self.state.reg.get_pc();
-            let opcode_index = self.state.mem.peek(pc);
+            let opcode_index = self.state.sys.peek(pc);
             //print!("==== {:04x}: {:02x} ", pc, opcode_index);
             print!("==== {:04x}: {:02x} {:02x} {:02x} ", pc, opcode_index,
-                self.state.mem.peek(pc+1), self.state.mem.peek(pc+2));
+                self.state.sys.peek(pc+1), self.state.sys.peek(pc+2));
         }
         let opcode = self.decoder.decode(&mut self.state);
         if trace {
