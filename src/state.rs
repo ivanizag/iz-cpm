@@ -186,7 +186,7 @@ impl State {
         if reg == Reg8::_HL {
             self.sys.poke(self.get_index_address(), value);
         } else {
-            self.reg.set8(reg, value);
+            self.reg.set8(self.translate_reg(reg), value);
         }
     }
 

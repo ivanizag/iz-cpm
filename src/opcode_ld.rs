@@ -152,7 +152,7 @@ pub fn build_ld_rr_nn(rr: Reg16) -> Opcode {
         cycles: 10, // IX/IX: 14
         action: Box::new(move |state: &mut State| {
             let value = state.advance_immediate16();
-            state.reg.set16(rr, value);
+            state.set_reg16(rr, value);
         })
     }
 }
@@ -163,7 +163,7 @@ pub fn build_ld_sp_hl() -> Opcode {
         cycles: 6, // IX/IY: 10
         action: Box::new(move |state: &mut State| {
             let value = state.get_reg16(Reg16::HL);
-            state.reg.set16(Reg16::SP, value);
+            state.set_reg16(Reg16::SP, value);
         })
     }
 }
@@ -187,7 +187,7 @@ pub fn build_ld_rr_pnn(rr: Reg16, fast: bool) -> Opcode {
         action: Box::new(move |state: &mut State| {
             let address = state.advance_immediate16();
             let value = state.sys.peek16(address);
-            state.reg.set16(rr, value);
+            state.set_reg16(rr, value);
         })
     }
 }
