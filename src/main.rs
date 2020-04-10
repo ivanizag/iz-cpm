@@ -40,7 +40,8 @@ perf report
 fn main() {
     let mut cpu = Cpu {
         state: State::new(Box::new(ZexMachine::new())),
-        decoder: Decoder::new()
+        decoder: Decoder::new(),
+        trace: false
     };
 
     // Load program
@@ -83,9 +84,30 @@ fn main() {
         cpu.state.sys.poke(5 + i as u16, code[i]);
     }
 
+    /*
+    Patch to have the stack where we need it
+    We change
+        LD HL, (0006h)    // 2a 06 00
+    to  LD HL, 0C900h      // 21 00 c9
+    */
+    cpu.state.sys.poke(0x0113, 0x21);
+    cpu.state.sys.poke16(0x0114, 0xc900);
+
+    // Patch to run a single test
+    let run_single_test = true;
+    let single_test = 10;
+    if run_single_test {
+        let mut test_start = cpu.state.sys.peek16(0x0120);
+        test_start += single_test*2;
+        cpu.state.sys.poke16(0x0120, test_start);
+        cpu.state.sys.poke16(test_start + 2 , 0);
+    
+    }
+
     //println!("Testing \"testfiles/zexdoc.com\"...");
     cpu.state.reg.set_pc(0x100);
     let trace = false;
+    cpu.trace = trace;
     loop {
         cpu.execute_instruction();
 
@@ -110,6 +132,12 @@ fn main() {
                 print!("{:02x} ", cpu.state.sys.peek(addr + i));
             }
             println!("");
+        }
+
+        if cpu.state.reg.get_pc() == 0x0116 {
+            // Unpatch some code. The bytes are used on some tests
+            cpu.state.sys.poke(0x0113, 0x2a);
+            cpu.state.sys.poke16(0x0114, 0x0006);        
         }
 
         if cpu.state.reg.get_pc() == 0x0000 {

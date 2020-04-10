@@ -18,6 +18,7 @@ use super::state::*;
 pub struct Decoder {
     no_prefix: [Option<Opcode>; 256],
     prefix_cb: [Option<Opcode>; 256],
+    prefix_cb_indexed: [Option<Opcode>; 256],
     prefix_ed: [Option<Opcode>; 256],
 }
 
@@ -61,6 +62,24 @@ impl Decoder {
                 None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
                 None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
             ],
+            prefix_cb_indexed: [
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+            ],
             prefix_ed: [
                 None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
                 None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None,
@@ -82,6 +101,7 @@ impl Decoder {
         };
         decoder.load_no_prefix();
         decoder.load_prefix_cb();
+        decoder.load_prefix_cb_indexed();
         decoder.load_prefix_ed();
         decoder
     }
@@ -89,7 +109,15 @@ impl Decoder {
     pub fn decode(&self, state: &mut State) -> &Opcode {
         let b0 = state.advance_pc();
         let opcode = match b0 {
-            0xcb => &self.prefix_cb[state.advance_pc() as usize], // TODO, alt index
+            0xcb => {
+                if state.is_alt_index() {
+                    state.load_displacement_forced();
+                    &self.prefix_cb_indexed[state.advance_pc() as usize]
+
+                } else {
+                    &self.prefix_cb[state.advance_pc() as usize]
+                }
+            },
             0xed => {
                 state.clear_index(); // With ed, the current prefix is ignored
                 &self.prefix_ed[state.advance_pc() as usize]
@@ -236,6 +264,28 @@ impl Decoder {
             self.prefix_cb[c as usize] = opcode;
         }
     }
+
+    fn load_prefix_cb_indexed(&mut self) {
+        for c in 0..=255 {
+            let p = DecodingHelper::parts(c);
+            let opcode = match p.x {
+                0 => None, //Some(build_rot_r(R[p.z], ROT[p.y], false)), // Shifts
+                1 => Some(build_bit_r(p.y as u8, R[p.z])), // BIT
+                2 => None, //Some(build_res_r(p.y as u8, R[p.z])), // RES
+                3 => None, //Some(build_set_r(p.y as u8, R[p.z])), // SET
+                _ => panic!("Unreachable")
+            };
+
+/*
+            match opcode.as_ref() {
+                None => println!("0x{:02x} 0x{:02x} {:15}: {:?}", 0xcb, c, "Pending", p),
+                Some(o) => println!("0x{:02x} 0x{:02x} {:15}: {:?}", 0xcb, c, o.name, p)
+            }
+*/
+            self.prefix_cb_indexed[c as usize] = opcode;
+        }
+    }
+
 
     fn load_prefix_ed(&mut self) {
         for c in 0..=255 {

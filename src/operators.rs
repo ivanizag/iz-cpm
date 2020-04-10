@@ -42,9 +42,9 @@ pub fn operator_add16(state: &mut State, aa: u16, bb: u16) -> u16 {
 pub fn operator_adc16(state: &mut State, aa: u16, bb: u16) -> u16 {
     let aaaa = aa as u32;
     let bbbb = bb as u32;
-    let mut vvvv = aaaa + bbbb;
+    let mut vvvv = aaaa.wrapping_add(bbbb);
     if state.reg.get_flag(Flag::C) {
-        vvvv += 1;
+        vvvv = vvvv.wrapping_add(1);
     }
     let vv = vvvv as u16;
 
@@ -60,9 +60,9 @@ pub fn operator_adc16(state: &mut State, aa: u16, bb: u16) -> u16 {
 pub fn operator_sbc16(state: &mut State, aa: u16, bb: u16) -> u16 {
     let aaaa = aa as u32;
     let bbbb = bb as u32;
-    let mut vvvv = aaaa - bbbb;
+    let mut vvvv = aaaa.wrapping_sub(bbbb);
     if state.reg.get_flag(Flag::C) {
-        vvvv -= 1;
+        vvvv = vvvv.wrapping_sub(1);
     }
     let vv = vvvv as u16;
 

@@ -101,10 +101,21 @@ impl State {
         if self.index == Reg16::HL {
             "".to_string()
         } else if self.displacement_loaded {
-            format!("{:?} ({})", self.index, self.displacement_loaded)
+            format!("[PREFIX {:?} + {}]", self.index, self.displacement)
         } else {
-            format!("{:?}", self.index)
+            format!("[PREFIX {:?}]", self.index)
         }
+    }
+
+    pub fn is_alt_index(& self) -> bool {
+        self.index != Reg16::HL
+    }
+
+    pub fn load_displacement_forced(&mut self) {
+        // For DDCB and FDCB we allways have to load the
+        // displacement. Even before decoding the opcode
+        self.displacement = self.advance_pc() as i8;
+        self.displacement_loaded = true;
     }
 
     pub fn load_displacement(&mut self, reg: Reg8) {
@@ -116,9 +127,8 @@ impl State {
         enough information to figure out whether to expect a displacement
         byte or not.
         */
-        if reg == Reg8::_HL && self.index != Reg16::HL {
-            self.displacement = self.advance_pc() as i8;
-            self.displacement_loaded = true;
+        if reg == Reg8::_HL && self.is_alt_index() && !self.displacement_loaded {
+            self.load_displacement_forced()
         }
     }
 
@@ -129,7 +139,7 @@ impl State {
     pub fn get_index_address(&self) -> u16 {
         // Pseudo register (HL), (IX+d), (IY+d)
         let address = self.reg.get16(self.index);
-        if self.index != Reg16::HL {
+        if self.is_alt_index() {
             if !self.displacement_loaded {
                 panic!("Displacement used but not loaded")
             }

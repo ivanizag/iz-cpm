@@ -33,10 +33,10 @@ impl Opcode {
             let n = state.peek_pc();
             let n_str = format!("{:02x}h", n);
             name.replace("n", &n_str)
-        } else if self.name.contains("n") {
+        } else if self.name.contains("d") {
             // Immediate argument 8 bits signed
             let d = state.peek_pc() as i8;
-            let d_str = format!("{}", d);
+            let d_str = format!("{:+x}", d);
             name.replace("d", &d_str)
         } else {
             name
@@ -46,7 +46,7 @@ impl Opcode {
 
 pub fn build_prefix(index: Reg16) -> Opcode {
     Opcode {
-        name: "PREFIX".to_string(),
+        name: format!("PREFIX {:?}", index),
         cycles: 0,
         action: Box::new(move |state: &mut State| {
             // Change the index mode to IX or IY

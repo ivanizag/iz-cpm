@@ -52,15 +52,16 @@ pub fn build_cp_block((inc, repeat, postfix) : (bool, bool, &'static str)) -> Op
             // S, Z and H set by operator_cp()
             state.reg.put_flag(Flag::_5, n & 1 != 0);
             state.reg.put_flag(Flag::_3, n & 0x08 != 0);
-            state.reg.put_flag(Flag::P, bc == 0);
+            state.reg.put_flag(Flag::P, bc != 0);
             state.reg.set_flag(Flag::N);
             state.reg.put_flag(Flag::C, c_bak); // C unchanged
 
-            if repeat && bc != 0 {
+            //let hl_ = state.get_reg(Reg8::_HL);
+            if repeat && bc != 0 &&  a != b {
                 // Back to redo the instruction
                 let pc = state.reg.get_pc().wrapping_sub(2);
                 state.reg.set_pc(pc);
             }
-                })
+        })
     }
 }
