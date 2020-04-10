@@ -95,7 +95,7 @@ fn main() {
 
     // Patch to run a single test
     let run_single_test = true;
-    let single_test = 10;
+    let single_test = 12;
     if run_single_test {
         let mut test_start = cpu.state.sys.peek16(0x0120);
         test_start += single_test*2;

@@ -101,3 +101,38 @@ pub fn build_neg() -> Opcode {
     }
 }
 
+pub fn build_daa() -> Opcode {
+    Opcode {
+        name: "NEG".to_string(),
+        cycles: 4,
+        action: Box::new(move |state: &mut State| {
+            // See TUZD-4.7
+            let a = state.reg.get_a();
+            let hi = a >> 4;
+            let lo = a & 0xf;
+
+            let nf = state.reg.get_flag(Flag::N);
+            let cf = state.reg.get_flag(Flag::C);
+            let hf = state.reg.get_flag(Flag::H);
+
+            let lo6 = hf || (lo > 9);
+            let hi6 = cf || (hi > 9) || (hi == 9 && lo > 9);
+            let diff = if lo6 {6} else {0}
+                + if hi6 {6<<4} else {0};
+            let new_a = if nf {
+                a.wrapping_sub(diff)
+            } else {
+                a.wrapping_add(diff)
+            };
+
+            let new_hf = (!nf && lo > 9) || (nf && hf && lo < 6);
+            let new_cf = hi6;
+
+            state.reg.set_a(new_a);
+            state.reg.update_sz53p_flags(new_a);
+            state.reg.put_flag(Flag::H, new_hf);
+            state.reg.put_flag(Flag::C, new_cf);
+            // N unchanged
+        })
+    }
+}
