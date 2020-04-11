@@ -176,7 +176,7 @@ impl Decoder {
                     5 => Some(build_dec_r(R[p.y])), // DEC r -- 8 bit dec
                     6 => Some(build_ld_r_n(R[p.y])), // LD r, n -- 8 bit load imm
                     7 => match p.y {
-                        0..=3 => Some(build_rot_r(Reg8::A, ROT[p.y], true)), // rotA
+                        0..=3 => Some(build_rot_r(Reg8::A, ROT[p.y], true, false)), // rotA
                         4 => Some(build_daa()), // TODO: DAA, decimal adjust A
                         5 => Some(build_cpl()), // CPL, complement adjust A
                         6 => Some(build_scf()), // SCF, set carry flag
@@ -247,10 +247,10 @@ impl Decoder {
         for c in 0..=255 {
             let p = DecodingHelper::parts(c);
             let opcode = match p.x {
-                0 => Some(build_rot_r(R[p.z], ROT[p.y], false)), // Shifts
+                0 => Some(build_rot_r(R[p.z], ROT[p.y], false, false)), // Shifts
                 1 => Some(build_bit_r(p.y as u8, R[p.z])), // BIT
-                2 => Some(build_res_r(p.y as u8, R[p.z])), // RES
-                3 => Some(build_set_r(p.y as u8, R[p.z])), // SET
+                2 => Some(build_set_res_r(p.y as u8, R[p.z], false)), // RES
+                3 => Some(build_set_res_r(p.y as u8, R[p.z], true)), // SET
                 _ => panic!("Unreachable")
             };
 
@@ -268,10 +268,10 @@ impl Decoder {
         for c in 0..=255 {
             let p = DecodingHelper::parts(c);
             let opcode = match p.x {
-                0 => None, //Some(build_rot_r(R[p.z], ROT[p.y], false)), // Shifts
+                0 => Some(build_rot_r(R[p.z], ROT[p.y], false, true)), // Shifts
                 1 => Some(build_bit_r(p.y as u8, R[p.z])), // BIT
-                2 => None, //Some(build_res_r(p.y as u8, R[p.z])), // RES
-                3 => None, //Some(build_set_r(p.y as u8, R[p.z])), // SET
+                2 => Some(build_indexed_set_res_r(p.y as u8, R[p.z], false)), // RES
+                3 => Some(build_indexed_set_res_r(p.y as u8, R[p.z], true)), // SET
                 _ => panic!("Unreachable")
             };
 

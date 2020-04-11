@@ -16,18 +16,27 @@ pub enum ShiftDir {
     Right
 }
 
-// TODO: special cases for DDCB and FDCB prefix
-pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast: bool) -> Opcode {
-    let separator = if fast {""} else {" "};
+pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast: bool, indexed: bool) -> Opcode {
+    let full_name: String;
+    if indexed {
+        full_name = format!("LD {}, {} {}", r, name, Reg8::_HL);
+    } else {
+        let separator = if fast {""} else {" "};
+        full_name = format!("{}{}{}", name, separator, r);
+    }
     Opcode {
-        name: format!("{}{}{}", name, separator, r),
+        name: full_name,
         cycles: if fast {4} else {8}, // The one byte opcodes are faster // (HL): 15, (IX+d): 23
         action: Box::new(move |state: &mut State| {
             state.load_displacement(r);
 
-            let mut v = state.get_reg(r);
-            let carry: bool;
+            let mut v = if indexed {
+                state.get_reg(Reg8::_HL)
+            } else {
+                state.get_reg(r)
+            };
 
+            let carry: bool;
             match dir {
                 ShiftDir::Left => {
                     let upper_bit = v >= 0x80;
@@ -59,7 +68,11 @@ pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast
                     carry = lower_bit;
                 }
             }
+            if indexed && r != Reg8::_HL {
+                state.set_reg(Reg8::_HL, v);
+            }
             state.set_reg(r, v);
+
             state.reg.put_flag(Flag::C, carry);
             state.reg.clear_flag(Flag::H);
             state.reg.clear_flag(Flag::N);
@@ -104,35 +117,55 @@ pub fn build_bit_r(bit: u8, r: Reg8) -> Opcode {
     }
 }
 
-// TODO: special cases for DDCB and FDCB prefix
-pub fn build_set_r(bit: u8, r: Reg8) -> Opcode {
+pub fn build_set_res_r(bit: u8, r: Reg8, value: bool) -> Opcode {
+    let name = if value {"SET"} else {"RES"};
     Opcode {
-        name: format!("SET {}, {}", bit, r),
-        cycles: 8, // (HL) 15, (IX+d) 23
+        name: format!("{} {}, {}", name, bit, r),
+        cycles: 8, // (HL) 15
         action: Box::new(move |state: &mut State| {
             state.load_displacement(r);
 
             let mut v = state.get_reg(r);
-            v = v | (1<<bit);
+            if value {
+                v = v | (1<<bit);
+            } else {
+                v = v & !(1<<bit);
+            }
+
             state.set_reg(r, v);
         })
     }
 }
 
-// TODO: special cases for DDCB and FDCB prefix
-pub fn build_res_r(bit: u8, r: Reg8) -> Opcode {
+pub fn build_indexed_set_res_r(bit: u8, r: Reg8, value: bool) -> Opcode {
+    let name = if value {"SET"} else {"RES"};
     Opcode {
-        name: format!("RES {}, {}", bit, r),
-        cycles: 8, // (HL) 15, (IX+d) 23
+        name: format!("LD {}, {} {}, {}", r, name, bit, Reg8::_HL),
+        cycles: 23,
         action: Box::new(move |state: &mut State| {
+            /*
+            An instruction such as LD r, RES b, (IX+d) should be interpreted as
+            "attempt to reset bit b of the byte at (IX+d), and copy the result
+            to register r, even the new byte cannot be written at the said
+            address (e.g. when it points to a ROM location).
+            */
             state.load_displacement(r);
 
-            let mut v = state.get_reg(r);
-            v = v & !(1<<bit);
-            state.set_reg(r, v);
+            let mut v = state.get_reg(Reg8::_HL);
+            if value {
+                v = v | (1<<bit);
+            } else {
+                v = v & !(1<<bit);
+            }
+            state.set_reg(Reg8::_HL, v);
+            if r != Reg8::_HL {
+                state.set_reg(r, v);
+            }
         })
     }
 }
+
+
 
 pub fn build_cpl() -> Opcode {
     Opcode {
