@@ -51,9 +51,6 @@ use super::registers::*;
 
 // 8 bit load
 pub fn build_ld_r_r(dst: Reg8, src: Reg8, special: bool) -> Opcode {
-    // If the next opcode makes use of (HL), it will be replaced by (IX+d), and any other instances of H
-    // and L will be unaffected. Therefore, an instruction like LD IXH, (IX+d) does not exist, but LD H, (IX+d) does.
-    // It's impossible for both src and dst to be (HL)
     Opcode {
         name: format!("LD {}, {}", dst, src),
         cycles: if special {9} else {4}, // (HL): 7, IXL/IXH/IYH/IYL: 8, (IX+d): 19
@@ -61,9 +58,11 @@ pub fn build_ld_r_r(dst: Reg8, src: Reg8, special: bool) -> Opcode {
             state.load_displacement(src);
             state.load_displacement(dst);
 
-            let value = state.get_reg(src);
-            state.set_reg(dst, value);
             /*
+            If the next opcode makes use of (HL), it will be replaced by (IX+d), and any other
+            instances of H and L will be unaffected. Therefore, an instruction like LD IXH, (IX+d)
+            does not exist, but LD H, (IX+d) does. It's impossible for both src and dst to be (HL)
+            */
             let value = if dst == Reg8::_HL {
                 state.reg.get8(src)
             } else {
@@ -74,7 +73,6 @@ pub fn build_ld_r_r(dst: Reg8, src: Reg8, special: bool) -> Opcode {
             } else {
                 state.set_reg(dst, value);
             }
-            */
         })
     }
 }
@@ -256,10 +254,11 @@ pub fn build_ld_block((inc, repeat, postfix) : (bool, bool, &'static str)) -> Op
             // TUZD-4.2
             //println!("LDIR {:02x} {:02x} {:02b}", value, state.reg.get_a(), value.wrapping_add(state.reg.get_a()));
             let n = value.wrapping_add(state.reg.get_a());
-            state.reg.put_flag(Flag::_5, n & 1 != 0);
+            state.reg.put_flag(Flag::_5, n & (1<<1) != 0);
             state.reg.clear_flag(Flag::H);
-            state.reg.put_flag(Flag::_3, n & 0x08 != 0);
+            state.reg.put_flag(Flag::_3, n & (1<<3) != 0);
             state.reg.put_flag(Flag::P, bc != 0);
+            state.reg.clear_flag(Flag::N);
             // S, Z and C unchanged. What about N?
 
             if repeat && bc != 0 {
