@@ -86,16 +86,18 @@ fn main() {
 
     /*
     Patch to have the stack where we need it
-    We change
+    We change:
         LD HL, (0006h)    // 2a 06 00
     to  LD HL, 0C900h      // 21 00 c9
+
+    We have to put the bytes back afterwards.
     */
     cpu.state.sys.poke(0x0113, 0x21);
     cpu.state.sys.poke16(0x0114, 0xc900);
 
     // Patch to run a single test
     let run_single_test = false;
-    let single_test = 35;
+    let single_test = 52;
     if run_single_test {
         let mut test_start = cpu.state.sys.peek16(0x0120);
         test_start += single_test*2;
