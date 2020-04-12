@@ -97,8 +97,8 @@ fn main() {
     cpu.state.sys.poke16(0x0114, 0xc900);
 
     // Patch to run a single test
-    let run_single_test = true;
-    let single_test = 8;
+    let run_single_test = false;
+    let single_test = 11;
     if run_single_test {
         let mut test_start = cpu.state.sys.peek16(0x0120);
         test_start += single_test*2;
@@ -107,7 +107,6 @@ fn main() {
     
     }
 
-    //println!("Testing \"testfiles/zexdoc.com\"...");
     cpu.state.reg.set_pc(0x100);
     let trace = false;
     cpu.trace = trace;

@@ -43,15 +43,18 @@ pub fn build_cp_block((inc, repeat, postfix) : (bool, bool, &'static str)) -> Op
             let c_bak = state.reg.get_flag(Flag::C);
             operator_cp(state, a, b);
             let bc = state.reg.inc_dec16(Reg16::BC, false /*decrement*/);
-            state.reg.inc_dec16(Reg16::HL, inc); // Should this be done after flags calculation?
+            state.reg.inc_dec16(Reg16::HL, inc);
 
             // TUZD-4.2
-            let n = (state.reg.get_a() as u16)
-                .wrapping_sub((state.reg.get8(Reg8::H) as u16) << 8)
-                .wrapping_sub(state.reg.get8(Reg8::F) as u16);
+            let mut n = a.wrapping_sub(b);
+            if state.reg.get_flag(Flag::H) {
+                n = n.wrapping_sub(1);
+            }
             // S, Z and H set by operator_cp()
-            state.reg.put_flag(Flag::_5, n & 1 != 0);
-            state.reg.put_flag(Flag::_3, n & 0x08 != 0);
+            state.reg.put_flag(Flag::_5, n & (1<<1) != 0);
+            state.reg.put_flag(Flag::_3, n & (1<<3) != 0);
+
+
             state.reg.put_flag(Flag::P, bc != 0);
             state.reg.set_flag(Flag::N);
             state.reg.put_flag(Flag::C, c_bak); // C unchanged
