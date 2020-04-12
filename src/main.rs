@@ -45,7 +45,8 @@ fn main() {
     };
 
     // Load program
-    let mut file = File::open("tests/zexdoc.com").unwrap();
+    //let mut file = File::open("tests/zexdoc.com").unwrap();
+    let mut file = File::open("tests/zexall.com").unwrap();
     let mut buf = [0u8;65536];
     let size = file.read(&mut buf).unwrap();
     for i in 0..size {
@@ -96,8 +97,8 @@ fn main() {
     cpu.state.sys.poke16(0x0114, 0xc900);
 
     // Patch to run a single test
-    let run_single_test = false;
-    let single_test = 52;
+    let run_single_test = true;
+    let single_test = 8;
     if run_single_test {
         let mut test_start = cpu.state.sys.peek16(0x0120);
         test_start += single_test*2;

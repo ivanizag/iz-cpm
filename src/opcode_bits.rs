@@ -101,20 +101,24 @@ pub fn build_bit_r(n: u8, r: Reg8) -> Opcode {
             state.reg.put_flag(Flag::P, z == 0);
             state.reg.clear_flag(Flag::N);
 
-/*            if r == Reg8::_HL {
-                if state.index == Reg16::HL {
-                    // Exceptions for (HL) TUZD-4-1
-                    /* Things get more bizarre with the BIT n,(HL)
-                    instruction. Again, except for YF and XF the flags
-                    are the same. YF and XF are copied from some sort
-                    of internal register */
-                } else {
-                    // Exceptions for (IX+d) TUZD-4-1
-                    let address = state.get_index_address();
-                    state.reg.update_53_flags((address >> 8) as u8);
+            if r == Reg8::_HL {
+                // Exceptions for (IX+d) TUZD-4-1
+                /* With the BIT n,(IX+d) instructions, the flags behave just
+                like the BIT n,r instruction, except for YF and XF. These are
+                not copied from the result but from something completely
+                different, namely bit 5 and 3 of the high byte of IX+d (so IX
+                plus the displacement).
+                */
+                let address = state.get_index_address();
+                state.reg.update_53_flags((address >> 8) as u8);
 
-                }
-            }*/
+                // Exceptions for (HL) TUZD-4-1
+                /* Things get more bizarre with the BIT n,(HL)
+                instruction. Again, except for YF and XF the flags
+                are the same. YF and XF are copied from some sort
+                of internal register */
+                // Not implemented. Just done the same than for (IX+d)
+            }
         })
     }
 }
