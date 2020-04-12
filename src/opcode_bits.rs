@@ -85,21 +85,23 @@ pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast
     }
 }
 
-pub fn build_bit_r(bit: u8, r: Reg8) -> Opcode {
+pub fn build_bit_r(n: u8, r: Reg8) -> Opcode {
     Opcode {
-        name: format!("BIT {}, {}", bit, r),
+        name: format!("BIT {}, {}", n, r),
         cycles: 8, // (HL) 12, (IX+d) 20
         action: Box::new(move |state: &mut State| {
             state.load_displacement(r);
 
-            let v8 = state.get_reg(r);
-            let z = v8 & (1<<bit);
-            state.reg.update_sz53p_flags(z); // TUZD-4.1
+            let v = state.get_reg(r);
+            let z = v & (1<<n);
+            state.reg.put_flag(Flag::S, (z & 0x80) != 0);
+            state.reg.update_53_flags(v); // TUZD-4.1, copy bits from reg
+            state.reg.put_flag(Flag::Z, z == 0);
             state.reg.set_flag(Flag::H);
             state.reg.put_flag(Flag::P, z == 0);
             state.reg.clear_flag(Flag::N);
 
-            if r == Reg8::_HL {
+/*            if r == Reg8::_HL {
                 if state.index == Reg16::HL {
                     // Exceptions for (HL) TUZD-4-1
                     /* Things get more bizarre with the BIT n,(HL)
@@ -112,7 +114,7 @@ pub fn build_bit_r(bit: u8, r: Reg8) -> Opcode {
                     state.reg.update_53_flags((address >> 8) as u8);
 
                 }
-            }
+            }*/
         })
     }
 }
