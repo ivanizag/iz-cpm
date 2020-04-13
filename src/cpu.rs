@@ -2,23 +2,14 @@ use super::decoder::*;
 use super::memory_io::*;
 use super::state::*;
 
-pub struct Cpu {
-    pub state: State,
+pub struct Cpu<'a> {
+    pub state: State<'a>,
     pub decoder: Decoder,
     pub trace: bool,
 }
 
-impl Cpu {
-    pub fn new(sys: Box<dyn Machine>) -> Cpu {
-        Cpu {
-            state: State::new(sys),
-            decoder: Decoder::new(),
-            trace: false
-        }
-    }
-
-    pub fn new_plain() -> Cpu {
-        let sys = Box::new(PlainMachine::new());
+impl<'a> Cpu<'a> {
+    pub fn new(sys: &'a mut dyn Machine) -> Cpu<'a> {
         Cpu {
             state: State::new(sys),
             decoder: Decoder::new(),

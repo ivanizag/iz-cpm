@@ -1,9 +1,9 @@
 use super::memory_io::*;
 use super::registers::*;
 
-pub struct State {
+pub struct State<'a> {
     pub reg: Registers,
-    pub sys: Box<dyn Machine>,
+    pub sys: &'a mut dyn Machine,
     pub cycles: u64,
     pub halted: bool,
     // Alternate index management
@@ -13,8 +13,8 @@ pub struct State {
     pub index_changed: bool, // Use the index change for the next opcode, reset afterwards
 }
 
-impl State {
-    pub fn new(sys: Box<dyn Machine>) -> State {
+impl State<'_> {
+    pub fn new(sys: &mut dyn Machine) -> State {
         State {
             reg: Registers::new(),
             sys,
