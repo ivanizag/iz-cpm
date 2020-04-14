@@ -51,29 +51,44 @@ use super::registers::*;
 
 // 8 bit load
 pub fn build_ld_r_r(dst: Reg8, src: Reg8, special: bool) -> Opcode {
-    Opcode {
-        name: format!("LD {}, {}", dst, src),
-        cycles: if special {9} else {4}, // (HL): 7, IXL/IXH/IYH/IYL: 8, (IX+d): 19
-        action: Box::new(move |env: &mut Environment| {
-            env.load_displacement(src);
-            env.load_displacement(dst);
-
-            /*
-            If the next opcode makes use of (HL), it will be replaced by (IX+d), and any other
-            instances of H and L will be unaffected. Therefore, an instruction like LD IXH, (IX+d)
-            does not exist, but LD H, (IX+d) does. It's impossible for both src and dst to be (HL)
-            */
-            let value = if dst == Reg8::_HL {
-                env.state.reg.get8(src)
-            } else {
-                env.get_reg(src)
-            };
-            if src == Reg8::_HL {
+    if src != Reg8::_HL && dst != Reg8::_HL
+            && src != Reg8::H && dst != Reg8::H
+            && src != Reg8::L && dst != Reg8::L {
+        // Faster version
+        Opcode {
+            name: format!("LD {}, {}", dst, src),
+            cycles: if special {9} else {4},
+            action: Box::new(move |env: &mut Environment| {
+                let value = env.state.reg.get8(src);
                 env.state.reg.set8(dst, value);
-            } else {
-                env.set_reg(dst, value);
-            }
-        })
+            })
+        }
+    } else {
+        // Full version
+        Opcode {
+            name: format!("LD {}, {}", dst, src),
+            cycles: 7, // (HL): 7, IXL/IXH/IYH/IYL: 8, (IX+d): 19
+            action: Box::new(move |env: &mut Environment| {
+                env.load_displacement(src);
+                env.load_displacement(dst);
+
+                /*
+                If the next opcode makes use of (HL), it will be replaced by (IX+d), and any other
+                instances of H and L will be unaffected. Therefore, an instruction like LD IXH, (IX+d)
+                does not exist, but LD H, (IX+d) does. It's impossible for both src and dst to be (HL)
+                */
+                let value = if dst == Reg8::_HL {
+                    env.state.reg.get8(src)
+                } else {
+                    env.get_reg(src)
+                };
+                if src == Reg8::_HL {
+                    env.state.reg.set8(dst, value);
+                } else {
+                    env.set_reg(dst, value);
+                }
+            })
+        }
     }
 }
 

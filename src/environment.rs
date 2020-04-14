@@ -29,7 +29,7 @@ impl <'a> Environment<'_> {
 
     pub fn peek16_pc(&self) -> u16 {
         let pc = self.state.reg.get_pc();
-        self.sys.peek(pc) as u16 + ((self.sys.peek(pc+1) as u16) << 8)
+        self.sys.peek16(pc)
     }
 
     pub fn advance_immediate16(&mut self) -> u16 {

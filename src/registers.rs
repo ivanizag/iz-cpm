@@ -3,23 +3,23 @@ use std::fmt;
 // 8 bit registers
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Reg8 {
-    A,
-    B,
-    C,
-    D,
-    E,
-    F, // Flags
-    H,
-    L,
-    I,
-    R,
-    IXH,
-    IXL,
-    IYH,
-    IYL,
-    SPH,
-    SPL,
-    _HL // Invalid
+    A = 0,
+    F = 1, // Flags
+    B = 2,
+    C = 3,
+    D = 4,
+    E = 5,
+    H = 6,
+    L = 7,
+    I = 8,
+    R = 9,
+    IXH = 10,
+    IXL = 11,
+    IYH = 12,
+    IYL = 13,
+    SPH = 14,
+    SPL = 15,
+    _HL = 16 // Invalid
 }
 pub const REG_COUNT8: usize = 16;
 
@@ -27,13 +27,13 @@ pub const REG_COUNT8: usize = 16;
 // 16 bit registers, composed from 8 bit registers
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Reg16 {
-    AF,
-    BC,
-    DE,
-    HL,
-    IX,
-    IY,
-    SP,
+    AF = Reg8::A as isize,
+    BC = Reg8::B as isize,
+    DE = Reg8::D as isize,
+    HL = Reg8::H as isize,
+    IX = Reg8::IXH as isize,
+    IY = Reg8::IYH as isize,
+    SP = Reg8::SPH as isize
 }
 
 // Flags, see http://www.z80.info/z80sflag.htm
@@ -57,7 +57,6 @@ impl fmt::Display for Reg8 {
         }
     }
 }
-
 
 #[derive(Debug)]
 pub struct Registers {
@@ -87,14 +86,17 @@ impl Registers {
         reg
     }
 
+    #[inline]
     pub fn get_a(&self) -> u8 {
         self.data[Reg8::A as usize]
     }
 
+    #[inline]
     pub fn set_a(&mut self, value: u8) {
         self.data[Reg8::A as usize] = value;
     }
 
+    #[inline]
     pub fn get8(&self, reg: Reg8) -> u8 {
         if reg == Reg8::_HL {
             panic!("Can't use the pseudo register (HL)");
@@ -102,6 +104,7 @@ impl Registers {
         self.data[reg as usize]
     }
 
+    #[inline]
     pub fn set8(&mut self, reg: Reg8, value: u8) {
         if reg == Reg8::_HL {
             panic!("Can't use the pseudo register (HL)");
@@ -120,18 +123,16 @@ impl Registers {
         v
     }
 
+    #[inline]
     pub fn get16(&self, rr: Reg16) -> u16 {
-        let (h, l) = Registers::get_pair(rr);
-
-        self.data[l] as u16
-        + ((self.data[h] as u16) << 8)
+        self.data[rr as usize +1] as u16
+        + ((self.data[rr as usize] as u16) << 8)
     }
 
+    #[inline]
     pub fn set16(&mut self, rr: Reg16, value: u16) {
-        let (h, l) = Registers::get_pair(rr);
-
-        self.data[l] = value as u8;
-        self.data[h] = (value >> 8) as u8;
+        self.data[rr as usize +1] = value as u8;
+        self.data[rr as usize] = (value >> 8) as u8;
     }
 
     pub fn inc_dec16(&mut self, rr: Reg16, inc: bool) -> u16 {
@@ -146,27 +147,15 @@ impl Registers {
     }
 
     pub fn swap(&mut self, rr: Reg16) {
-        let (h, l) = Registers::get_pair(rr);
+        let ih = rr as usize;
+        let temp = self.data[ih];
+        self.data[ih] = self.shadow[ih];
+        self.shadow[ih] = temp;
 
-        let temp = self.data[l];
-        self.data[l] = self.shadow[l];
-        self.shadow[l] = temp;
-
-        let temp = self.data[h];
-        self.data[h] = self.shadow[h];
-        self.shadow[h] = temp;
-    }
-
-    fn get_pair(rr: Reg16) -> (usize, usize) {
-        match rr {
-            Reg16::AF => (Reg8::A as usize, Reg8::F as usize),
-            Reg16::BC => (Reg8::B as usize, Reg8::C as usize),
-            Reg16::DE => (Reg8::D as usize, Reg8::E as usize),
-            Reg16::HL => (Reg8::H as usize, Reg8::L as usize),
-            Reg16::IX => (Reg8::IXH as usize, Reg8::IXL as usize),
-            Reg16::IY => (Reg8::IYH as usize, Reg8::IYL as usize),
-            Reg16::SP => (Reg8::SPH as usize, Reg8::SPL as usize)
-        }
+        let il = rr as usize + 1;
+        let temp = self.data[il];
+        self.data[il] = self.shadow[il];
+        self.shadow[il] = temp;
     }
 
     pub fn get_flag(&self, flag: Flag) -> bool {
@@ -248,10 +237,12 @@ impl Registers {
 
     }
 
+    #[inline]
     pub fn get_pc(&self) -> u16 {
         self.pc
     }
 
+    #[inline]
     pub fn set_pc(&mut self, value: u16) {
         self.pc = value;
     }
