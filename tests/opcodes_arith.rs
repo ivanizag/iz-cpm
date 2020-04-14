@@ -1,152 +1,177 @@
 extern crate z80;
 
 use z80::cpu::Cpu;
-use z80::memory_io::PlainMachine;
+use z80::state::State;
+use z80::memory_io::*;
 use z80::registers::*;
 
 #[test]
 fn test_neg_a() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0xed);  // NEG
-    cpu.state.sys.poke(0x0001, 0x44);
-    cpu.state.reg.set_a(0xff);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0xed);  // NEG
+    sys.poke(0x0001, 0x44);
+    state.reg.set_a(0xff);
 
-    assert_eq!(0x01, cpu.state.reg.get_a());
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0x01, state.reg.get_a());
 }
 
 #[test]
 fn test_inc_a() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0x3c);  // INC A
-    cpu.state.reg.set_a(0xa4);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0x3c);  // INC A
+    state.reg.set_a(0xa4);
 
-    assert_eq!(0xa5, cpu.state.reg.get_a());
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0xa5, state.reg.get_a());
 }
 
 #[test]
 fn test_inc_a_overflow() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0x3c);  // INC A
-    cpu.state.reg.set_a(0xff);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0x3c);  // INC A
+    state.reg.set_a(0xff);
 
-    assert_eq!(0x00, cpu.state.reg.get_a());
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0x00, state.reg.get_a());
 }
 
 #[test]
 fn test_inc_e() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0x1c);  // INC E
-    cpu.state.reg.set8(Reg8::E, 0x14);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0x1c);  // INC E
+    state.reg.set8(Reg8::E, 0x14);
 
-    assert_eq!(0x15, cpu.state.reg.get8(Reg8::E));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0x15, state.reg.get8(Reg8::E));
 }
 
 #[test]
 fn test_dec_a() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0x3d);  // DEC A
-    cpu.state.reg.set_a(0xa4);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0x3d);  // DEC A
+    state.reg.set_a(0xa4);
 
-    assert_eq!(0xa3, cpu.state.reg.get_a());
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0xa3, state.reg.get_a());
 }
 
 #[test]
 fn test_dec_a_underflow() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0x3d);  // DEC A
-    cpu.state.reg.set_a(0x00);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0x3d);  // DEC A
+    state.reg.set_a(0x00);
 
-    assert_eq!(0xff, cpu.state.reg.get_a());
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0xff, state.reg.get_a());
 }
 
 #[test]
 fn test_inc_de() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0x13);  // INC DE
-    cpu.state.reg.set16(Reg16::DE, 0xcea4);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0x13);  // INC DE
+    state.reg.set16(Reg16::DE, 0xcea4);
 
-    assert_eq!(0xcea5, cpu.state.reg.get16(Reg16::DE));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0xcea5, state.reg.get16(Reg16::DE));
 }
 
 #[test]
 fn test_inc_de_overflow() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0x13);  // INC DE
-    cpu.state.reg.set16(Reg16::DE, 0xffff);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0x13);  // INC DE
+    state.reg.set16(Reg16::DE, 0xffff);
 
-    assert_eq!(0x0000, cpu.state.reg.get16(Reg16::DE));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0x0000, state.reg.get16(Reg16::DE));
 }
 
 #[test]
 fn test_dec_de() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0x1b);  // DEC A
-    cpu.state.reg.set16(Reg16::DE, 0x1256);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0x1b);  // DEC A
+    state.reg.set16(Reg16::DE, 0x1256);
 
-    assert_eq!(0x1255, cpu.state.reg.get16(Reg16::DE));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0x1255, state.reg.get16(Reg16::DE));
 }
 
 #[test]
 fn test_dec_de_underflow() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0x1b);  // DEC DE
-    cpu.state.reg.set16(Reg16::DE, 0x0000);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0x1b);  // DEC DE
+    state.reg.set16(Reg16::DE, 0x0000);
 
-    assert_eq!(0xffff, cpu.state.reg.get16(Reg16::DE));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0xffff, state.reg.get16(Reg16::DE));
 }
 
 #[test]
 fn test_dec_phl() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0x35);  // DEC (HL)
-    cpu.state.reg.set16(Reg16::HL, 0x23c4);
-    cpu.state.sys.poke(0x23c4, 0x67);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0x35);  // DEC (HL)
+    state.reg.set16(Reg16::HL, 0x23c4);
+    sys.poke(0x23c4, 0x67);
 
-    assert_eq!(0x66, cpu.state.sys.peek(0x23c4));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0x66, sys.peek(0x23c4));
 }
 
 #[test]
 fn test_add_hl_de() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0x19);  // ADD HL, DE
-    cpu.state.reg.set16(Reg16::HL, 0x1234);
-    cpu.state.reg.set16(Reg16::DE, 0x0101);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0x19);  // ADD HL, DE
+    state.reg.set16(Reg16::HL, 0x1234);
+    state.reg.set16(Reg16::DE, 0x0101);
 
-    assert_eq!(0x1335, cpu.state.reg.get16(Reg16::HL));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0x1335, state.reg.get16(Reg16::HL));
 }

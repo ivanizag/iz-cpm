@@ -7,7 +7,7 @@ use super::opcode_jumps::*;
 use super::opcode_ld::*;
 use super::operators::*;
 use super::registers::*;
-use super::state::*;
+use super::environment::*;
 
 /* See
     http://www.z80.info/decoding.htm
@@ -106,20 +106,20 @@ impl Decoder {
         decoder
     }
 
-    pub fn decode(&self, state: &mut State) -> &Opcode {
-        let b0 = state.advance_pc();
+    pub fn decode(&self, env: &mut Environment) -> &Opcode {
+        let b0 = env.advance_pc();
         let opcode = match b0 {
             0xcb => {
-                if state.is_alt_index() {
-                    state.load_displacement_forced();
-                    &self.prefix_cb_indexed[state.advance_pc() as usize]
+                if env.is_alt_index() {
+                    env.load_displacement_forced();
+                    &self.prefix_cb_indexed[env.advance_pc() as usize]
                 } else {
-                    &self.prefix_cb[state.advance_pc() as usize]
+                    &self.prefix_cb[env.advance_pc() as usize]
                 }
             },
             0xed => {
-                state.clear_index(); // With ed, the current prefix is ignored
-                &self.prefix_ed[state.advance_pc() as usize]
+                env.clear_index(); // With ed, the current prefix is ignored
+                &self.prefix_ed[env.advance_pc() as usize]
             },
             _ => &self.no_prefix[b0 as usize]
             // TODO: verify how dddd, dded, ddfd, fddd, fded and fdfd work

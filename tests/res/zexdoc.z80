@@ -50,7 +50,7 @@ spbt:	ds	2
 ; Technical Manual.
 ;
 ; The next three parts of the descriptor are 20 byte vectors
-; corresponding to a 4 byte instruction and a 16 byte machine state.
+; corresponding to a 4 byte instruction and a 16 byte machine env.
 ; The first part is the base case, which is the first test case of
 ; the sequence.  This base is then modified according to the next 2
 ; vectors.  Each 1 bit in the increment vector specifies a bit to be

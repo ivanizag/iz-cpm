@@ -1,9 +1,7 @@
-use super::memory_io::*;
 use super::registers::*;
 
-pub struct State<'a> {
+pub struct State {
     pub reg: Registers,
-    pub sys: &'a mut dyn Machine,
     pub cycles: u64,
     pub halted: bool,
     // Alternate index management
@@ -13,11 +11,10 @@ pub struct State<'a> {
     pub index_changed: bool, // Use the index change for the next opcode, reset afterwards
 }
 
-impl State<'_> {
-    pub fn new(sys: &mut dyn Machine) -> State {
+impl State {
+    pub fn new() -> State {
         State {
             reg: Registers::new(),
-            sys,
             cycles: 0,
             halted: false,
             index: Reg16::HL,
@@ -25,184 +22,5 @@ impl State<'_> {
             displacement_loaded: false,
             index_changed: false
         }
-    }
-
-    pub fn peek_pc(&self) -> u8 {
-        let pc = self.reg.get_pc();
-        self.sys.peek(pc)
-    }
-
-    pub fn advance_pc(&mut self) -> u8 {
-        let pc = self.reg.get_pc();
-        let value = self.sys.peek(pc);
-        self.reg.set_pc(pc.wrapping_add(1));
-        value
-    }
-
-    pub fn peek16_pc(&self) -> u16 {
-        let pc = self.reg.get_pc();
-        self.sys.peek(pc) as u16 + ((self.sys.peek(pc+1) as u16) << 8)
-    }
-
-    pub fn advance_immediate16(&mut self) -> u16 {
-        let mut value: u16 = self.advance_pc() as u16;
-        value += (self.advance_pc() as u16) << 8;
-        value
-    }
-
-    pub fn push(&mut self, value: u16) {
-        let mut sp = self.reg.get16(Reg16::SP);
-
-        let h = (value >> 8) as u8;
-        let l = value as u8;
-
-        sp = sp.wrapping_sub(1);
-        self.sys.poke(sp, h);
-
-        sp = sp.wrapping_sub(1);
-        self.sys.poke(sp, l);
-
-        self.reg.set16(Reg16::SP, sp);
-    }
-
-    pub fn pop(&mut self) -> u16 {
-        let mut sp = self.reg.get16(Reg16::SP);
-
-        let l = self.sys.peek(sp);
-        sp = sp.wrapping_add(1);
-
-        let h = self.sys.peek(sp);
-        sp = sp.wrapping_add(1);
-
-        self.reg.set16(Reg16::SP, sp);
-        (l as u16) + ((h as u16) << 8)
-    }
-
-    pub fn set_index(&mut self, index: Reg16) {
-        self.index = index;
-        self.index_changed = true;
-    }
-
-    pub fn step(&mut self) {
-        if self.index_changed {
-            self.index_changed = false;
-        } else {
-            self.clear_index();
-        }
-    }
-
-    pub fn clear_index(&mut self) {
-        self.index = Reg16::HL;
-        self.displacement_loaded = false;
-        self.index_changed = false;
-    }
-
-    pub fn get_index_description(&self) -> String {
-        if self.index == Reg16::HL {
-            "".to_string()
-        } else if self.displacement_loaded {
-            format!("[PREFIX {:?} + {}]", self.index, self.displacement)
-        } else {
-            format!("[PREFIX {:?}]", self.index)
-        }
-    }
-
-    pub fn is_alt_index(& self) -> bool {
-        self.index != Reg16::HL
-    }
-
-    pub fn load_displacement_forced(&mut self) {
-        // For DDCB and FDCB we allways have to load the
-        // displacement. Even before decoding the opcode
-        self.displacement = self.advance_pc() as i8;
-        self.displacement_loaded = true;
-    }
-
-    pub fn load_displacement(&mut self, reg: Reg8) {
-        /*
-        The displacement byte is a signed 8-bit integer (-128..+127) used
-        in some instructions to specifiy a displacement added to a given
-        memory address. Its presence or absence depends on the instruction
-        at hand, therefore, after reading the prefix and opcode, one has
-        enough information to figure out whether to expect a displacement
-        byte or not.
-        */
-        if reg == Reg8::_HL && self.is_alt_index() && !self.displacement_loaded {
-            self.load_displacement_forced()
-        }
-    }
-
-    pub fn get_index_value(& self) -> u16 {
-        self.reg.get16(self.index)
-    }
-
-    pub fn get_index_address(&self) -> u16 {
-        // Pseudo register (HL), (IX+d), (IY+d)
-        let address = self.reg.get16(self.index);
-        if self.is_alt_index() {
-            if !self.displacement_loaded {
-                panic!("Displacement used but not loaded")
-            }
-            (address as i16).wrapping_add(self.displacement as i16) as u16
-        } else {
-            address
-        }
-    }
-
-    fn translate_reg(&self, reg: Reg8) -> Reg8 {
-        // TODO: use a faster lookup table
-        match self.index {
-            Reg16::IX => match reg {
-                Reg8::H => Reg8::IXH,
-                Reg8::L => Reg8::IXL,
-                _ => reg
-            },
-            Reg16::IY => match reg {
-                Reg8::H => Reg8::IYH,
-                Reg8::L => Reg8::IYL,
-                _ => reg
-            },
-            _ => reg
-        }
-    }
-
-    pub fn get_reg(& self, reg: Reg8) -> u8 {
-        if reg == Reg8::_HL {
-            self.sys.peek(self.get_index_address())
-        } else {
-            self.reg.get8(self.translate_reg(reg))
-        }
-    }
-
-    pub fn get_reg16(& self, rr: Reg16) -> u16 {
-        if rr == Reg16::HL {
-            self.reg.get16(self.index)
-        } else {
-            self.reg.get16(rr)
-        }
-    }
-
-    pub fn set_reg(&mut self, reg: Reg8, value: u8) {
-        if reg == Reg8::_HL {
-            self.sys.poke(self.get_index_address(), value);
-        } else {
-            self.reg.set8(self.translate_reg(reg), value);
-        }
-    }
-
-    pub fn set_reg16(&mut self, rr: Reg16, value: u16) {
-        if rr == Reg16::HL {
-            self.reg.set16(self.index, value);
-        } else {
-            self.reg.set16(rr, value);
-        }
-    }
-
-    pub fn port_in(&mut self, address: u16) -> u8 {
-        self.sys.port_in(address)
-    }
-
-    pub fn port_out(&mut self, address: u16, value: u8) {
-        self.sys.port_out(address, value);
     }
 }

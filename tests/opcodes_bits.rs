@@ -1,228 +1,259 @@
 extern crate z80;
 
 use z80::cpu::Cpu;
-use z80::memory_io::PlainMachine;
+use z80::state::State;
+use z80::memory_io::*;
 use z80::registers::*;
 
 #[test]
 fn test_rrca_fast() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0x0f); // RRCA
-    cpu.state.reg.set_a(0b10010011);
-    cpu.state.reg.set_flag(Flag::C);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0x0f); // RRCA
+    state.reg.set_a(0b10010011);
+    state.reg.set_flag(Flag::C);
 
-    assert_eq!(0b11001001, cpu.state.reg.get_a());
-    assert_eq!(true, cpu.state.reg.get_flag(Flag::C));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0b11001001, state.reg.get_a());
+    assert_eq!(true, state.reg.get_flag(Flag::C));
 }
 
 #[test]
 fn test_rrc_a() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0xcb); // RRC A
-    cpu.state.sys.poke(0x0001, 0x0f);
-    cpu.state.reg.set_a(0b10010011);
-    cpu.state.reg.set_flag(Flag::C);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0xcb); // RRC A
+    sys.poke(0x0001, 0x0f);
+    state.reg.set_a(0b10010011);
+    state.reg.set_flag(Flag::C);
 
-    assert_eq!(0b11001001, cpu.state.reg.get_a());
-    assert_eq!(true, cpu.state.reg.get_flag(Flag::C));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0b11001001, state.reg.get_a());
+    assert_eq!(true, state.reg.get_flag(Flag::C));
 }
 
 #[test]
 fn test_rr_b() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0xcb); // RR B
-    cpu.state.sys.poke(0x0001, 0x18);
-    cpu.state.reg.set8(Reg8::B, 0b10010010);
-    cpu.state.reg.set_flag(Flag::C);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0xcb); // RR B
+    sys.poke(0x0001, 0x18);
+    state.reg.set8(Reg8::B, 0b10010010);
+    state.reg.set_flag(Flag::C);
 
-    assert_eq!(0b11001001, cpu.state.reg.get8(Reg8::B));
-    assert_eq!(false, cpu.state.reg.get_flag(Flag::C));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0b11001001, state.reg.get8(Reg8::B));
+    assert_eq!(false, state.reg.get_flag(Flag::C));
 }
 
 #[test]
 fn test_sra_c() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0xcb); // SRA C
-    cpu.state.sys.poke(0x0001, 0x29);
-    cpu.state.reg.set8(Reg8::C, 0b10010011);
-    cpu.state.reg.clear_flag(Flag::C);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0xcb); // SRA C
+    sys.poke(0x0001, 0x29);
+    state.reg.set8(Reg8::C, 0b10010011);
+    state.reg.clear_flag(Flag::C);
 
-    assert_eq!(0b11001001, cpu.state.reg.get8(Reg8::C));
-    assert_eq!(true, cpu.state.reg.get_flag(Flag::C));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0b11001001, state.reg.get8(Reg8::C));
+    assert_eq!(true, state.reg.get_flag(Flag::C));
 }
 
 #[test]
 fn test_srl_d() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0xcb); // SRL D
-    cpu.state.sys.poke(0x0001, 0x3a);
-    cpu.state.reg.set8(Reg8::D, 0b10010011);
-    cpu.state.reg.clear_flag(Flag::C);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0xcb); // SRL D
+    sys.poke(0x0001, 0x3a);
+    state.reg.set8(Reg8::D, 0b10010011);
+    state.reg.clear_flag(Flag::C);
 
-    assert_eq!(0b01001001, cpu.state.reg.get8(Reg8::D));
-    assert_eq!(true, cpu.state.reg.get_flag(Flag::C));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0b01001001, state.reg.get8(Reg8::D));
+    assert_eq!(true, state.reg.get_flag(Flag::C));
 }
 
 #[test]
 fn test_rlc_a() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0xcb); // RLC A
-    cpu.state.sys.poke(0x0001, 0x07);
-    cpu.state.reg.set_a(0b00010011);
-    cpu.state.reg.set_flag(Flag::C);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0xcb); // RLC A
+    sys.poke(0x0001, 0x07);
+    state.reg.set_a(0b00010011);
+    state.reg.set_flag(Flag::C);
 
-    assert_eq!(0b00100110, cpu.state.reg.get_a());
-    assert_eq!(false, cpu.state.reg.get_flag(Flag::C));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0b00100110, state.reg.get_a());
+    assert_eq!(false, state.reg.get_flag(Flag::C));
 }
 
 #[test]
 fn test_rl_b() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0xcb); // RL B
-    cpu.state.sys.poke(0x0001, 0x10);
-    cpu.state.reg.set8(Reg8::B, 0b00010011);
-    cpu.state.reg.set_flag(Flag::C);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0xcb); // RL B
+    sys.poke(0x0001, 0x10);
+    state.reg.set8(Reg8::B, 0b00010011);
+    state.reg.set_flag(Flag::C);
 
-    assert_eq!(0b00100111, cpu.state.reg.get8(Reg8::B));
-    assert_eq!(false, cpu.state.reg.get_flag(Flag::C));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0b00100111, state.reg.get8(Reg8::B));
+    assert_eq!(false, state.reg.get_flag(Flag::C));
 }
 
 #[test]
 fn test_sla_c() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0xcb); // SLA C
-    cpu.state.sys.poke(0x0001, 0x21);
-    cpu.state.reg.set8(Reg8::C, 0b10010011);
-    cpu.state.reg.clear_flag(Flag::C);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0xcb); // SLA C
+    sys.poke(0x0001, 0x21);
+    state.reg.set8(Reg8::C, 0b10010011);
+    state.reg.clear_flag(Flag::C);
 
-    assert_eq!(0b00100110, cpu.state.reg.get8(Reg8::C));
-    assert_eq!(true, cpu.state.reg.get_flag(Flag::C));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0b00100110, state.reg.get8(Reg8::C));
+    assert_eq!(true, state.reg.get_flag(Flag::C));
 }
 
 #[test]
 fn test_sll_d() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0xcb); // SLL D
-    cpu.state.sys.poke(0x0001, 0x32);
-    cpu.state.reg.set8(Reg8::D, 0b10010011);
-    cpu.state.reg.clear_flag(Flag::C);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0xcb); // SLL D
+    sys.poke(0x0001, 0x32);
+    state.reg.set8(Reg8::D, 0b10010011);
+    state.reg.clear_flag(Flag::C);
 
-    assert_eq!(0b00100111, cpu.state.reg.get8(Reg8::D));
-    assert_eq!(true, cpu.state.reg.get_flag(Flag::C));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0b00100111, state.reg.get8(Reg8::D));
+    assert_eq!(true, state.reg.get_flag(Flag::C));
 }
 
 #[test]
 fn test_bit_a() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0xcb); // BIT 1, A
-    cpu.state.sys.poke(0x0001, 0x4f);
-    cpu.state.reg.set_a(0b00010010);
-    cpu.state.reg.set_flag(Flag::Z);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0xcb); // BIT 1, A
+    sys.poke(0x0001, 0x4f);
+    state.reg.set_a(0b00010010);
+    state.reg.set_flag(Flag::Z);
 
-    assert_eq!(0b00010010, cpu.state.reg.get_a());
-    assert_eq!(false, cpu.state.reg.get_flag(Flag::Z));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0b00010010, state.reg.get_a());
+    assert_eq!(false, state.reg.get_flag(Flag::Z));
 }
 
 #[test]
 fn test_set_b() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0xcb); // SET 0, B
-    cpu.state.sys.poke(0x0001, 0xc0);
-    cpu.state.reg.set8(Reg8::B, 0b00010010);
-    cpu.state.reg.clear_flag(Flag::Z);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0xcb); // SET 0, B
+    sys.poke(0x0001, 0xc0);
+    state.reg.set8(Reg8::B, 0b00010010);
+    state.reg.clear_flag(Flag::Z);
 
-    assert_eq!(0b00010011, cpu.state.reg.get8(Reg8::B));
-    assert_eq!(false, cpu.state.reg.get_flag(Flag::Z));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0b00010011, state.reg.get8(Reg8::B));
+    assert_eq!(false, state.reg.get_flag(Flag::Z));
 }
 
 #[test]
 fn test_res_c() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0xcb); // RES 7, C
-    cpu.state.sys.poke(0x0001, 0xb9);
-    cpu.state.reg.set8(Reg8::C, 0b10010011);
-    cpu.state.reg.clear_flag(Flag::Z);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0xcb); // RES 7, C
+    sys.poke(0x0001, 0xb9);
+    state.reg.set8(Reg8::C, 0b10010011);
+    state.reg.clear_flag(Flag::Z);
 
-    assert_eq!(0b00010011, cpu.state.reg.get8(Reg8::C));
-    assert_eq!(false, cpu.state.reg.get_flag(Flag::Z));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0b00010011, state.reg.get8(Reg8::C));
+    assert_eq!(false, state.reg.get_flag(Flag::Z));
 }
 
 #[test]
 fn test_cpl() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0x2f);  // CPL
-    cpu.state.reg.set_a(0x3d);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0x2f);  // CPL
+    state.reg.set_a(0x3d);
 
-    assert_eq!(0xc2, cpu.state.reg.get_a());
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0xc2, state.reg.get_a());
 }
 
 #[test]
 fn test_rld() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0xed); // RLD
-    cpu.state.sys.poke(0x0001, 0x6f);
-    cpu.state.reg.set_a(0xab);
-    cpu.state.reg.set16(Reg16::HL, 0xccdd);
-    cpu.state.sys.poke(0xccdd, 0xcd);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0xed); // RLD
+    sys.poke(0x0001, 0x6f);
+    state.reg.set_a(0xab);
+    state.reg.set16(Reg16::HL, 0xccdd);
+    sys.poke(0xccdd, 0xcd);
 
-    assert_eq!(0xac, cpu.state.reg.get_a());
-    assert_eq!(0xdb, cpu.state.sys.peek(0xccdd));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0xac, state.reg.get_a());
+    assert_eq!(0xdb, sys.peek(0xccdd));
 }
 
 #[test]
 fn test_rrd() {
-    let mut machine = PlainMachine::new();
-    let mut cpu = Cpu::new(&mut machine);
-    cpu.state.sys.poke(0x0000, 0xed); // RRD
-    cpu.state.sys.poke(0x0001, 0x67);
-    cpu.state.reg.set_a(0xab);
-    cpu.state.reg.set16(Reg16::HL, 0xccdd);
-    cpu.state.sys.poke(0xccdd, 0xcd);
+    let mut sys = PlainMachine::new();
+    let mut state = State::new();
+    let mut cpu = Cpu::new();
 
-    cpu.execute_instruction();
+    sys.poke(0x0000, 0xed); // RRD
+    sys.poke(0x0001, 0x67);
+    state.reg.set_a(0xab);
+    state.reg.set16(Reg16::HL, 0xccdd);
+    sys.poke(0xccdd, 0xcd);
 
-    assert_eq!(0xad, cpu.state.reg.get_a());
-    assert_eq!(0xbc, cpu.state.sys.peek(0xccdd));
+    cpu.execute_instruction(&mut state, &mut sys);
+
+    assert_eq!(0xad, state.reg.get_a());
+    assert_eq!(0xbc, sys.peek(0xccdd));
 }

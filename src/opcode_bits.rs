@@ -1,5 +1,5 @@
 use super::opcode::*;
-use super::state::*;
+use super::environment::*;
 use super::registers::*;
 
 #[derive(Copy, Clone)]
@@ -27,13 +27,13 @@ pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast
     Opcode {
         name: full_name,
         cycles: if fast {4} else {8}, // The one byte opcodes are faster // (HL): 15, (IX+d): 23
-        action: Box::new(move |state: &mut State| {
-            state.load_displacement(r);
+        action: Box::new(move |env: &mut Environment| {
+            env.load_displacement(r);
 
             let mut v = if indexed {
-                state.get_reg(Reg8::_HL)
+                env.get_reg(Reg8::_HL)
             } else {
-                state.get_reg(r)
+                env.get_reg(r)
             };
 
             let carry: bool;
@@ -44,7 +44,7 @@ pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast
                     let set_lower_bit = match mode {
                         ShiftMode::Arithmetic => false, // always 0 in bit 0
                         ShiftMode::Logical => true, // always 1 in bit 0
-                        ShiftMode::Rotate => state.reg.get_flag(Flag::C), // carry in bit 0
+                        ShiftMode::Rotate => env.state.reg.get_flag(Flag::C), // carry in bit 0
                         ShiftMode::RotateCarry => upper_bit, // bit 7 moves to bit 0
                     };
                     if set_lower_bit { // bit 0 is 0 already
@@ -59,7 +59,7 @@ pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast
                     let set_upper_bit = match mode {
                         ShiftMode::Arithmetic => upper_bit, // extend bit 7
                         ShiftMode::Logical => false, // always 0 in bit 7
-                        ShiftMode::Rotate => state.reg.get_flag(Flag::C), // carry in bit 0
+                        ShiftMode::Rotate => env.state.reg.get_flag(Flag::C), // carry in bit 0
                         ShiftMode::RotateCarry => lower_bit, // bit 0 goes to bit 7
                     };
                     if set_upper_bit { // bit 7 is 0 already
@@ -69,17 +69,17 @@ pub fn build_rot_r(r: Reg8, (dir, mode, name): (ShiftDir, ShiftMode, &str), fast
                 }
             }
             if indexed && r != Reg8::_HL {
-                state.set_reg(Reg8::_HL, v);
+                env.set_reg(Reg8::_HL, v);
             }
-            state.set_reg(r, v);
+            env.set_reg(r, v);
 
-            state.reg.put_flag(Flag::C, carry);
-            state.reg.clear_flag(Flag::H);
-            state.reg.clear_flag(Flag::N);
+            env.state.reg.put_flag(Flag::C, carry);
+            env.state.reg.clear_flag(Flag::H);
+            env.state.reg.clear_flag(Flag::N);
             if fast {
-                state.reg.update_53_flags(v);
+                env.state.reg.update_53_flags(v);
             } else {
-                state.reg.update_sz53p_flags(v);
+                env.state.reg.update_sz53p_flags(v);
             }
         })
     }
@@ -89,17 +89,17 @@ pub fn build_bit_r(n: u8, r: Reg8) -> Opcode {
     Opcode {
         name: format!("BIT {}, {}", n, r),
         cycles: 8, // (HL) 12, (IX+d) 20
-        action: Box::new(move |state: &mut State| {
-            state.load_displacement(r);
+        action: Box::new(move |env: &mut Environment| {
+            env.load_displacement(r);
 
-            let v = state.get_reg(r);
+            let v = env.get_reg(r);
             let z = v & (1<<n);
-            state.reg.put_flag(Flag::S, (z & 0x80) != 0);
-            state.reg.update_53_flags(v); // TUZD-4.1, copy bits from reg
-            state.reg.put_flag(Flag::Z, z == 0);
-            state.reg.set_flag(Flag::H);
-            state.reg.put_flag(Flag::P, z == 0);
-            state.reg.clear_flag(Flag::N);
+            env.state.reg.put_flag(Flag::S, (z & 0x80) != 0);
+            env.state.reg.update_53_flags(v); // TUZD-4.1, copy bits from reg
+            env.state.reg.put_flag(Flag::Z, z == 0);
+            env.state.reg.set_flag(Flag::H);
+            env.state.reg.put_flag(Flag::P, z == 0);
+            env.state.reg.clear_flag(Flag::N);
 
             if r == Reg8::_HL {
                 // Exceptions for (IX+d) TUZD-4-1
@@ -109,8 +109,8 @@ pub fn build_bit_r(n: u8, r: Reg8) -> Opcode {
                 different, namely bit 5 and 3 of the high byte of IX+d (so IX
                 plus the displacement).
                 */
-                let address = state.get_index_address();
-                state.reg.update_53_flags((address >> 8) as u8);
+                let address = env.get_index_address();
+                env.state.reg.update_53_flags((address >> 8) as u8);
 
                 // Exceptions for (HL) TUZD-4-1
                 /* Things get more bizarre with the BIT n,(HL)
@@ -128,17 +128,17 @@ pub fn build_set_res_r(bit: u8, r: Reg8, value: bool) -> Opcode {
     Opcode {
         name: format!("{} {}, {}", name, bit, r),
         cycles: 8, // (HL) 15
-        action: Box::new(move |state: &mut State| {
-            state.load_displacement(r);
+        action: Box::new(move |env: &mut Environment| {
+            env.load_displacement(r);
 
-            let mut v = state.get_reg(r);
+            let mut v = env.get_reg(r);
             if value {
                 v = v | (1<<bit);
             } else {
                 v = v & !(1<<bit);
             }
 
-            state.set_reg(r, v);
+            env.set_reg(r, v);
         })
     }
 }
@@ -148,24 +148,24 @@ pub fn build_indexed_set_res_r(bit: u8, r: Reg8, value: bool) -> Opcode {
     Opcode {
         name: format!("LD {}, {} {}, {}", r, name, bit, Reg8::_HL),
         cycles: 23,
-        action: Box::new(move |state: &mut State| {
+        action: Box::new(move |env: &mut Environment| {
             /*
             An instruction such as LD r, RES b, (IX+d) should be interpreted as
             "attempt to reset bit b of the byte at (IX+d), and copy the result
             to register r, even the new byte cannot be written at the said
             address (e.g. when it points to a ROM location).
             */
-            state.load_displacement(r);
+            env.load_displacement(r);
 
-            let mut v = state.get_reg(Reg8::_HL);
+            let mut v = env.get_reg(Reg8::_HL);
             if value {
                 v = v | (1<<bit);
             } else {
                 v = v & !(1<<bit);
             }
-            state.set_reg(Reg8::_HL, v);
+            env.set_reg(Reg8::_HL, v);
             if r != Reg8::_HL {
-                state.set_reg(r, v);
+                env.set_reg(r, v);
             }
         })
     }
@@ -177,14 +177,14 @@ pub fn build_cpl() -> Opcode {
     Opcode {
         name: "CPL".to_string(),
         cycles: 4,
-        action: Box::new(move |state: &mut State| {
-            let mut v = state.reg.get_a();
+        action: Box::new(move |env: &mut Environment| {
+            let mut v = env.state.reg.get_a();
             v = !v;
-            state.reg.set_a(v);
+            env.state.reg.set_a(v);
 
-            state.reg.set_flag(Flag::H);
-            state.reg.set_flag(Flag::N);
-            state.reg.update_53_flags(v);
+            env.state.reg.set_flag(Flag::H);
+            env.state.reg.set_flag(Flag::N);
+            env.state.reg.update_53_flags(v);
         })
     }
 }
@@ -193,13 +193,13 @@ pub fn build_scf() -> Opcode {
     Opcode {
         name: "SCF".to_string(),
         cycles: 4,
-        action: Box::new(move |state: &mut State| {
-            let a = state.reg.get_a();
+        action: Box::new(move |env: &mut Environment| {
+            let a = env.state.reg.get_a();
 
-            state.reg.set_flag(Flag::C);
-            state.reg.clear_flag(Flag::H);
-            state.reg.clear_flag(Flag::N);
-            state.reg.update_53_flags(a);
+            env.state.reg.set_flag(Flag::C);
+            env.state.reg.clear_flag(Flag::H);
+            env.state.reg.clear_flag(Flag::N);
+            env.state.reg.update_53_flags(a);
         })
     }
 }
@@ -208,14 +208,14 @@ pub fn build_ccf() -> Opcode {
     Opcode {
         name: "CCF".to_string(),
         cycles: 4,
-        action: Box::new(move |state: &mut State| {
-            let a = state.reg.get_a();
-            let c = state.reg.get_flag(Flag::C);
+        action: Box::new(move |env: &mut Environment| {
+            let a = env.state.reg.get_a();
+            let c = env.state.reg.get_flag(Flag::C);
 
-            state.reg.put_flag(Flag::C, !c);
-            state.reg.put_flag(Flag::H, c);
-            state.reg.clear_flag(Flag::N);
-            state.reg.update_53_flags(a);
+            env.state.reg.put_flag(Flag::C, !c);
+            env.state.reg.put_flag(Flag::H, c);
+            env.state.reg.clear_flag(Flag::N);
+            env.state.reg.update_53_flags(a);
         })
     }
 }
@@ -224,9 +224,9 @@ pub fn build_rxd(dir: ShiftDir, name: &str) -> Opcode {
     Opcode {
         name: name.to_string(),
         cycles: 18,
-        action: Box::new(move |state: &mut State| {
-            let mut a = state.reg.get_a();
-            let mut phl = state.get_reg(Reg8::_HL);
+        action: Box::new(move |env: &mut Environment| {
+            let mut a = env.state.reg.get_a();
+            let mut phl = env.get_reg(Reg8::_HL);
             // a = 0xWX, phl = 0xYZ
             match dir {
                 ShiftDir::Left => {
@@ -242,12 +242,12 @@ pub fn build_rxd(dir: ShiftDir, name: &str) -> Opcode {
                     a = temp;
                 }
             }
-            state.reg.set_a(a);
-            state.set_reg(Reg8::_HL, phl);
+            env.state.reg.set_a(a);
+            env.set_reg(Reg8::_HL, phl);
 
-            state.reg.clear_flag(Flag::H);
-            state.reg.clear_flag(Flag::N);
-            state.reg.update_sz53p_flags(a);
+            env.state.reg.clear_flag(Flag::H);
+            env.state.reg.clear_flag(Flag::N);
+            env.state.reg.update_sz53p_flags(a);
         })
     }
 }

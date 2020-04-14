@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 mod decoder;
+mod environment;
 mod memory_io;
 mod opcode;
 mod opcode_alu;
@@ -15,10 +16,9 @@ mod state;
 mod cpu;
 
 use cpu::Cpu;
-use memory_io::PlainMachine;
 
 
 fn main() {
-    Cpu::new(&mut PlainMachine::new());
+    Cpu::new();
 }
 

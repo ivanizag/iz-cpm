@@ -1,5 +1,5 @@
 use super::opcode::*;
-use super::state::*;
+use super::environment::*;
 use super::registers::*;
 
 /*
@@ -54,9 +54,9 @@ pub fn build_ld_r_r(dst: Reg8, src: Reg8, special: bool) -> Opcode {
     Opcode {
         name: format!("LD {}, {}", dst, src),
         cycles: if special {9} else {4}, // (HL): 7, IXL/IXH/IYH/IYL: 8, (IX+d): 19
-        action: Box::new(move |state: &mut State| {
-            state.load_displacement(src);
-            state.load_displacement(dst);
+        action: Box::new(move |env: &mut Environment| {
+            env.load_displacement(src);
+            env.load_displacement(dst);
 
             /*
             If the next opcode makes use of (HL), it will be replaced by (IX+d), and any other
@@ -64,14 +64,14 @@ pub fn build_ld_r_r(dst: Reg8, src: Reg8, special: bool) -> Opcode {
             does not exist, but LD H, (IX+d) does. It's impossible for both src and dst to be (HL)
             */
             let value = if dst == Reg8::_HL {
-                state.reg.get8(src)
+                env.state.reg.get8(src)
             } else {
-                state.get_reg(src)
+                env.get_reg(src)
             };
             if src == Reg8::_HL {
-                state.reg.set8(dst, value);
+                env.state.reg.set8(dst, value);
             } else {
-                state.set_reg(dst, value);
+                env.set_reg(dst, value);
             }
         })
     }
@@ -81,11 +81,11 @@ pub fn build_ld_r_n(r: Reg8) -> Opcode {
     Opcode {
         name: format!("LD {}, n", r),
         cycles: 7, // (HL): 10, IXL/IXH/IYH/IYL: 11,  (IX+d): 19
-        action: Box::new(move |state: &mut State| {
-            state.load_displacement(r);
+        action: Box::new(move |env: &mut Environment| {
+            env.load_displacement(r);
 
-            let value = state.advance_pc();
-            state.set_reg(r, value);
+            let value = env.advance_pc();
+            env.set_reg(r, value);
         })
     }
 }
@@ -95,10 +95,10 @@ pub fn build_ld_a_prr(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("LD A, ({:?})", rr),
         cycles: 7,
-        action: Box::new(move |state: &mut State| {
-            let address = state.reg.get16(rr);
-            let value = state.sys.peek(address);
-            state.reg.set_a(value);
+        action: Box::new(move |env: &mut Environment| {
+            let address = env.state.reg.get16(rr);
+            let value = env.sys.peek(address);
+            env.state.reg.set_a(value);
         })
     }
 }
@@ -107,10 +107,10 @@ pub fn build_ld_a_pnn() -> Opcode {
     Opcode {
         name: "LD A, (nn)".to_string(),
         cycles: 13,
-        action: Box::new(move |state: &mut State| {
-            let address = state.advance_immediate16();
-            let value = state.sys.peek(address);
-            state.reg.set_a(value);
+        action: Box::new(move |env: &mut Environment| {
+            let address = env.advance_immediate16();
+            let value = env.sys.peek(address);
+            env.state.reg.set_a(value);
         })
     }
 }
@@ -120,10 +120,10 @@ pub fn build_ld_prr_a(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("LD ({:?}), A", rr),
         cycles: 7,
-        action: Box::new(move |state: &mut State| {
-            let value = state.reg.get_a();
-            let address = state.reg.get16(rr);
-            state.sys.poke(address, value);
+        action: Box::new(move |env: &mut Environment| {
+            let value = env.state.reg.get_a();
+            let address = env.state.reg.get16(rr);
+            env.sys.poke(address, value);
         })
     }
     
@@ -133,10 +133,10 @@ pub fn build_ld_pnn_a() -> Opcode {
     Opcode {
         name: "LD (nn), A".to_string(),
         cycles: 13,
-        action: Box::new(move |state: &mut State| {
-            let value = state.reg.get_a();
-            let address = state.advance_immediate16();
-            state.sys.poke(address, value);
+        action: Box::new(move |env: &mut Environment| {
+            let value = env.state.reg.get_a();
+            let address = env.advance_immediate16();
+            env.sys.poke(address, value);
         })
     }
     
@@ -148,9 +148,9 @@ pub fn build_ld_rr_nn(rr: Reg16) -> Opcode {
     Opcode {
         name: format!("LD {:?}, nn", rr),
         cycles: 10, // IX/IX: 14
-        action: Box::new(move |state: &mut State| {
-            let value = state.advance_immediate16();
-            state.set_reg16(rr, value);
+        action: Box::new(move |env: &mut Environment| {
+            let value = env.advance_immediate16();
+            env.set_reg16(rr, value);
         })
     }
 }
@@ -159,9 +159,9 @@ pub fn build_ld_sp_hl() -> Opcode {
     Opcode {
         name: "LD SP, HL".to_string(),
         cycles: 6, // IX/IY: 10
-        action: Box::new(move |state: &mut State| {
-            let value = state.get_reg16(Reg16::HL);
-            state.set_reg16(Reg16::SP, value);
+        action: Box::new(move |env: &mut Environment| {
+            let value = env.get_reg16(Reg16::HL);
+            env.set_reg16(Reg16::SP, value);
         })
     }
 }
@@ -170,10 +170,10 @@ pub fn build_ld_pnn_rr(rr: Reg16, fast: bool) -> Opcode {
     Opcode {
         name: format!("LD (nn), {:?}", rr),
         cycles: if fast {20} else {16},  // HL(fast): 16 , IX/IY: 20,
-        action: Box::new(move |state: &mut State| {
-            let address = state.advance_immediate16();
-            let value = state.get_reg16(rr);
-            state.sys.poke16(address, value);
+        action: Box::new(move |env: &mut Environment| {
+            let address = env.advance_immediate16();
+            let value = env.get_reg16(rr);
+            env.sys.poke16(address, value);
         })
     }
 }
@@ -182,10 +182,10 @@ pub fn build_ld_rr_pnn(rr: Reg16, fast: bool) -> Opcode {
     Opcode {
         name: format!("LD {:?}, (nn)", rr),
         cycles: if fast {20} else {16},  // HL(fast): 16 , IX/IY: 20,
-        action: Box::new(move |state: &mut State| {
-            let address = state.advance_immediate16();
-            let value = state.sys.peek16(address);
-            state.set_reg16(rr, value);
+        action: Box::new(move |env: &mut Environment| {
+            let address = env.advance_immediate16();
+            let value = env.sys.peek16(address);
+            env.set_reg16(rr, value);
         })
     }
 }
@@ -194,8 +194,8 @@ pub fn build_ex_af() -> Opcode {
     Opcode {
         name: "EX AF, AF'".to_string(),
         cycles: 4,
-        action: Box::new(|state: &mut State| {
-            state.reg.swap(Reg16::AF);
+        action: Box::new(|env: &mut Environment| {
+            env.state.reg.swap(Reg16::AF);
         })
     }
 }
@@ -204,10 +204,10 @@ pub fn build_exx() -> Opcode {
     Opcode {
         name: "EXX".to_string(),
         cycles: 4,
-        action: Box::new(|state: &mut State| {
-            state.reg.swap(Reg16::BC);
-            state.reg.swap(Reg16::DE);
-            state.reg.swap(Reg16::HL); // NO IX, IY variant
+        action: Box::new(|env: &mut Environment| {
+            env.state.reg.swap(Reg16::BC);
+            env.state.reg.swap(Reg16::DE);
+            env.state.reg.swap(Reg16::HL); // NO IX, IY variant
         })
     }
 }
@@ -216,10 +216,10 @@ pub fn build_ex_de_hl() -> Opcode {
     Opcode {
         name: "EX DE, HL".to_string(),
         cycles: 4,
-        action: Box::new(move |state: &mut State| {
-            let temp = state.reg.get16(Reg16::HL); // No IX/IY variant
-            state.reg.set16(Reg16::HL, state.reg.get16(Reg16::DE));
-            state.reg.set16(Reg16::DE, temp);
+        action: Box::new(move |env: &mut Environment| {
+            let temp = env.state.reg.get16(Reg16::HL); // No IX/IY variant
+            env.state.reg.set16(Reg16::HL, env.state.reg.get16(Reg16::DE));
+            env.state.reg.set16(Reg16::DE, temp);
         })         
     }
 }
@@ -228,12 +228,12 @@ pub fn build_ex_psp_hl() -> Opcode {
     Opcode {
         name: "EX (SP), HL".to_string(),
         cycles: 19, // IX/IY: 23
-        action: Box::new(move |state: &mut State| {
-            let address = state.reg.get16(Reg16::SP);
+        action: Box::new(move |env: &mut Environment| {
+            let address = env.state.reg.get16(Reg16::SP);
 
-            let temp = state.get_reg16(Reg16::HL);
-            state.set_reg16(Reg16::HL, state.sys.peek16(address));
-            state.sys.poke16(address, temp);
+            let temp = env.get_reg16(Reg16::HL);
+            env.set_reg16(Reg16::HL, env.sys.peek16(address));
+            env.sys.poke16(address, temp);
         })         
     }
 }
@@ -242,29 +242,29 @@ pub fn build_ld_block((inc, repeat, postfix) : (bool, bool, &'static str)) -> Op
     Opcode {
         name: format!("LD{}", postfix),
         cycles: 16, // 21 if PC is changed
-        action: Box::new(move |state: &mut State| {
-            let value = state.get_reg(Reg8::_HL);
-            let address = state.reg.get16(Reg16::DE);
-            state.sys.poke(address, value);
+        action: Box::new(move |env: &mut Environment| {
+            let value = env.get_reg(Reg8::_HL);
+            let address = env.state.reg.get16(Reg16::DE);
+            env.sys.poke(address, value);
 
-            state.reg.inc_dec16(Reg16::DE, inc);
-            state.reg.inc_dec16(Reg16::HL, inc);
-            let bc = state.reg.inc_dec16(Reg16::BC, false /*decrement*/);
+            env.state.reg.inc_dec16(Reg16::DE, inc);
+            env.state.reg.inc_dec16(Reg16::HL, inc);
+            let bc = env.state.reg.inc_dec16(Reg16::BC, false /*decrement*/);
 
             // TUZD-4.2
-            //println!("LDIR {:02x} {:02x} {:02b}", value, state.reg.get_a(), value.wrapping_add(state.reg.get_a()));
-            let n = value.wrapping_add(state.reg.get_a());
-            state.reg.put_flag(Flag::_5, n & (1<<1) != 0);
-            state.reg.clear_flag(Flag::H);
-            state.reg.put_flag(Flag::_3, n & (1<<3) != 0);
-            state.reg.put_flag(Flag::P, bc != 0);
-            state.reg.clear_flag(Flag::N);
+            //println!("LDIR {:02x} {:02x} {:02b}", value, env.state.reg.get_a(), value.wrapping_add(env.state.reg.get_a()));
+            let n = value.wrapping_add(env.state.reg.get_a());
+            env.state.reg.put_flag(Flag::_5, n & (1<<1) != 0);
+            env.state.reg.clear_flag(Flag::H);
+            env.state.reg.put_flag(Flag::_3, n & (1<<3) != 0);
+            env.state.reg.put_flag(Flag::P, bc != 0);
+            env.state.reg.clear_flag(Flag::N);
             // S, Z and C unchanged. What about N?
 
             if repeat && bc != 0 {
                 // Back to redo the instruction
-                let pc = state.reg.get_pc().wrapping_sub(2);
-                state.reg.set_pc(pc);
+                let pc = env.state.reg.get_pc().wrapping_sub(2);
+                env.state.reg.set_pc(pc);
             }
         })         
     }
