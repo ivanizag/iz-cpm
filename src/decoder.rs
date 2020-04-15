@@ -186,7 +186,7 @@ impl Decoder {
                     _ => panic!("Unreachable")
                 },
                 1 => match (p.z, p.y) {
-                    (6, 6) => Some(build_halt()), // HALT, excetion instead of LD (HL), (HL)
+                    (6, 6) => Some(build_halt()), // HALT, exception instead of LD (HL), (HL)
                     _ => Some(build_ld_r_r(R[p.y], R[p.z], false)), // LD r[y], r[z] -- 8 bit load imm
                 },
             2 => Some(build_operator_a_r(R[p.z], ALU[p.y])), // alu A, r

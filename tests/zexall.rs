@@ -11,6 +11,7 @@ static ZEXALL: &'static [u8] = include_bytes!("res/zexall.com");
 
 
 #[test]
+#[ignore]
 fn text_zexall() {
     let mut machine = ZexMachine::new();
     let mut state = State::new();
