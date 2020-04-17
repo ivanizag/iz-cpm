@@ -41,6 +41,17 @@ impl CpmConsole {
     }
 
     pub fn read(&mut self) -> u8 {
+        /*
+        The Console Input function reads the next console character to
+        register A. Graphic characters, along with carriage return,
+        line- feed, and back space (CTRL-H) are echoed to the console.
+        Tab characters, CTRL-I, move the cursor to the next tab stop. A
+        check is made for start/stop scroll, CTRL-S, and start/stop
+        printer echo, CTRL-P. The FDOS does not return to the calling
+        program until a character has been typed, thus suspending
+        execution if a character is not ready. 
+        */
+
         match self.next_char {
             Some(ch) => {
                 self.next_char = None;
@@ -54,11 +65,25 @@ impl CpmConsole {
     }
 
     pub fn write(&self, ch: u8) {
+        /*
+        The ASCII character from register E is sent to the console
+        device. As in Function 1, tabs are expanded and checks are made
+        for start/stop scroll and printer echo. 
+        */
+
         print!("{}", ch as char);
         stdout().flush().unwrap();
     }
 
     pub fn write_string(&self, address: u16, machine: &CpmMachine) {
+        /*
+        The Print String function sends the character string stored in
+        memory at the location given by DE to the console device, until
+        a $ is encountered in the string. Tabs are expanded as in
+        Function 2, and checks are made for start/stop scroll and
+        printer echo. 
+        */
+
         let mut index = address;
         let mut msg = String::new();
         loop {
@@ -75,6 +100,12 @@ impl CpmConsole {
     }
 
     pub fn status(&self) -> u8 {
+        /*
+        The Console Status function checks to see if a character has
+        been typed at the console. If a character is ready, the value
+        0FFH is returned in register A. Otherwise a 00H value is returned. 
+        */
+
         match self.next_char {
             Some(_) => 0xff,
             None => {

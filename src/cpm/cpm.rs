@@ -1,32 +1,51 @@
 extern crate z80;
+extern crate clap;
 
-mod cpm_console;
-mod cpm_machine;
+use std::fs::File;
+use std::io::prelude::*;
+use clap::{Arg, App};
 
 use z80::cpu::Cpu;
 use z80::memory_io::*;
 use z80::registers::*;
 use z80::state::State;
 
+mod cpm_console;
+mod cpm_disk;
+mod cpm_machine;
+
 use self::cpm_console::*;
+use self::cpm_disk::*;
 use self::cpm_machine::*;
 
-//static PROGRAM: &'static [u8] = include_bytes!("rom/zexall.com");
-static PROGRAM: &'static [u8] = include_bytes!("rom/MBASIC.COM");
-
 fn main() {
+    // Parse arguments
+    let matches = App::new("Z80 CP/M 2.2 emulator")
+        .arg(Arg::with_name("INPUT")
+            .help("The z80 image to run")
+            .required(true)
+            .index(1))
+        .arg(Arg::with_name("bdos_trace")
+            .short("t")
+            .long("bdos_trace")
+            .help("Trace BDOS calls"))
+        .get_matches();
+    let filename = matches.value_of("INPUT").unwrap();
+    let bdos_trace = matches.is_present("bdos_trace");
+    
+    // Init system
     let mut machine = CpmMachine::new();
     let mut state = State::new();
     let mut cpu = Cpu::new();
-
-    // Init console
     let mut console = CpmConsole::new();
+    let mut disk = CpmDisk::new();
 
     // Load program
-    let code = PROGRAM;
-    let size = code.len();
+    let mut file = File::open(filename).unwrap();
+    let mut buf = [0u8;65536];
+    let size = file.read(&mut buf).unwrap();
     for i in 0..size {
-        machine.poke(0x100 + i as u16, code[i]);
+        machine.poke(0x100 + i as u16, buf[i]);
     }
 
     /*
@@ -42,7 +61,7 @@ fn main() {
     }
 
     state.reg.set_pc(0x100);
-    let trace = true;
+    let trace = false;
     cpu.trace = trace;
     loop {
         cpu.execute_instruction(&mut state, &mut machine);
@@ -71,50 +90,25 @@ fn main() {
         if state.reg.get_pc() == 0x0007 {
             console.pool_keyboard();
 
-            let command = state.reg.get8(Reg8::C); 
-            print!("\n[[BDOS command {}]]", command);
+            let command = state.reg.get8(Reg8::C);
+            if bdos_trace {
+                print!("\n[[BDOS command {}]]", command);
+            }
+
             match command {
                 // See https://www.seasip.info/Cpm/bdos.html
                 // See http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch5.htm
-                1=> { // C_READ) - Console input
-                    /*
-                    The Console Input function reads the next console character to
-                    register A. Graphic characters, along with carriage return,
-                    line- feed, and back space (CTRL-H) are echoed to the console.
-                    Tab characters, CTRL-I, move the cursor to the next tab stop. A
-                    check is made for start/stop scroll, CTRL-S, and start/stop
-                    printer echo, CTRL-P. The FDOS does not return to the calling
-                    program until a character has been typed, thus suspending
-                    execution if a character is not ready. 
-                    */
+                1=> { // C_READ - Console input
                     state.reg.set_a(console.read())
-                    // No need to echo. The console has done that already.
                 }
                 2 => { // C_WRITE - Console output
-                    /*
-                    The ASCII character from register E is sent to the console
-                    device. As in Function 1, tabs are expanded and checks are made
-                    for start/stop scroll and printer echo. 
-                    */
                     console.write(state.reg.get8(Reg8::E));
                 },
                 9 => { // C_WRITESTR - Output string
-                    /*
-                    The Print String function sends the character string stored in
-                    memory at the location given by DE to the console device, until
-                    a $ is encountered in the string. Tabs are expanded as in
-                    Function 2, and checks are made for start/stop scroll and
-                    printer echo. 
-                    */
                     let address = state.reg.get16(Reg16::DE);
                     console.write_string(address, &machine);
                 },
                 11 => { // C_STAT - Console status
-                    /*
-                    The Console Status function checks to see if a character has
-                    been typed at the console. If a character is ready, the value
-                    0FFH is returned in register A. Otherwise a 00H value is returned. 
-                    */
                     state.reg.set_a(console.status());
                 },
                 12 => { // S_BDOSVER - Return version number
@@ -129,42 +123,13 @@ fn main() {
                     and random access functions. 
                     */
                     state.reg.set16(Reg16::HL, 0x22); // CPM 2.2
-
-                    // Needed?
-                    state.reg.set8(Reg8::B, state.reg.get8(Reg8::H));
-                    state.reg.set8(Reg8::A, state.reg.get8(Reg8::L));
                 },
                 13 => { // DRV_ALLRESET - Reset disk system
-                    /*
-                    The Reset Disk function is used to programmatically restore the
-                    file system to a reset state where all disks are set to
-                    Read-Write. See functions 28 and 29, only disk drive A is
-                    selected, and the default DMA address is reset to BOOT+0080H.
-                    This function can be used, for example, by an application
-                    program that requires a disk change without a system reboot.
-                    */
-                    // TODO
-                    //cpm.disk.reset()
+                    disk.reset()
                 },
                 14 => { // DRV_SET - Select disk
-                    /*
-                    The Select Disk function designates the disk drive named in
-                    register E as the default disk for subsequent file operations,
-                    with E = 0 for drive A, 1 for drive B, and so on through 15,
-                    corresponding to drive P in a full 16 drive system. The drive is
-                    placed in an on-line status, which activates its directory until
-                    the next cold start, warm start, or disk system reset operation.
-                    If the disk medium is changed while it is on-line, the drive
-                    automatically goes to a Read-Only status in a standard CP/M
-                    environment, see Function 28. FCBs that specify drive code
-                    zero (dr = 00H) automatically reference the currently selected
-                    default drive. Drive code values between 1 and 16 ignore the
-                    selected default drive and directly reference drives A through P.
-                    */
                     let selected = state.reg.get8(Reg8::E);
-                    print!("[[Disk {} selected]]", selected);
-                    // TODO
-                    //cpm_disk.select_disk(selected);
+                    disk.select(selected);
                 },
                 15 => { // F_OPEN - Open file
                     /*
