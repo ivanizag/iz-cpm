@@ -54,7 +54,7 @@ fn relative_jump(env: &mut Environment, offset: u8) {
 // Absolute jumps
 pub fn build_jp_unconditional() -> Opcode {
     Opcode {
-        name: "JP d".to_string(),
+        name: "JP nn".to_string(),
         cycles: 10,
         action: Box::new(move |env: &mut Environment| {
             let address = env.advance_immediate16();

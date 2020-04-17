@@ -12,7 +12,7 @@ use self::cpm_console::*;
 use self::cpm_machine::*;
 
 //static PROGRAM: &'static [u8] = include_bytes!("rom/zexall.com");
-static PROGRAM: &'static [u8] = include_bytes!("rom/cbasic.com");
+static PROGRAM: &'static [u8] = include_bytes!("rom/MBASIC.COM");
 
 fn main() {
     let mut machine = CpmMachine::new();
@@ -42,7 +42,7 @@ fn main() {
     }
 
     state.reg.set_pc(0x100);
-    let trace = false;
+    let trace = true;
     cpu.trace = trace;
     loop {
         cpu.execute_instruction(&mut state, &mut machine);
@@ -72,7 +72,7 @@ fn main() {
             console.pool_keyboard();
 
             let command = state.reg.get8(Reg8::C); 
-            //print!("\n[[BDOS command {}]]", command);
+            print!("\n[[BDOS command {}]]", command);
             match command {
                 // See https://www.seasip.info/Cpm/bdos.html
                 // See http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch5.htm
@@ -129,6 +129,10 @@ fn main() {
                     and random access functions. 
                     */
                     state.reg.set16(Reg16::HL, 0x22); // CPM 2.2
+
+                    // Needed?
+                    state.reg.set8(Reg8::B, state.reg.get8(Reg8::H));
+                    state.reg.set8(Reg8::A, state.reg.get8(Reg8::L));
                 },
                 13 => { // DRV_ALLRESET - Reset disk system
                     /*
