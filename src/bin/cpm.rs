@@ -1,17 +1,15 @@
 extern crate z80;
 
-use std::io::*;
-use std::sync::mpsc;
-use std::sync::mpsc::Receiver;
-use std::sync::mpsc::TryRecvError;
-use std::thread;
-use std::time::Duration;
+mod cpm_console;
+mod cpm_machine;
 
 use z80::cpu::Cpu;
 use z80::memory_io::*;
 use z80::registers::*;
 use z80::state::State;
 
+use self::cpm_console::*;
+use self::cpm_machine::*;
 
 //static PROGRAM: &'static [u8] = include_bytes!("rom/zexall.com");
 static PROGRAM: &'static [u8] = include_bytes!("rom/cbasic.com");
@@ -22,9 +20,7 @@ fn main() {
     let mut cpu = Cpu::new();
 
     // Init console
-    let mut stdout = stdout();
-    let stdin_channel = spawn_stdin_channel();
-    let mut next_char: Option<u8> = None;
+    let mut console = CpmConsole::new();
 
     // Load program
     let code = PROGRAM;
@@ -71,17 +67,10 @@ fn main() {
             break;
         }
 
+        // We do the BDOS actions outside the emulation just before the RTS
         if state.reg.get_pc() == 0x0007 {
-            // Keyboard
-            if next_char == None {
-                next_char = match stdin_channel.try_recv() {
-                    Ok(key) => Some(key),
-                    Err(TryRecvError::Empty) => None,
-                    Err(TryRecvError::Disconnected) => panic!("Stdin disconnected")
-                }
-            }
+            console.pool_keyboard();
 
-            // We do the BDOS actions outside the emulation just before the RTS
             let command = state.reg.get8(Reg8::C); 
             //print!("\n[[BDOS command {}]]", command);
             match command {
@@ -98,17 +87,7 @@ fn main() {
                     program until a character has been typed, thus suspending
                     execution if a character is not ready. 
                     */
-                    match next_char {
-                        Some(ch) => {
-                            state.reg.set8(Reg8::A, ch);
-                        },
-                        None => {
-                            // Blocks waiting for char
-                            let ch = stdin_channel.recv().unwrap();
-                            state.reg.set8(Reg8::A, ch);
-                        }
-                    }
-                    next_char = None;
+                    state.reg.set_a(console.read())
                     // No need to echo. The console has done that already.
                 }
                 2 => { // C_WRITE - Console output
@@ -117,8 +96,7 @@ fn main() {
                     device. As in Function 1, tabs are expanded and checks are made
                     for start/stop scroll and printer echo. 
                     */
-                    print!("{}", state.reg.get8(Reg8::E) as char);
-                    stdout.flush().unwrap();
+                    console.write(state.reg.get8(Reg8::E));
                 },
                 9 => { // C_WRITESTR - Output string
                     /*
@@ -128,19 +106,8 @@ fn main() {
                     Function 2, and checks are made for start/stop scroll and
                     printer echo. 
                     */
-                    let mut address = state.reg.get16(Reg16::DE);
-                    let mut msg = String::new();
-                    loop {
-                        let ch = machine.peek(address) as char;
-                        address += 1;
-                
-                        if ch == '$'{
-                            break;
-                        }
-                        msg.push(ch);
-                    }
-                    print!("{}", msg);
-                    stdout.flush().unwrap();
+                    let address = state.reg.get16(Reg16::DE);
+                    console.write_string(address, &machine);
                 },
                 11 => { // C_STAT - Console status
                     /*
@@ -148,17 +115,7 @@ fn main() {
                     been typed at the console. If a character is ready, the value
                     0FFH is returned in register A. Otherwise a 00H value is returned. 
                     */
-                    match next_char {
-                        Some(_) => {
-                            state.reg.set8(Reg8::A, 0xff);
-                        },
-                        None => {
-                            state.reg.set8(Reg8::A, 0);
-
-                            // Avoid 100% CPU usage waiting for input.
-                            thread::sleep(Duration::from_millis(1));  
-                        }
-                    }
+                    state.reg.set_a(console.status());
                 },
                 12 => { // S_BDOSVER - Return version number
                     /*
@@ -396,69 +353,3 @@ fn main() {
         }
     }
 }
-
-fn spawn_stdin_channel() -> Receiver<u8> {
-    let (tx, rx) = mpsc::channel::<u8>();
-    thread::spawn(move || loop {
-        let mut buffer = String::new();
-        stdin().read_line(&mut buffer).unwrap();
-        for mut c in buffer.bytes() {
-            if c == 10 {c = 13};
-            tx.send(c).unwrap();
-        }
-    });
-    rx
-}
-
-
-struct CpmMachine {
-    mem: [u8; PLAIN_MEMORY_SIZE],
-    in_values: [u8; 256],
-    in_called: bool,
-    in_port: u8,
-    out_called: bool,
-    out_port: u8,
-    out_value: u8
-}
-
-impl CpmMachine {
-    pub fn new() -> CpmMachine {
-        CpmMachine {
-            mem: [0; PLAIN_MEMORY_SIZE],
-            in_values: [0; 256],
-            out_called: false,
-            out_port: 0,
-            out_value: 0,
-            in_called: false,
-            in_port: 0
-        }
-    }
-}
-
-impl Machine for CpmMachine {
-    fn peek(&self, address: u16) -> u8 {
-        self.mem[address as usize]
-    }
-
-    fn poke(&mut self, address: u16, value: u8) {
-        self.mem[address as usize] = value;
-    }
-
-    fn port_in(&mut self, address: u16) -> u8 {
-        let value = self.in_values[address as u8 as usize];
-        if value != 1 {
-            //print!("Port {:04x} in {:02x}\n", address, value);
-        }
-        self.in_port = address as u8;
-        self.in_called = true;
-        value
-    }
-
-    fn port_out(&mut self, address: u16, value: u8) {
-        //print!("Port {:04x} out {:02x} {}\n", address, value, value as char);
-        self.out_port = address as u8;
-        self.out_value = value;
-        self.out_called = true;
-    }
-}
-
