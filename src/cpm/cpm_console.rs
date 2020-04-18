@@ -115,4 +115,47 @@ impl CpmConsole {
             }
         }
     }
+
+    pub fn raw_io(&mut self, data: u8) -> u8 {
+        /*
+        Direct Console I/O is supported under CP/M for those specialized
+        applications where basic console input and output are required. Use
+        of this function should, in general, be avoided since it bypasses
+        all of the CP/M normal control character functions (for example,
+        CTRL-S and CTRL-P). Programs that perform direct I/O through the
+        BIOS under previous releases of CP/M, however, should be changed to
+        use direct I/O under BDOS so that they can be fully supported under
+        future releases of MP/M and CP/M.
+
+        Upon entry to Function 6, register E either contains hexadecimal FF,
+        denoting a console input request, or an ASCII character. If the
+        input value is FF, Function 6 returns A = 00 if no character is
+        ready, otherwise A contains the next console input character.
+
+        If the input value in E is not FF, Function 6 assumes that E contains
+        a valid ASCII character that is sent to the console.
+
+        Function 6 must not be used in conjunction with other console I/O
+        functions. 
+        */
+
+        if data == 0xff {
+            // Input
+            match self.next_char {
+                Some(ch) => {
+                    self.next_char = None;
+                    ch
+                },
+                None => {
+                    // Avoid 100% CPU usage waiting for input.
+                    thread::sleep(Duration::from_millis(1)); 
+                    0
+                }
+            }
+        } else {
+            // Output
+            self.write(data);
+            0 // Should this be 0 or data?
+        }
+    }
 }

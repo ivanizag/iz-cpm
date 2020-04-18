@@ -1,15 +1,13 @@
-static DEFAULT_DMA: u16 = 0xff00;
-
-pub struct CpmDisk {
-    selected: u8,
-    dma: u16
+pub struct CpmDrive {
+    current: u8,
+    selected_bitmap: u16
 }
 
-impl CpmDisk {
-    pub fn new() -> CpmDisk {
-        CpmDisk {
-            selected: 0,
-            dma: DEFAULT_DMA
+impl CpmDrive {
+    pub fn new() -> CpmDrive {
+        CpmDrive {
+            current: 0,
+            selected_bitmap: 1<<0
         }
     }
 
@@ -22,10 +20,8 @@ impl CpmDisk {
         This function can be used, for example, by an application
         program that requires a disk change without a system reboot.
         */
-        // TODO
-        //cpm.disk.reset()
-        self.dma = DEFAULT_DMA;
-        self.selected = 0;
+        self.current = 0;
+        self.selected_bitmap = 1<<0;
     }
 
     pub fn select(&mut self, selected: u8) {
@@ -43,6 +39,31 @@ impl CpmDisk {
         default drive. Drive code values between 1 and 16 ignore the
         selected default drive and directly reference drives A through P.
         */
-        self.selected = selected;
+        self.current = selected;
+        self.selected_bitmap &= 1<<selected;
+    }
+
+    pub fn get_current(&self) -> u8 {
+        /*
+        Function 25 returns the currently selected default disk number
+        in register A. The disk numbers range from 0 through 15
+        corresponding to drives A through P.
+        */
+        self.current
+    }
+
+    pub fn get_log_in_vector(&self) -> u16 {
+        /*
+        The log-in vector value returned by CP/M is a 16-bit value in HL,
+        where the least significant bit of L corresponds to the first
+        drive A and the high-order bit of H corresponds to the sixteenth
+        drive, labeled P. A 0 bit indicates that the drive is not on-line,
+        while a 1 bit marks a drive that is actively on-line as a result of
+        an explicit disk drive selection or an implicit drive select caused
+        by a file operation that specified a nonzero dr field. The user
+        should note that compatibility is maintained with earlier releases,
+        because registers A and L contain the same values upon return. 
+        */
+        self.selected_bitmap
     }
 }

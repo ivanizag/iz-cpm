@@ -11,12 +11,16 @@ use z80::registers::*;
 use z80::state::State;
 
 mod cpm_console;
-mod cpm_disk;
+mod cpm_drive;
+mod cpm_file;
 mod cpm_machine;
+mod fcb;
 
 use self::cpm_console::*;
-use self::cpm_disk::*;
+use self::cpm_drive::*;
+use self::cpm_file::*;
 use self::cpm_machine::*;
+use self::fcb::*;
 
 fn main() {
     // Parse arguments
@@ -37,8 +41,9 @@ fn main() {
     let mut machine = CpmMachine::new();
     let mut state = State::new();
     let mut cpu = Cpu::new();
-    let mut console = CpmConsole::new();
-    let mut disk = CpmDisk::new();
+    let mut cpm_console = CpmConsole::new();
+    let mut cpm_drive= CpmDrive::new();
+    let mut cpm_file = CpmFile::new();
 
     // Load program
     let mut file = File::open(filename).unwrap();
@@ -88,7 +93,7 @@ fn main() {
 
         // We do the BDOS actions outside the emulation just before the RTS
         if state.reg.get_pc() == 0x0007 {
-            console.pool_keyboard();
+            cpm_console.pool_keyboard();
 
             let command = state.reg.get8(Reg8::C);
             if bdos_trace {
@@ -99,86 +104,46 @@ fn main() {
                 // See https://www.seasip.info/Cpm/bdos.html
                 // See http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch5.htm
                 1=> { // C_READ - Console input
-                    state.reg.set_a(console.read())
+                    state.reg.set_a(cpm_console.read())
                 }
                 2 => { // C_WRITE - Console output
-                    console.write(state.reg.get8(Reg8::E));
+                    cpm_console.write(state.reg.get8(Reg8::E));
                 },
+                6 => { // C_RAWIO - Direct console I/O
+                    state.reg.set_a(cpm_console.raw_io(state.reg.get8(Reg8::E)))
+                }
                 9 => { // C_WRITESTR - Output string
                     let address = state.reg.get16(Reg16::DE);
-                    console.write_string(address, &machine);
+                    cpm_console.write_string(address, &machine);
                 },
                 11 => { // C_STAT - Console status
-                    state.reg.set_a(console.status());
+                    state.reg.set_a(cpm_console.status());
                 },
                 12 => { // S_BDOSVER - Return version number
-                    /*
-                    Function 12 provides information that allows version independent
-                    programming. A two-byte value is returned, with H = 00
-                    designating the CP/M release (H = 01 for MP/M) and L = 00 for all
-                    releases previous to 2.0. CP/M 2.0 returns a hexadecimal 20 in
-                    register L, with subsequent version 2 releases in the hexadecimal
-                    range 21, 22, through 2F. Using Function 12, for example, the
-                    user can write application programs that provide both sequential
-                    and random access functions. 
-                    */
-                    state.reg.set16(Reg16::HL, 0x22); // CPM 2.2
+                    state.reg.set16(Reg16::HL, get_version());
                 },
                 13 => { // DRV_ALLRESET - Reset disk system
-                    disk.reset()
+                    cpm_drive.reset();
+                    cpm_file.reset();
                 },
                 14 => { // DRV_SET - Select disk
                     let selected = state.reg.get8(Reg8::E);
-                    disk.select(selected);
+                    cpm_drive.select(selected);
                 },
-                15 => { // F_OPEN - Open file
-                    /*
-                    The Open File operation is used to activate a file that currently
-                    exists in the disk directory for the currently active user number.
-                    The FDOS scans the referenced disk directory for a match in
-                    positions 1 through 14 of the FCB referenced by DE (byte s1 is
-                    automatically zeroed) where an ASCII question mark (3FH) matches
-                    any directory character in any of these positions. Normally, no
-                    question marks are included, and bytes ex and s2 of the FCB are
-                    zero.
-
-                    If a directory element is matched, the relevant directory
-                    information is copied into bytes d0 through dn of FCB, thus
-                    allowing access to the files through subsequent read and write
-                    operations. The user should note that an existing file must not
-                    be accessed until a successful open operation is completed. Upon
-                    return, the open function returns a directory code with the
-                    value 0 through 3 if the open was successful or 0FFH (255 decimal)
-                    if the file cannot be found. If question marks occur in the FCB,
-                    the first matching FCB is activated. Note that the current record,
-                    (cr) must be zeroed by the program if the file is to be accessed
-                    sequentially from the first record. 
-                    */
-                    //let res = cpm_file.open(mem, REG16::DE);
-                    //state.reg.set_a(res);
-                    //TODO
-                    state.reg.set_a(0);
+                15 /*15*/ => { // F_OPEN - Open file
+                    let fcb = Fcb::new(state.reg.get16(Reg16::DE), &machine);
+                    if bdos_trace {
+                        print!("[[Open file {}]]", fcb.get_name());
+                    }
+                    let res = cpm_file.open(&fcb);
+                    state.reg.set_a(res);
                 },
-                16 => { // F_CLOSE - Close file
-                    /*
-                    The Close File function performs the inverse of the Open File
-                    function. Given that the FCB addressed by DE has been previously
-                    activated through an open or make function, the close function
-                    permanently records the new FCB in the reference disk directory
-                    (see functions 15 and 22). The FCB matching process for the close
-                    is identical to the open function. The directory code returned for
-                    a successful close operation is 0, 1, 2, or 3, while a 0FFH (255
-                    decimal) is returned if the filename cannot be found in the
-                    directory. A file need not be closed if only read operations have
-                    taken place. If write operations have occurred, the close operation
-                    is necessary to record the new directory information permanently. 
-                    */
-                    //let res = cpm_file.close(mem, REG16::DE);
-                    //state.reg.set_a(res);
-                    //TODO
-                    state.reg.set_a(0);
+                216 /*16*/ => { // F_CLOSE - Close file
+                    let fcb = Fcb::new(state.reg.get16(Reg16::DE), &machine);
+                    let res = cpm_file.close(&fcb);
+                    state.reg.set_a(res);
                 },
-                20 => { // F_READ - read next record
+                220 /*20*/ => { // F_READ - read next record
                     /*
                     Given that the FCB addressed by DE has been activated through an
                     Open or Make function, the Read Sequential function reads the
@@ -198,55 +163,17 @@ fn main() {
                     state.reg.set_a(0xff);
                 },
                 24 => { // DRV_LOGINVEC - Return Log-in Vector
-                    /*
-                    The log-in vector value returned by CP/M is a 16-bit value in HL,
-                    where the least significant bit of L corresponds to the first
-                    drive A and the high-order bit of H corresponds to the sixteenth
-                    drive, labeled P. A 0 bit indicates that the drive is not on-line,
-                    while a 1 bit marks a drive that is actively on-line as a result of
-                    an explicit disk drive selection or an implicit drive select caused
-                    by a file operation that specified a nonzero dr field. The user
-                    should note that compatibility is maintained with earlier releases,
-                    because registers A and L contain the same values upon return. 
-                    */
-                    // TODO
-                    // let vector = cpm_drive.log_in_vector();
-                    let vector = 1;
+                    let vector = cpm_drive.get_log_in_vector();
                     state.reg.set16(Reg16::HL, vector);
                     state.reg.set_a(vector as u8);
                 },
                 25 => { // DRV_GET - Return current disk
-                    /*
-                    Function 25 returns the currently selected default disk number
-                    in register A. The disk numbers range from 0 through 15
-                    corresponding to drives A through P.
-                    */
-                    // TODO
-                    // let drive = cpm_drive.current()
-                    let drive = 0; // A:
-                    state.reg.set_a(drive);
+                    state.reg.set_a(cpm_drive.get_current());
                 },
                 26 => { // F_DMAOFF - Set DMA address
-                    /*
-                    DMA is an acronym for Direct Memory Address, which is often used
-                    in connection with disk controllers that directly access the
-                    memory of the mainframe computer to transfer data to and from the
-                    disk subsystem. Although many computer systems use non-DMA access
-                    (that is, the data is transferred through programmed I/O
-                    operations), the DMA address has, in CP/M, come to mean the
-                    address at which the 128-byte data record resides before a disk
-                    write and after a disk read. Upon cold start, warm start, or disk
-                    system reset, the DMA address is automatically set to BOOT+0080H.
-                    The Set DMA function can be used to change this default value to
-                    address another area of memory where the data records reside.
-                    Thus, the DMA address becomes the value specified by DE until it
-                    is changed by a subsequent Set DMA function, cold start, warm
-                    start, or disk system reset. 
-                    */
-                    //cpm_file.set_dma(state.reg.get16(REG16::DE));
-                    // TODO
+                    cpm_file.set_dma(state.reg.get16(Reg16::DE));
                 },
-                33 => { // F_READRAND - Random access read record
+                233 /*33*/ => { // F_READRAND - Random access read record
                     /*
                     The Read Random function is similar to the sequential file read
                     operation of previous releases, except that the read operation
@@ -321,4 +248,18 @@ fn main() {
             }
         }
     }
+}
+
+fn get_version() -> u16 {
+    /*
+    Function 12 provides information that allows version independent
+    programming. A two-byte value is returned, with H = 00
+    designating the CP/M release (H = 01 for MP/M) and L = 00 for all
+    releases previous to 2.0. CP/M 2.0 returns a hexadecimal 20 in
+    register L, with subsequent version 2 releases in the hexadecimal
+    range 21, 22, through 2F. Using Function 12, for example, the
+    user can write application programs that provide both sequential
+    and random access functions. 
+    */
+    0x0022 // CP/M 2.2 for Z80
 }
