@@ -130,7 +130,7 @@ fn main() {
                     let selected = state.reg.get8(Reg8::E);
                     cpm_drive.select(selected);
                 },
-                15 /*15*/ => { // F_OPEN - Open file
+                15 => { // F_OPEN - Open file
                     let fcb = Fcb::new(state.reg.get16(Reg16::DE), &machine);
                     if bdos_trace {
                         print!("[[Open file {}]]", fcb.get_name());
@@ -138,7 +138,7 @@ fn main() {
                     let res = cpm_file.open(&fcb);
                     state.reg.set_a(res);
                 },
-                216 /*16*/ => { // F_CLOSE - Close file
+                16 => { // F_CLOSE - Close file
                     let fcb = Fcb::new(state.reg.get16(Reg16::DE), &machine);
                     let res = cpm_file.close(&fcb);
                     state.reg.set_a(res);
@@ -173,71 +173,15 @@ fn main() {
                 26 => { // F_DMAOFF - Set DMA address
                     cpm_file.set_dma(state.reg.get16(Reg16::DE));
                 },
-                233 /*33*/ => { // F_READRAND - Random access read record
-                    /*
-                    The Read Random function is similar to the sequential file read
-                    operation of previous releases, except that the read operation
-                    takes place at a particular record number, selected by the 24-bit
-                    value constructed from the 3-byte field following the FCB (byte
-                    positions r0 at 33, r1 at 34, and r2 at 35). The user should note
-                    that the sequence of 24 bits is stored with least significant byte
-                    first (r0), middle byte next (r1), and high byte last (r2). CP/M
-                    does not reference byte r2, except in computing the size of a file
-                    (see Function 35). Byte r2 must be zero, however, since a nonzero
-                    value indicates overflow past the end of file.
-
-                    Thus, the r0, r1 byte pair is treated as a double-byte, or word
-                    value, that contains the record to read. This value ranges from 0
-                    to 65535, providing access to any particular record of the
-                    8-megabyte file. To process a file using random access, the base
-                    extent (extent 0) must first be opened. Although the base extent
-                    might or might not contain any allocated data, this ensures that
-                    the file is properly recorded in the directory and is visible in
-                    DIR requests. The selected record number is then stored in the
-                    random record field (r0, r1), and the BDOS is called to read the
-                    record.
-
-                    Upon return from the call, register A either contains an error
-                    code, as listed below, or the value 00, indicating the operation
-                    was successful. In the latter case, the current DMA address
-                    contains the randomly accessed record. Note that contrary to the
-                    sequential read operation, the record number is not advanced.
-                    Thus, subsequent random read operations continue to read the same
-                    record.
-
-                    Upon each random read operation, the logical extent and current
-                    record values are automatically set. Thus, the file can be
-                    sequentially read or written, starting from the current randomly
-                    accessed position. However, note that, in this case, the last
-                    randomly read record will be reread as one switches from random
-                    mode to sequential read and the last record will be rewritten as
-                    one switches to a sequential write operation. The user can simply
-                    advance the random record position following each random read or
-                    write to obtain the effect of sequential I/O operation.
-
-                    Error codes returned in register A following a random read are
-                    listed below.
-                        01	reading unwritten data
-                        02	(not returned in random mode)
-                        03	cannot close current extent
-                        04	seek to unwritten extent
-                        05	(not returned in read mode)
-                        06	seek Past Physical end of disk
-
-                    Error codes 01 and 04 occur when a random read operation
-                    accesses a data block that has not been previously written or an
-                    extent that has not been created, which are equivalent
-                    conditions. Error code 03 does not normally occur under proper
-                    system operation. If it does, it can be cleared by simply
-                    rereading or reopening extent zero as long as the disk is not
-                    physically write protected. Error code 06 occurs whenever byte
-                    r2 is nonzero under the current 2.0 release. Normally, nonzero
-                    return codes can be treated as missing data, with zero return
-                    codes indicating operation complete. 
-                    */
-                    // TODO
-                    //let res = cpm_file.random_read(FCBinDE);
-                    let res = 1;
+                33 => { // F_READRAND - Random access read record
+                    let fcb = Fcb::new(state.reg.get16(Reg16::DE), &machine);
+                    if bdos_trace {
+                        print!("[Read record {:x}]", fcb.get_random_record_number());
+                    }
+                    let res = cpm_file.read_rand(&fcb);
+                    if res == 0 {
+                        cpm_file.load_buffer(&mut machine);
+                    }
                     state.reg.set_a(res);
                 }
 

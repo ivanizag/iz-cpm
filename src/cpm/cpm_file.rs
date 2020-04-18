@@ -1,13 +1,20 @@
 use std::ffi::OsString;
 use std::fs;
 use std::io;
+use std::io::Read;
+use std::io::Seek;
+
+use z80::memory_io::*;
 
 use super::fcb::*;
+use super::cpm_machine::*;
 
-static DEFAULT_DMA: u16 = 0x0080;
+const DEFAULT_DMA: u16 = 0x0080;
+const RECORD_SIZE: usize = 128;
 
 pub struct CpmFile {
     dma: u16,
+    buffer: [u8; RECORD_SIZE],
     file: Option<fs::File> // TODO: support more that one file opened
 }
 
@@ -15,6 +22,7 @@ impl CpmFile {
     pub fn new() -> CpmFile {
         CpmFile {
             dma: DEFAULT_DMA,
+            buffer: [0; RECORD_SIZE],
             file: None
         }
     }
@@ -89,7 +97,7 @@ impl CpmFile {
         }
     }
 
-    pub fn close(&self, _fcb: &Fcb) -> u8 {
+    pub fn close(&mut self, _fcb: &Fcb) -> u8 {
         /*
         The Close File function performs the inverse of the Open File
         function. Given that the FCB addressed by DE has been previously
@@ -104,8 +112,110 @@ impl CpmFile {
         is necessary to record the new directory information permanently. 
         */
         
-        //TODO
-        0
+        match &self.file {
+            None => 0xff,
+            Some(_) => {
+                self.file = None; 
+                0
+            }
+        }
+    }
+
+    pub fn read_rand(&mut self, fcb: &Fcb) -> u8 {
+        /*
+        The Read Random function is similar to the sequential file read
+        operation of previous releases, except that the read operation
+        takes place at a particular record number, selected by the 24-bit
+        value constructed from the 3-byte field following the FCB (byte
+        positions r0 at 33, r1 at 34, and r2 at 35). The user should note
+        that the sequence of 24 bits is stored with least significant byte
+        first (r0), middle byte next (r1), and high byte last (r2). CP/M
+        does not reference byte r2, except in computing the size of a file
+        (see Function 35). Byte r2 must be zero, however, since a nonzero
+        value indicates overflow past the end of file.
+
+        Thus, the r0, r1 byte pair is treated as a double-byte, or word
+        value, that contains the record to read. This value ranges from 0
+        to 65535, providing access to any particular record of the
+        8-megabyte file. To process a file using random access, the base
+        extent (extent 0) must first be opened. Although the base extent
+        might or might not contain any allocated data, this ensures that
+        the file is properly recorded in the directory and is visible in
+        DIR requests. The selected record number is then stored in the
+        random record field (r0, r1), and the BDOS is called to read the
+        record.
+
+        Upon return from the call, register A either contains an error
+        code, as listed below, or the value 00, indicating the operation
+        was successful. In the latter case, the current DMA address
+        contains the randomly accessed record. Note that contrary to the
+        sequential read operation, the record number is not advanced.
+        Thus, subsequent random read operations continue to read the same
+        record.
+
+        Upon each random read operation, the logical extent and current
+        record values are automatically set. Thus, the file can be
+        sequentially read or written, starting from the current randomly
+        accessed position. However, note that, in this case, the last
+        randomly read record will be reread as one switches from random
+        mode to sequential read and the last record will be rewritten as
+        one switches to a sequential write operation. The user can simply
+        advance the random record position following each random read or
+        write to obtain the effect of sequential I/O operation.
+
+        Error codes returned in register A following a random read are
+        listed below.
+            01	reading unwritten data
+            02	(not returned in random mode)
+            03	cannot close current extent
+            04	seek to unwritten extent
+            05	(not returned in read mode)
+            06	seek Past Physical end of disk
+
+        Error codes 01 and 04 occur when a random read operation
+        accesses a data block that has not been previously written or an
+        extent that has not been created, which are equivalent
+        conditions. Error code 03 does not normally occur under proper
+        system operation. If it does, it can be cleared by simply
+        rereading or reopening extent zero as long as the disk is not
+        physically write protected. Error code 06 occurs whenever byte
+        r2 is nonzero under the current 2.0 release. Normally, nonzero
+        return codes can be treated as missing data, with zero return
+        codes indicating operation complete. 
+        */
+        match &mut self.file {
+            None => 4, //04 file is not opened
+            Some(os_file) => {
+                let record = fcb.get_random_record_number();
+                if record > 65535 {
+                    return 6; //06	seek Past Physical end of disk
+                }
+
+                let file_offset = record as u64 * RECORD_SIZE as u64;
+                let res = os_file.seek(io::SeekFrom::Start(file_offset));
+                if let Err(_) = res {
+                    return 6; //06	seek Past Physical end of disk
+                }
+
+                let res = os_file.read(&mut self.buffer);
+                let size = match res {
+                    Ok(n) => n,
+                    _ => return 1 // 01 reading unwritten data
+                };
+
+                // Fill with zeros
+                for i in size..RECORD_SIZE {
+                    self.buffer[i] = 0;
+                }
+                0
+            }
+        }
+    }
+
+    pub fn load_buffer(&self, machine: &mut CpmMachine) {
+        for i in 0..RECORD_SIZE {
+            machine.poke(self.dma + i as u16, self.buffer[i]);
+        }
     }
 
     fn find_host_file(&self, name: String) -> io::Result<OsString> {
