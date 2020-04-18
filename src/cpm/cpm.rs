@@ -22,6 +22,8 @@ use self::cpm_file::*;
 use self::cpm_machine::*;
 use self::fcb::*;
 
+const BIOS_BASE_ADDRESS: u16 = 0xfa00;
+
 fn main() {
     // Parse arguments
     let matches = App::new("Z80 CP/M 2.2 emulator")
@@ -29,13 +31,18 @@ fn main() {
             .help("The z80 image to run")
             .required(true)
             .index(1))
-        .arg(Arg::with_name("bdos_trace")
+        .arg(Arg::with_name("call_trace")
             .short("t")
-            .long("bdos_trace")
-            .help("Trace BDOS calls"))
+            .long("call-trace")
+            .help("Trace BDOS and BIOS calls"))
+        .arg(Arg::with_name("cpu_trace")
+            .short("c")
+            .long("cpu-trace")
+            .help("Trace BDOS and BIOS calls"))
         .get_matches();
     let filename = matches.value_of("INPUT").unwrap();
-    let bdos_trace = matches.is_present("bdos_trace");
+    let call_trace = matches.is_present("call_trace");
+    let cpu_trace = matches.is_present("cpu_trace");
     
     // Init system
     let mut machine = CpmMachine::new();
@@ -54,8 +61,21 @@ fn main() {
     }
 
     /*
-    System call 5
+    Setup BIOS location and entry points
+    .org $0
+        jp BIOS_BASE_ADDRESS + 3
+    */
+    let warm_start = BIOS_BASE_ADDRESS + 3; // Warm start is the second entrypoin in BIOS*/ 
+    machine.poke(0, 0xc3 /* jp nnnn */);
+    machine.poke(1, warm_start as u8);
+    machine.poke(2, (warm_start >> 8) as u8);
+    // We put ret on all the addresses
+    for i in 0..0x80 { // 0x34 should be enough to cover the 17 entry points.
+        machine.poke(BIOS_BASE_ADDRESS + i, 0xc9 /*ret*/);
+    }
 
+    /*
+    Setup BDOS: System call 5
     .org $5
         out ($0), a
         ret
@@ -65,13 +85,14 @@ fn main() {
         machine.poke(5 + i as u16, code[i]);
     }
 
+
+
     state.reg.set_pc(0x100);
-    let trace = false;
-    cpu.trace = trace;
+    cpu.trace = cpu_trace;
     loop {
         cpu.execute_instruction(&mut state, &mut machine);
 
-        if trace {
+        if false /*cpu_trace*/ {
             // CPU registers
             println!("PC({:04x}) AF({:04x}) BC({:04x}) DE({:04x}) HL({:04x}) SP({:04x}) IX({:04x}) IY({:04x}) Flags({:08b})",
                 state.reg.get_pc(),
@@ -86,17 +107,61 @@ fn main() {
             );
         }
 
-        if state.reg.get_pc() == 0x0000 {
-            println!("Terminated in address 0x0000");
-            break;
+        let pc = state.reg.get_pc();
+        // We fo the BIOS actions outside the emulation.
+        if pc >= BIOS_BASE_ADDRESS {
+            let offset = pc - BIOS_BASE_ADDRESS;
+            if offset < 0x80 && (offset % 3) == 0 {
+                /*
+                We are on the first byte of the tree reserved for each
+                vector. We execute the action and the let the RET run.
+                */
+                let command = offset / 3;
+                if call_trace {
+                    print!("\n[[BIOS function {}]]", command);
+                }
+                /*
+                See: http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch6.htm#Table_6-5
+
+                0  BOOT: Cold start routine
+                1  WBOOT: Warm boot - reload command processor
+                2  CONST: Console status
+                3  CONIN: Console input
+                4  CONOUT: Console output
+                5  LIST: Printer output
+                6  PUNCH: Paper tape punch output
+                7  READER: Paper tape reader input
+                8  SELDSK: Select disc drive
+                9  SETTRK: Set track number
+                10 SETSEC: Set sector number
+                11 SETDMA: Set DMA address
+                12 READ: Read a sector
+                13 WRITE: Write a sector
+                14 LISTST: Status of list device
+                15 SECTRAN: Sector translation for skewing
+                */
+                match command {
+                    0 => { // BOOT: Cold Start Routine
+                        println!("Terminated. cold restart");
+                        break;                                }
+                    1 => { // WBOOT: Warm boot.
+                        // Reload command processor. We will go back to the host.
+                        println!("Terminated, warm restart");
+                        break;                                }
+                    _ => {
+                        print!("BIOS command {} not implemented.\n", command);
+                        panic!("BIOS command not implemented");
+                    }    
+                }
+            }
         }
 
         // We do the BDOS actions outside the emulation just before the RTS
-        if state.reg.get_pc() == 0x0007 {
+        if pc == 0x0007 {
             cpm_console.pool_keyboard();
 
             let command = state.reg.get8(Reg8::C);
-            if bdos_trace {
+            if call_trace /*&& command > 11*/ {
                 print!("\n[[BDOS command {}]]", command);
             }
 
@@ -132,7 +197,7 @@ fn main() {
                 },
                 15 => { // F_OPEN - Open file
                     let fcb = Fcb::new(state.reg.get16(Reg16::DE), &machine);
-                    if bdos_trace {
+                    if call_trace {
                         print!("[[Open file {}]]", fcb.get_name());
                     }
                     let res = cpm_file.open(&fcb);
@@ -171,12 +236,17 @@ fn main() {
                     state.reg.set_a(cpm_drive.get_current());
                 },
                 26 => { // F_DMAOFF - Set DMA address
-                    cpm_file.set_dma(state.reg.get16(Reg16::DE));
+                    let dma = state.reg.get16(Reg16::DE);
+                    if call_trace {
+                        print!("[Set dma {:04x}]", dma);
+                    }
+                    cpm_file.set_dma(dma);
                 },
                 33 => { // F_READRAND - Random access read record
                     let fcb = Fcb::new(state.reg.get16(Reg16::DE), &machine);
-                    if bdos_trace {
-                        print!("[Read record {:x}]", fcb.get_random_record_number());
+                    if call_trace {
+                        print!("[Read record {:x} into {:04x}]",
+                            fcb.get_random_record_number(), cpm_file.get_dma());
                     }
                     let res = cpm_file.read_rand(&fcb);
                     if res == 0 {
@@ -186,7 +256,7 @@ fn main() {
                 }
 
                 _ => {
-                    print!("Command {} not implemented.\n", command);
+                    print!("BDOS command {} not implemented.\n", command);
                     panic!("BDOS command not implemented");
                 }
             }

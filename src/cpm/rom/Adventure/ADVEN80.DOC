@@ -1,0 +1,525 @@
+FILE: ADVEN80.DOC -- notes on the ADVEN80 Adventure Game System Programs
+                  -- Bill Soon, Nov. 1981
+
+These are notes regarding the three associated files:
+	ADVEN80.MAC
+	MAKEADV.BAS
+	SAMPADV.ADV
+
+ADVEN80.MAC is the source for the main adventure program, as published
+in Dr. Dobbs Journal, Nov. 1981.  Changes were made, mostly to labels
+which the Mac-80 Relocating Macro Assembler interpreted as reserved words.
+
+MAKEADV.BAS is the Basic source for the 'macro' database/file processor.
+This takes as input a file with the extension .ADV and produces an output
+file with extension .MAC, converting the tables into Z80 assembler code
+in the process.  A DSEG and a .Z80 pseudo-op is added to the beginning
+of the .MAC file to ease the assembly and linking process.
+
+SAMPADV.ADV is a small test adventure, generally close to the example
+given in the DDJ article. This describes the environment in a more
+readable and easy to enter form than trying to do it in straight Z80
+mnemonics.
+
+First, assemble ADVEN80.MAC using a relocating Z80 assembler. Microsoft
+M80 / Mac-80 works.  Then run MAKEADV.BAS using Microsoft Basic interpreter
+or optionally compile first using the Basic compiler. A file named
+SAMPADV.MAC will be produced as output.  Assemble SAMPADV.MAC with
+the relo. Z80 assembler. Using L80 or Digital Research's LINK-80
+linking loader, link ADVEN80.REL with SAMPADV.REL and save on disk
+to the FILENAME.COM of your choice.  Then run and enjoy.
+
+
+	For more details, see the original DDJ article.  The key points
+are repeated below...
+
+A summary of the article on 'Adven-80, An Advanced Adventure
+Development System', by Peter D. Scargill, from Dr. Dobb's
+Journal, #61, November 1981.
+
+
+--- Peter D. Scargill, 24 Percy Park, Tynemouth, Tyne & Wear, Great Britain.
+
+				*********
+
+Adven-80 is a program wherein the user resides in one of many LOCATIONS.
+A LOCATION may have the property of being LIGHT or DARK, and usually is
+associated with several alternative EXITS.  The player moves from one
+LOCATION to another; in any LOCATION he may find an OBJECT or OBJECTS.
+Objects have DESCRIPTIONS, and may optionally have DETAILED DESCRIPTIONS
+as well.  Unless specifically mentioned an object may be TAKEN or
+DROPPED or LOOKED AT or otherwise manipulated within the confines of the
+facilities of the MATCHW table.  Each object may only be in one location
+at any given time (or may be worn or carried as applicable).  The object
+of the game is usually to obtain some form of TREASURE or achieve a
+SCORE of so many points.
+
+Of special interest is the LINE PARSER, which examines a line of user
+entry and checks each word in turn to see if it is a known word.  If so,
+a token entry is make in a separate buffer.  The token buffer is scanned
+for words such as "THEN" and "AND" -- if found, the line is split.  This
+allows the use of multiple statement lines.
+
+This Adventure system, written for the Z80 microprocessor, is a full-
+feature, machine code Adventure which runs at very high speed, with a
+minimum memory requirement (a simple Adventure could be written in well
+under 16K).
+
+----------------------------------------------------------------------
+
+Tables:
+
+OBJLOC  The format of this table, containing <object no./location> pairs
+is simple.  The pairs are contiguous with a zero to end the table.
+Several location numbers have special meanings and are listed below:
+
+	Loc. 255	Object is non-existent. Cannot be found.
+	Loc. 254	Object is currently being carried.
+	Loc. 253	Object is currently being worn.
+
+Location 252 is special in that any object currently in this location
+is one of a pair of objects which together form a TWIN-STATE object.
+Example: LAMP. The lamp may be LIT or UNLIT and so we need to have
+two versions of the same object.
+
+In the table, these two forms should always be concurrent.  In the
+lamp example, the two states could be, say, LAMP and ULAMP. If the
+word LAMP is made accessible, then this must appear FIRST in the
+table.  This is very important. Example coding:
+
+	OBJLOC	/* Table name. These are mandatory */
+
+	LAMP 45  /* object 34, a lit lamp, is in locatin 45 */
+	ULAMP 252 /* object 35, an unlit lamp, is hidden from view */
+
+	ENDTABLE  /* end of table */
+
+If the scanner begins at the start of the table, and then finds a
+match with object LAMP, in order to blow out the lamp, the two
+LOCATION entries in the table are simply swapped over.
+
+Object ULAMP was equated only and *must never be* found by the
+user-input encoding section, although CONDITION entries such
+as OC or OP can access both versions.
+
+If a user says GET LAMP, and there are no conditions, the system
+will look for lamp.  If this is at location 252 then the pointer
+will be incremented automatically to point at the ULAMP entry.
+Hence the user will be given whichever version of the object is
+NOT at location 252.  (Assuming that the other version is PRESENT
+or being carried or whatever).
+
+Inventories simply look at the location numbers and if a match is
+found, then a description is printed. The same applies during the
+initial description, where objects contained within the current
+location are described.
+
+---------------------------------------------------------------
+
+OBJDES   This table containing <object no./MSG no.> pairs is
+closely related to the above OBJLOC table.  During "I can see..."
+type routines, the table OBJLOC is scanned in order to find
+objects contained within a given location, be it the current
+location or those reserved for objects being carried or worn.
+
+When the object is found, the number of the object is used to scan
+through the left side of OBJDES, and when an object match is found,
+the description number, which refers to an entry in the UMESS
+table, is used to produce a description of the required object.
+The OBJDES table need be in no particular order, and no ZERO
+terminator is required as we are not searching for a non-existent
+object.  In the sample database the ENDTABLE macro is shown, but
+this is just for neatness, it is not essential here.
+
+---------------------------------------------------------------
+
+OBPROP  This table describes the things that can be done to an object,
+assuming you wish to limit that object to certain actions.  I.e, you
+would not expect the player to TAKE THE STATUE if it weighs a ton...
+
+	OBPROP
+	STATUE	LOOK,LISTEN,FEEL
+	DOOR	LOCK,UNLOCK,LOOK
+	ENDTABLE
+
+Objects not in the table are considered to have universal attributes
+(within the limitations of the MATCHW table.
+
+-----------------------------------------------------------------------
+
+OBJDSK  This table finds use for those objects you would like to enable
+a close inspection of.  Any object not appearing in this table will be
+described as 'ordinary looking'.
+
+	OBJDSK
+	LAMP	'Looks like an old miner`s lamp to me.'
+	ENDTABLE
+
+----------------------------------------------------------------------
+
+TABKEY  This table is used by the line parser. As the user input line
+is parsed, 4-byte word sections are put into a temporary buffer. (Words
+shorter than 4 characters long are left-justified and padded with
+spaces).  TABKEY is used to replace any known words with a single byte
+code.  Unknown words are scrapped.
+
+Tabkey is composed of the following:  The first byte is the KEY number.
+Following that are groups of 4 bytes, with the LAST 4-byte group
+having the 8th BIT SET ON in the LAST CHARACTER.  If any of the 4-byte
+groups match that in the buffer, then the KEY byte is put into a buffer
+for later use.  To signify the end of the table, ZERO is used as a KEY
+byte.
+
+When the sentence has been completely scanned, a buffer called CODBUF
+will contain the single byte KEY replacements to all the words in the
+user input that matched.  A ZERO will indicate the end of this buffer.
+Hence the sequence N "N NORT" will allow inputs of "N" or "GO NORTH"
+to be placed in CODBUF as the single byte representing the key N.
+
+A special byte which may end up in CODBUF is THEN. This is currently
+set at 250 decimal and is used for batching of commands, so that the
+user may say, for example, "GET THE AXE THEN LOOK AT IT.  The IT
+is taken care of automatically by a section of code that converts
+occurences of IT into the last mentioned object.
+
+Keysets for TABKEY are actually entered in macro form; i.e.:
+
+	BEGIN	'BEGISTAR'
+
+Another example is: LOOK "LOOKPERUEXAM" where LOOK is the word
+equated to a KEY number, and will match on LOOK, PERUSE,
+and EXAMINE.
+
+-------------------------------------------------------------------
+
+MATCHW  This table looks at user input after it has been encoded
+into a byte sequence.  The table is scanned until a pair of bytes
+corresponding to those in the CODBUF area are found.  If there
+is no match then a default message is printed to indicate that the
+program found no sensible matches.  Otherwise, a set of CONDITIONS
+is checked, and if all of these are TRUE, then a set of actions
+is taken. The format is as follows:
+
+  <2 byte key><cond><255><actions><255><either ZERO or more ceys>
+
+  where cond = either no entry or any amount of conditions
+  and arguments, and actions = any amount of actions.
+
+255 is a delimiter and so must not occur within either the
+conditions or the actions.  However, 255 may be used as one of
+the twg KEY bytes to tell the program to match up with ANY entry:
+
+  <23,255>  If CODBUF contains 23 followed by anything, then
+	    the set will be accepted.
+
+  <34,0>    In this case, CODBUF should contain 34 ONLY.
+
+Again, simple equates are used to make life easy:
+
+	MATCH	GET,ANY
+	TEST	OH,INP
+	ACTION	TKE,INP,OK
+
+In the above example, if the user enters, say, GET LAMP, then
+the system will test to see if the object is in the current
+location (OH) and if so, will allow the taking of the LAMP and
+will then print an OK message and exit the table, ready for
+more user input.
+
+	MATCH	LOOK,NULL
+	ACTION	LA,EXTB
+
+If and only if the user enters the single word LOOK, the system
+will unconditionally Look Around, then EXit the TaBle.
+
+	MATCH	ANY,ANY
+	ACTION	PRM,37,EXTB
+
+This entry should be put at the end of the MATCHW table.  This
+will match ANY user input, and print message 37 from the MSG
+table, which would be, for example, "I don`t know what you mean."
+
+	MATCH	ON,LAMP
+	TEST	OC,MATCH,OC,ULAMP
+	ACTION	SWP,LAMP,SWP,MATCH,OK
+
+This is a more complex example.  If the user enters ON LAMP or
+LIGHT THE LAMP, etc., and then only if the MATCH and the ULAMP
+(unlit lamp) are being carried, then swap the MATCH for its USED
+partner, and swap the ULAMP with its LIT partner.
+
+Notice no attempt was made to execute the instruction SWP,ULAMP.
+This would be disastrous as the ULAMP is the SECOND entry in the
+table (of the twin-state pair LAMP/ULAMP), and you must only
+SWAP the FIRST entry (the main entry), as the command SWP,FRED
+looks for the entry FRED in the OBJLOC table, and swaps its
+location with that of the *next* entry in the table. That is why
+the user-accessible version of the object *must* be entered
+into the table before the alternative form.
+
+------------------------------------------------------------------
+------------------------------------------------------------------
+Messages:
+
+MSG  This is a general purpose message table, containing messages such as
+"I can not see anything" and "OK".  These messages include directives and
+all general statements. The format is extremely simple:
+
+	0  message sequefce  0  message sequence  0
+
+The sequence is that of a zero byte followed by ASCII text until the
+next zero. The zero then acts as both delimiter and counter.  As the
+maximum message number is known (there is no search), an end-of-table
+delimiter is not required, other than the zero at the end of message.
+
+NOTE that the first 20 messages must *not* be altered in position as they
+are used by the system in some cases automatically.  There is a limit
+of 255 messages.  In macro form, simply enter the message number and
+the message:
+
+	45  'Hi there, this is a message, isn`t it..%'
+
+Note that the standard apostrophe (') cannot be used *within text* and
+must be replaced by the reverse apostrophe (`)/  The (%) percent sign
+is used as a CRLF and cannot be used for its original purpose.
+
+----------------------------------------------------------------------
+
+UMESS  This table contains descriptions of objects and all general
+messages that are specific to a particular adventure.
+
+	7  'This is another message'
+
+Note:  CRL will be sent to the screen upon encountering a % sign in
+the text.  Also, the character '>' anywhere in a sentence will not
+produce any output, but will cancel any pending batching of commands.
+
+It is possible to have conditional sections within messages (or indeed
+complete conditional messages).  Flags 23 to 49 inclusive have been
+reserved for this purpose.  These may be tested for TRUE or FALSE only,
+in the following manner.  Anywhere within a string, the game writer may
+insert braces as follows:
+
+  'This is a bit of {Auntidy } test{B as you can{C easily} see}.'
+
+If flags 23 (i.e., A), 24 (B), and 25 (C), are all ZERO then the output
+of the message would be "This is a bit of text."; but if one were to
+set flag 25 the the output would be "This is a bit of untidy text."
+
+If flag 24 was set, then: "This is a bit of text as you can see."
+If flag 25 were also set, the word "easily" would be inserted. Note,
+however, that this would not apply if flag 24 were 0, then all text
+inside the matching set of braces would be ignored.
+
+Only the letters A-Z inclusive and the "/" character may be used
+after the opening braces (A-Z corresponding to flags 24-49)
+and the maximum nesting depth is 10, although as many non-nested
+sets as desired may be put into any section of text.  The character "/"
+may be used *before* any of the alpha chars A-Z to indicate that the
+flag has *not* been set, i.e, is ZERO.  The system flag that
+indicates that the "/" char is in use is only set and reset on
+OPENING braces so don't try any fancy multi-level conditional text
+while using this form.
+
+In this version, two special flags have been reserved.  Flags 21
+and 22 corresponding to @ and ? are automatically set by the program
+after every user entry to be always opposite but randomly so. If
+flag 21 = 1 then flag 22 will = 0, and vice-versa.  Hence it is
+possible to write the following default message:
+
+	44  '{@I simply don`t understand you.}{?What?}'
+
+Whenever this message is called, there is a 50-50 chance of either
+"What?" or "I simply don`t understand you." being output by the
+program.
+
+These conditional facilities may be used anywhere that text is found,
+either in place descriptions, object descriptions, or even default
+replies.  A good use is to allow for either random or deliberate
+variations in, say, the default "Can`t help you" message, etc. etc.
+
+---------------------------------------------------------------------
+---------------------------------------------------------------------
+
+Descriptions:
+
+LOC   Place descriptions begin with zero, a number 255 to 252 to
+indicate one of the following:
+
+	255	Normal place, full exit description
+	254	Normal place, no exit description printed
+	253	Dark place, full exit description (if lit by lamp)
+	252	Dark place, no exit description printed
+
+In high level form the following words have the same effect:
+
+	NORMAL	= 255
+	NOEXIT	= 254
+	DARK	= 253
+	DARKNO	= 252
+
+then followed by MESSAGE  KEY  LOCATION bytes, 255 to indicate end of
+directions, and then textual description with zero being the text
+terminator. Example:
+
+	0 254 02 01 02 255 <text> 0 253 03 32 12 255 <text> 0
+
+In macro form, a typical entry:
+
+	1	NOEXIT,2,N,2
+	   'I am in a small room with no furniture. There '
+	   'appears to be nobody around at the moment.%'
+
+
+This means location #1 is a normal place printing no exit description,
+description of North from MSG 2, match on user KEY of 'N', and transfer
+player to location #2 if a match is found.
+
+Again, no end of table required other than the mandatory zero,
+(or ENDTABLE) as we are not looking for locations which do not
+exist.
+
+A special location number is 249 (RTN).  When a transfer is made to this
+location, the program will treat this in a special manner by returning
+the user to the previous location.  Hence, you may enter a LARGE BOX
+and an RTN exit will get you out, no matter where the box is situated.
+This eliminates much location testing.
+
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+
+
+		FLAG  TABLE
+
+This is a 255 byte table numbered 1 to 255, zero not being used since
+zero is used as a delimiter.  Certain flags have special uses:
+
+1  Dark location indicator... If ZERO then dark.
+2  Number of items carried
+3  Maximum permissible items to be carried
+4  Counted up once every turn
+5  "    "
+6  "    "
+7  Counted down once every turn if not zero
+8  "    "
+9  "    "
+10 Counted down if dark, lamp ON, every turn.
+11 "    "
+12 "    "
+13 Present score
+14 Present location
+15 Store FF or FE (Internal)
+16 1 and 10 OR'ed together. ZERO means can't see.
+17 Lamp on/off. Zero when ON, 1 when OFF
+18 Number of items WORN
+19 Number of items HERE (present location)
+21 - 22 inclusive. For random text control (automatic)
+23 - 48 inclusive. Text controls A-Z
+
+     Flags 49 to 250 are available to the user.
+
+-----------------------------------------------------------------------
+
+-----------------------------------------------------------------------
+		CONDITIONS/ACTIONS
+
+Here are the conditions and actions possible, together with explanations
+for each.  Those shown below are all available to the Adventure writer
+and there is no limit to the amount of conditions and/or actions that
+you may specify in any set.
+
+CONDITIONS:
+
+CL	xx	Current location is xx
+NCL	xx	Current location is NOT xx
+OP	xx	Object xx is in present location or is worn or carried
+		(xx=0 means obtain object number from user input)
+OC	xx	Object is being carried
+OW	xx	Object is being worn
+OWC	xx	Object is worn or carried
+OH	xx	Object is here but not carried or worn
+ONP	xx	Object is not present
+ONC	xx	Object is not being carried
+ONW	xx	Object is not being worn
+NWC	xx	Object is not worn and not carried
+ONH	xx	Object not here, but MAY be worn or carried
+OE	xx	Object exists at present
+ONE	xx	Object does not exist at present
+ZL	xx  yy	Object xx is at location yy
+NZL	xx  yy	Object xx is not at location yy
+RND	xx	Random choice 0 - 254 , where 254 is dead certain
+TF	xx  yy	Test flag No. xx for value yy
+NTF	xx  yy	Test flag No. xx for NOT value yy
+GES	xx  yy	Flag xx greater than or equal to value yy
+LTS	xx  yy	Flag xx less than value yy
+C2	xx	Compare 2nd word with xx
+C3	xx	Compare 3rd word with xx
+NC2	xx	True if 2nd word is NOT = to xx
+NC3	xx	True if 3rd word is NOT = to xx
+
+
+ACTIONS:
+
+INV		Print an inventory of carried and worn objects
+TKE	xx	Get object to carry it
+WR	xx	Get object and wear it
+DR	xx	Drop the object
+PR	xx	Print message number xx from UMESS table
+PRM	xx	Print message number xx from MESS  table
+DL	xx	Describe location
+SF	xx  yy	Set flag xx to value yy
+DSCOB	xx	Describe the object
+SWP	xx	Swap object xx with object xx+1 in OBJLOC table
+MV	xx	Move to location xx
+OK		Say 'OK' and exit table
+QT		Quit game
+INF	xx	Increment flag xx (xx not cleared from buffer)
+DEF	xx	Decrement flag xx (xx not cleared from buffer)
+EXTB		Exit table
+SC		Print current score
+PU	xx  yy	Put object xx into location yy
+CR	xx	Create object xx (Place here)
+DES	xx	Destroy object xx
+FLIP	xx	Flip flag xx, true to Zero and vice-versa
+LA	xx	Look around at items.
+SMA	xx	Set message A to UMESS number xx
+SMB	xx	Set message B to UMESS number xx
+WT	xx	Wait for xx seconds
+PF	xx	Print the value of flag no. xx
+ATF	xx  yy	Add yy to the value of flag xx.
+		If > 255 then set to 255. Make yy = 0.
+SFF	xx  yy	Subtract yy from flag xx. If xx<0 then
+		set xx to 0.  Make yy = 0.
+GRUN	xx	Print description, directions, etc & exit.
+
+-----------------------------------------------------------------------
+
+FLAG:
+
+This table is simply a collection of pairs of flag numbers and their
+corresponding initial data values.  Entries MUST be contiguous.
+
+	35	22	/* means flag 35 is set to value 22 */
+
+Certain flags are controlled automatically by the program and may
+be viewed only.
+
+-----------------------------------------------------------------------
+
+TITL1:
+
+This final message is that which will be presented at the start of any
+game.  It is comprised of ASCII text, with a Zero delimiter at the end.
+
+CHR$( any single ASCII number you like, or several -- to clear screen.)
+
+'any title message'
+'blah blah blah'
+
+ENDTABLE
+
+-----------------------------------------------------------------------
+ * END OF DOCUMENTATION *
+
+-----------------------------------------------------------------------
+

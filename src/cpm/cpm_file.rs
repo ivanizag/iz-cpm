@@ -61,6 +61,10 @@ impl CpmFile {
         self.dma = dma;
     }
 
+    pub fn get_dma(&self) -> u16 {
+        self.dma
+    }
+
     pub fn open(&mut self, fcb: &Fcb) -> u8 {
         /*
         The Open File operation is used to activate a file that currently
@@ -230,11 +234,6 @@ impl CpmFile {
                         return Ok(entry.path().into_os_string())
                     }
                 }
-
-                /*match cpm_name {
-                    Some(name) => print!("Name '{}' is valid\n", name),
-                    None => print!("Name '{}' is not valid\n", entry.file_name().to_string_lossy())
-                }*/
             }
         }
         Err(io::Error::new(io::ErrorKind::NotFound, ""))

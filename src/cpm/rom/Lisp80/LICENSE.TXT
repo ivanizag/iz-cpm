@@ -1,0 +1,198 @@
+
+                       The  Soft  Warehouse
+                         P. O. Box  11174
+                 Honolulu,  Hawaii  96828  U.S.A.
+                          (808) 734-5801
+
+                        LICENSE  AGREEMENT
+
+
+    THIS AGREEMENT is entered into this ________ day of _____________________, 
+
+1980,  by  and  between  THE SOFT WAREHOUSE,  a  Hawaii  general  partnership,
+
+ 
+hereinafter called "LICENSOR," and __________________________________________, 
+
+
+having an address at _________________________________________________________
+
+
+______________________________________________________________________________
+
+
+________________________________________, hereinafter called "LICENSEE".
+
+
+        LICENSOR  hereby licenses to LICENSEE the following computer  programs 
+and associated documentation (the "Software"):
+
+
+The ___________________-80 System,   Serial No: ______________________________
+
+This  agreement is subject to a nontransferable,  nonexclusive  license   (the 
+"License"),  which is hereby granted to LICENSEE, to use the Software upon the 
+terms and conditions herein;  and LICENSEE hereby accepts the Software subject 
+to the License solely upon such terms and conditions.
+
+        1.   TERM.   This Agreement shall commence on the date that the second 
+party signs it, and unless sooner terminated shall extend indefinitely.
+
+        2.  CHARGE.  As a fee for the use of the Software, LICENSEE  shall pay 
+
+
+LICENSOR ___________________________________________ USA dollars ($_________). 
+Except as indicated on the order form, such fee does not include local, state, 
+national  or international taxes,  and LICENSEE hereby agrees to pay all  such 
+taxes  as  may  be  imposed  upon LICENSEE or LICENSOR  with  respect  to  the 
+ownership, licensing, sale, purchase or use of the Software.
+
+        3.   TITLE.   LICENSEE agrees that the Software is,  and shall at  all 
+times remain,  the property of LICENSOR and copyrighted by LICENSOR.  LICENSEE 
+shall  have no right,  title or interest thereto except as expressly set forth 
+in this Agreement.
+
+        4.   DUPLICATION  and DISCLOSURE.   LICENSEE agrees that the  Software 
+shall be held in confidence, and is provided for the exclusive use of LICENSEE 
+only  at its facilities indicated in Schedule A to this agreement.   That list 
+of  facilities can be expanded subsequently up to ten (10) computers  residing 
+in any one (1) building, and LICENSEE agrees to notify LICENSOR immediately in 
+writing  of  any  such expansion.   The Software shall not  be  duplicated  or 
+disclosed to others in whole or in part without the express written permission 
+of  LICENSOR.   Except  for PRINTED representations of  files  MULISP.COM  and 
+MUSIMP80.COM  permission is hereby  granted for making any number of  diskette 
+or  printed  copies  of  any files in the Software for the  exclusive  use  of 
+LICENSEE's  family,  employees,  consultants or students,  if and only to  the 
+extent  that  such duplication is reasonably necessary to LICENSEE's  or  such 
+persons'  use of the Software at the listed facilities.   For each such  copy, 
+the  file LICENSE.TXT must be stored on the same diskette or bound  with  each 
+set of listings.   LICENSEE shall take all reasonable steps to ensure that the 
+Software  is  not  disclosed  or duplicated or used in  contravention  of  the 
+provisions of the Agreement by such persons.  These steps include, but are not 
+limited to,  all steps that LICENSEE takes with respect to information,  data, 
+and  other  tangible  and intangible property of its own that  it  regards  as 
+confidential  or  proprietary.  LICENSEE shall also maintain  records  of  the 
+names,  addresses  and  phone numbers of everyone known to LICENSEE to have  a 
+direct or indirect copy of the Software or any portion thereof. LICENSEE shall 
+take all reasonable steps to recover such copies as soon as they are no longer 
+necessary for the above use; and LICENSEE shall immediately notify LICENSOR in 
+writing of each failure to recover any copy. 
+
+        5.   NOTICE.   All duplications of the Software in any form shall bear 
+the  following  notice:   "  (c)  1980  The  Soft  Warehouse.  Permission  for 
+disclosure or duplication or other use hereof may be granted only by The  Soft 
+Warehouse."
+
+        6.    WARRANTY   and  LIMITATION  of  LIABILITY.   LICENSOR  MAKES  NO 
+WARRANTIES,  EITHER EXPRESS OR IMPLIED, AS TO ANY MATTER WHATSOEVER, INCLUDING 
+WITHOUT LIMITATION,  THE CONDITION OF THE SOFTWARE, ITS MERCHANTABILITY OR ITS 
+FITNESS  FOR ANY PARTICULAR PURPOSE.   LICENSOR shall not be liable  for,  and 
+LICENSEE  hereby assumes the risk of and will indemnify and save harmless  and 
+release  and forever discharge LICENSOR,  its  agents,  officers,  owners  and 
+employees thereof in respect to any expense,  claim, liability, loss or damage 
+(including  any incidental or consequential damage) either direct or indirect, 
+by  LICENSEE or by third parties,  in any way arising out of  the  furnishing, 
+performance  or  use  of the Software.  In any event LICENSOR's  liability  to 
+LICENSEE  on any ground,  including but not limited to negligence,  shall  not 
+exceed a sum equal to the fee paid to LICENSOR by LICENSEE hereunder.
+
+        7.   NEW  RELEASES and MODIFICATIONS.   LICENSEE shall receive without 
+charge  the  next  three  issues  of  LICENSOR's  Newsletter,   published   at 
+approximately  four-month intervals,  in which instructions will be given  for 
+eliminating  program errors which have surfaced,  if any.   For an annual  fee 
+covering  duplication  and  distribution  costs,  LICENSEE  can  continue  the 
+subscription  beyond  these  three  issues for as long as  the  Newsletter  is 
+distributed.   LICENSOR shall have no further obligations of notice of defects 
+in,  maintenance of or updates to the Software hereunder.   LICENSEE shall not 
+make any alterations, variations, modifications, additions, or improvements to 
+files MULISP80.COM or MUSIMP80.COM,  or merge them into other program material 
+to  form an updated work,  except in accordance with corrections appearing  in 
+LICENSOR's Newsletter.
+
+        8.   DEFAULT.  If LICENSEE fails to pay any charge provided for herein 
+within  ten (10) days after the same is due and payable,  or if LICENSEE  with 
+regard to any item or items of Software fails to observe,  keep or perform any 
+other  provisions of the Agreement required to be observed,  kept or performed 
+by LICENSEE,  LICENSOR shall have the right to exercise any one or more of the 
+following remedies:
+
+            (a)   To terminate the License herein granted;
+            (b)   To  declare  the entire balance of any  fee  payable     
+        under  Paragraph  2 hereinabove for the entire  term  of  this     
+        Agreement immediately due and payable without notice or demand 
+        to LICENSEE, and to sue for and recover the same;
+            (c)   To  take  possession  of any or  all  items  of  the     
+        Software  without  demand  or notice,  wherever  they  may  be 
+        located;
+            (d)   In  the  event  of  any  unauthorized  use   of  the     
+        Software,  to recover from LICENSEE an amount equal to (i) the 
+        sum  LICENSOR  would  have  charged  the  person  or   persons     
+        obtaining   the  benefit  of  such  unauthorized  use  of  the 
+        Software, plus (ii) any amount received by LICENSEE on account 
+        of such unauthorized use;
+            (e)   To have the obligations of LICENSEE under  Paragraph     
+        4 specifically performed and to have any threatened or  actual     
+        breach  by LICENSEE enjoined,  it being acknowledged that such     
+        equitable relief is the only adequate remedy;
+            (f)  To pursue its remedies for copyright infringement, in 
+        addition  to any other remedy at law or in equity.   All  such 
+        remedies are cumulative,  and may be exercised concurrently or 
+        separately.
+
+        9.   LEGAL EXPENSES.  In case legal action is taken by either party to 
+enforce  this  Agreement,   all  costs  and  expenses,   including  reasonable 
+attorney's fees, incurred by the prevailing party in such action shall be paid 
+by the other party.
+
+       10.  TERMINATION.  Upon termination of the License, all of the Software 
+and all copies thereof shall be returned to LICENSOR.
+
+       11.   GOVERNING LAW.  All questions with respect to the construction of 
+this  Agreement and the rights and liabilities of the parties hereto shall  be 
+governed by the laws of the State of Hawaii, the United States of America, and 
+international law, as applicable.
+
+       12.  PARTIAL  INVALIDATION.   If any  of the  provisions,  or  portions 
+thereof, of this Agreement are invalid under any applicable statute or rule of 
+law, they are to that extent to be deemed omitted.
+
+       13.   ENTIRE  AGREEMENT.   This Agreement contains all the  agreements, 
+representations,  and  understandings  of  the parties  with  respect  to  the 
+Software   and   supersedes  any  previous  understandings,   commitments   or 
+agreements, oral or written.
+
+        IN WITNESS WHEREOF, the parties have executed this Agreement as of the 
+day and year first above written.
+
+
+
+By _______________________________________     Date: _________________________
+           Signature of LICENSEE
+
+
+
+  ________________________________________     Date: _________________________
+             The Soft Warehouse
+
+
+
+                                 SCHEDULE  A
+
+                   to The Soft Warehouse LICENSE AGREEMENT
+                      (to be completed by the LICENSEE)
+
+
+The  name  and address of the building in which the computers described  below 
+are maintained:
+
+
+______________________________________________________________________________
+
+
+______________________________________________________________________________
+
+
+The make,  model,  and serial number of up to ten (10) computers on which  the 
+licensed software system may be used:
+
+B>                                                                                                                                                                                                                                                     

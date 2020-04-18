@@ -1,0 +1,1607 @@
+; * ADVEN-80 *
+;		An Adventure game system designed for and
+;	implemented in Z80 Assembly Language. Released for
+; 	non-commercial use only - 1981 Peter D. Scargill
+;
+; Revised for assembly by the Microsoft Macro-80 assembler
+; using .Z80 option for Z80 source. 
+; Also, some labels changed as they are reserved words to
+; the M80 assembler.  -- Bill Soon, Nov. 1981
+;
+; For regular terminal and CP/M -- other options omitted.
+;
+;  From Doctor Dobb's Journal, #61, Nov. 1981. - program
+;  inspired by Scott Adams adventure series. Design influenced
+;  by several ideas generated with the help of K. Reed of
+;  S.P.L. International.
+; --------------------------------------------------------
+;
+	.Z80
+;
+;CONDITION EQUATES	;Must not be changed or re-ordered
+;
+CL	EQU	1	;Current location xx
+NCL	EQU	2	;Current location not xx
+OP	EQU	3	;Object xx present (carried/worn etc)
+OC	EQU	4	;Object xx carried
+OW	EQU	5	;Object xx worn
+OWC	EQU	6	;Object xx carried/worn
+OH	EQU	7	;Object xx here but not carried/worn
+ONP	EQU	8	;Object xx not present
+ONC	EQU	9	;Object xx not carried
+ONW	EQU	10	;Object xx not carried
+NWC	EQU	11	;Object xx not worn
+ONH	EQU	12	;Object xx not here, maybe carried/worn
+OE	EQU	13	;Object xx exists
+ONE	EQU	14	;Object xx does not exist
+ZL	EQU	15	;Object xx is at location yy
+NZL	EQU	16	;Object xx not at location yy
+RND	EQU	17	;Random xx where xx 1 to 254 inclusive
+TF	EQU	18	;Flag xx = yy
+NTF	EQU	19	;Flag xx <> yy
+GES	EQU	20	;Flag xx >= yy
+LTS	EQU	21	;Flag xx < yy
+C2	EQU	22	;2nd word = xx
+C3	EQU	23	;3rd word = xx
+NC2	EQU	24	;2nd word not = xx
+NC3	EQU	25	;3rd word not = xx
+;
+;ACTION EQUATES
+;
+INV	EQU	1	;Print inventory of carried/worn items
+TKE	EQU	2	;Get xx to carry
+WR	EQU	3	;Get xx to wear
+DR	EQU	4	;Drop xx
+PR	EQU	5	;Print UMESS(xx)
+PRM	EQU	6	;Print MESS(xx)
+DL	EQU	7	;Describe the location xx
+SF	EQU	8	;Set flag xx = yy
+DSCOB	EQU	9	;Describe the object
+SWP	EQU	10	;Swap object xx with xx+1
+MV	EQU	11	;Go to location xx
+OK	EQU	12	;Say OK and leave table
+QT	EQU	13	;Quit, printing present score
+INF	EQU	14	;Increment flag xx
+DEF	EQU	15	;Decrement flag xx
+EXTB	EQU	16	;Exit table
+SC	EQU	17	;Print current score
+PU	EQU	18	;Put object xx into location yy
+CR	EQU	19	;Create object xx
+DES	EQU	20	;Destroy object xx
+FLIP	EQU	21	;Flip flag xx<>xx true-false
+LA	EQU	22	;Look around at items
+SMA	EQU	23	;Set up message xx
+SMB	EQU	24	;Set up message yy
+WT	EQU	25	;Wait for xx seconds (4Mhz)
+PF	EQU	26	;Print decimal value of flag xx
+ATF	EQU	27	;Add to flag then clear
+SFF	EQU	28	;Subtract from flag then clear
+GRUN	EQU	29	;Print Place, directions, etc
+;
+; These EXTRNs link this program module to the main database
+;
+	EXTRN	OBJLOC	;Object present location table
+	EXTRN	OBJDES	;Simple object description table
+	EXTRN	MATCHW	;Keyword match pair/Action table
+	EXTRN	TITL1	;Database title
+	EXTRN	MSG	;Standard system messages
+	EXTRN	UMESS	;Individual database messages
+	EXTRN	TABKEY	;Keyword/substitute table
+	EXTRN	OBJDSK	;Object special descriptions
+	EXTRN	OBPROP	;Properties of restricted objects
+	EXTRN	LOC	;Location table
+	EXTRN	FLAG	;Flag table
+	EXTRN	FL14	;Refs within the table
+	EXTRN	FL20	; ""       """"""""
+	EXTRN	FL21	; ""       """    "
+;
+;STORAGE AREAS AND BUFFERS
+;
+XNCO:	DEFB	00	;1st Optional Message
+XBEFA:	DEFB	00	;2nd Optional Message
+LSTOBJ:	DEFB	00	;Byte reserved for latest object name
+BUFFER:	DEFS	60	;60 byte line buffer
+BLK4:	DEFS	04	;Temporary buffer
+CODBUF:	DEFB	00	;Coded text store & batch buffer
+	DEFS	14
+CODB2:	DEFB	00	;2nd buffer for 'AGAIN'
+	DEFS	14
+WAYOUT:	DEFB	00	;Temporary store for available exits
+	DEFS	30
+RANSEED:	DEFS	01	;Last random number store
+CCOUNT:	DEFB	00	;Character count
+SPEC:	DEFB	00	;Status of SPECIAL text
+	DEFS	16	;STACK for 'SPECIAL' message system
+NSTORE:	DEFS	4	;Temporary store for BIN-ASCII
+SAVIX:	DEFB	00	;Temporary store
+TE1:	DEFB	00	;Negation flag for text
+;
+;GENERAL PROGRAM EQUATES - MODIFY FOR DIFFERENT SYSTEMS
+;
+TRUE	EQU	-1
+FALSE	EQU	00
+;
+CLEARS	EQU	26	;Clear Screen for TVI-912 Televideo crt
+HOMEUP	EQU	30	;Home up command for TVI-912
+SYSRET	EQU	0	;Return to CP/M
+;
+AGAIN	EQU	252	;DO NOT change. For repeat line.
+RTN	EQU	249	;Special place, returns last location
+LINLEN	EQU	70	;Max line length - 10
+THEN	EQU	250	;Don't alter this. Duplicate in database.
+;
+; CONMSG 'CONFIGURING ADVEN-80 ADVENTURE SYSTEM'
+;
+;Start of ADVEN-80. First section prints out title info
+;and sets up random number.
+;
+;
+RUNB:	LD	A,CLEARS	;Initialize screen
+	CALL	COUT
+	LD	HL,TITL1	;Print heading blurb
+	CALL	MPRINT		;Routine to do the hard work
+	CALL	CHRIN		;Wait for any key
+;
+	LD	A,R		;Completely random seed
+	LD	(RANSEED),A	;Save it in buffer
+	LD	A,CLEARS	;Clear my screen
+	CALL	COUT
+;
+;
+;Main program loop. Start by printing location description.
+;
+;
+RUN:	CALL	DESCR		;Describe location & 'can see...'
+;
+AFTDK:	CALL	STABLE		;Set up flags
+	CALL	IBTCH		;check if we are batching
+	JR	Z,GTENTR
+	CALL	BEFA		;2nd optional message
+GTENTR:	CALL	ENTRI		;Get user input
+	LD	A,R		;Set up random number
+	LD	(RANSEED),A
+;
+SRTOUT:	LD	IY,WAYOUT	;Point to available exits
+	LD	IX,FLAG		;Point to flags
+	LD	HL,CODBUF+1	;Look @ 2nd word in code buffer
+	LD	A,(HL)
+	CP	251		;Look for the code for 'IT'
+	JR	NZ,QWOP
+	LD	A,(LSTOBJ)	;If found, get last object
+	OR	A		;Test Acc.
+	LD	E,0
+	JP	Z,ENDMAT	;if no last object, Error
+	LD	(HL),A		;otherwise save in buffer
+QWOP:	DEC	HL		;Point back to start of CODBUF
+	LD	A,(HL)
+	CP	15		;See if this is a direction
+	JR	NC,XMATCH
+MOREDI:	LD	A,(IY+0)	;Compare with available exits
+	OR	A
+	JR	Z,XMATCH	;Found a direction to go ???
+	LD	A,(IY+1)
+	CP	(HL)
+	JR	Z,DFND
+	INC	IY		;Skip description of direction
+	INC	IY
+	INC	IY
+	JR	MOREDI		;Look for another exit
+DFND:	LD	A,(IY+2)
+	CP	RTN		;Is this a return
+	JR	NZ,BASL
+	LD	A,(IX+20)	;If so, retrieve old location
+BASL:	PUSH	AF
+	LD	A,(IX+14)
+	LD	(IX+20),A	;Do a swap...
+	POP	AF
+	LD	(IX+14),A	;Put new location in FLAG table
+	JP	RUN		;and go to it.
+;
+;
+;Look to see if we are in the middle of a batch of commands
+;and if so, set Zero flag else reset it.
+;
+IBTCH:	PUSH	HL		;Save HL
+	LD	HL,CODBUF	;point to start of buffer
+IBTPL:	LD	A,(HL)
+	OR	A		;if you hit end, then no batch
+	JR	Z,NBTCH
+	CP	THEN
+	JR	Z,ZBTCH		;if find THEN, is batch line
+	INC	HL
+	JR	IBTPL
+ZBTCH:	LD	A,255		;Set or Reset Zero flag as
+NBTCH:	INC	A		;necessary
+	POP	HL		;Restore HL
+	RET
+;
+; XMATCH
+;This section looks at CODBUF to see if any sense can be made
+;of the codes. (This is AFTER direction checks have been made.)
+;If no sense then a request for rephraseing is made else action
+;is taken.
+;
+XMATCH:	LD	IX,CODBUF	;point IX to user input after
+	EXX			;treatment, checking for
+	LD	HL,OBPROP	;legality in the case of an
+FLNA:	INC	HL		;object. (Check OBPROP)
+	LD	A,(HL)
+	OR	A
+	JP	Z,ENCHK		;not a special object ???
+	CP	(IX+1)
+	JP	Z,FNBYTE	;got as match
+FLNB:	INC	HL		;otherwise skip to next
+	LD	A,(HL)
+	OR	A
+	JP	NZ,FLNB
+	JP	FLNA
+FNBYTE:	INC	HL
+	LD	A,(HL)
+	OR	A
+	JP	Z,ILEGL
+	CP	(IX+0)		;check is legal
+	JP	Z,ENCHK
+	JP	FNBYTE
+ILEGL:	EXX
+	LD	HL,MSG		;otherwise may not.
+	LD	B,46
+	JP	HOPM
+ENCHK:	EXX
+;
+	LD	A,(IX+1)	;Save this byte
+	LD	(SAVIX),A
+	LD	IY,MATCHW	;Set to start of table
+	LD	DE,0		;Reset pointers
+NEXTK:	LD	A,(SAVIX)	;Get byte back
+	LD	(IX+1),A
+	LD	A,(IY+0)
+	OR	A
+	JR	NZ,NOTENDM
+ENDMAT:	XOR	A
+	OR	E		;check value in E
+;
+; CONMSG 'Normal terminal configuration'
+;
+	JP	NZ,AFTDK	;return for next input
+;
+	LD	HL,CODBUF
+	LD	A,(HL)
+	CP	15		;see if this was a direction
+	LD	HL,MSG
+	JR	NC,DNFOL
+	LD	B,21		;Print 'not valid directin'
+	JP	HOPM
+DNFOL:	LD	B,20		; 'don't follow you'
+HOPM:	CALL	MFETCH
+HOMU:	JP	AFTDK
+;
+;First, check input pair. If either is 255 then this is treated
+;as WILDCARD & passed. It is necessary for certain CONDITION/
+;ACTION sets that must be run after EVERY input.
+;
+NOTENDM: LD	A,(IY+0)
+	CP	255		;check 1st char.
+	JR	Z,CHSND
+	CP	(IX+0)
+	JR	NZ,FAILTHS	;if no match then FAILED
+CHSND:	LD	A,(IY+1)
+	CP	255		;another WILDCARD???
+	JR	Z,PASED
+	CP	(IX+1)
+	JR	Z,PASED
+;
+;This section sets the IY pointer to the start of a new set of
+;conditions/actions
+;
+FAILTHS: INC	IY
+FAILOOP: INC	IY
+	LD	A,(IY+0)
+	CP	255
+	JR	NZ,FAILOOP	;look for next section-ACTIONS
+FAILLX:	INC	IY
+	LD	A,(IY+0)
+	CP	255
+	JR	NZ,FAILLX	;look for new set
+	INC	IY
+	JP	NEXTK		;look for another set to match
+;
+;This section looks at conditions in current list & determines
+;whether or not these are all valid.
+;
+PASED:	LD	E,1		;make flag non-zero
+SKP1:	INC	IY		;skip over key set
+	INC	IY
+	LD	A,(IY+0)
+	CP	255		;test - no more conds?
+	JP	Z,ACTONIT	;if not, go to action section
+;
+;First of the conditions as outlined in the EQUATES section
+;
+	CP	C2
+	JR	NZ,ISC3		;simple comparisons
+	LD	A,(IY+1)
+	CP	(IX+1)
+HOPZ:	JR	Z,SKP1		;HOPZ is used as stepping stone
+	JP	FAILTHS		;- saves few bytes here & there
+ISC3:	CP	C3
+	JR	NZ,ISNC2
+	LD	A,(IY+1)
+	CP	(IX+2)
+	JR	HOPZ
+ISNC2:	CP	NC2
+	JR	NZ,ISNC3
+	LD	A,(IY+1)
+	CP	(IX+1)
+HOPNZ:	JR	NZ,SKP1		;stepping stone for a different
+	JP	FAILTHS		;condition
+;
+ISNC3:	CP	NC3
+	JR	NZ,ISCL		;All comparisons. No actions.
+	LD	A,(IY+1)
+	CP	(IX+2)
+	JR	HOPNZ
+;
+ISCL:	CP	CL
+	JR	NZ,ISNCL	;here comparing loc. number in
+	LD	HL,FL14		;pair buffer with present loc.
+	LD	A,(HL)
+	CP	(IY+1)		;stored in flag 14.
+	JP	HOPZ
+ISNCL:	CP	NCL
+	JR	NZ,ISOPP	;this as above but the outcome
+	LD	HL,FL14		;is the opposite
+	LD	A,(HL)
+	CP	(IY+1)
+	JP	HOPNZ
+ISOPP:	CP	RND		;Are we talking here about
+	JP	NC,ISRND	;objects, or should we skip
+	LD	A,(IY+1)	;the next few comparisons
+	OR	A
+	JR	NZ,CHZR
+	LD	A,(IX+1)	;check if the user actually
+	OR	A		;did enter an object name.
+	JR	NZ,NOTUSR
+	LD	HL,MSG		;if not, send a nasty message
+	LD	B,33
+	JP	HOPM
+;
+CHZR:	LD	(IX+1),A	;He did, eh, let's go find it
+NOTUSR: LD	HL,OBJLOC
+NTX1:	LD	A,(HL)
+	OR	A		;if we reach end of the table
+	JR	Z,CNFND		;then no object
+	CP	(IX+1)
+	JR	Z,OBFND		;found it!
+	INC	HL
+	INC	HL
+	JR	NTX1
+CNFND:	LD	HL,MSG		;Can't find thing. Tell him.
+	LD	B,25
+	JP	HOPM
+OBFND:	INC	HL		;put location in D reg.
+;
+;If we are talking here of an object name entered by user, we
+;must check to make sure that this is correct version of object
+;in the case of a twin/state object such as a lamp.
+;
+	LD	A,(IY+1)	;get user input
+	OR	A
+	JR	NZ,ALAX
+	LD	A,(HL)
+	CP	252		;Is it non-existent version?
+	JR	NZ,ALAX
+	INC	HL		;if so, go to existing version
+	INC	HL
+;
+ALAX:	LD	D,(HL)
+	LD	A,(IY+0)	;get the verb back
+;
+ISOP:	CP	OP
+	JR	NZ,ISOC		;keep looking as before
+	LD	HL,FL14
+	LD	A,(HL)
+	CP	D		;is it here?
+	JP	Z,SKP1
+	LD	A,254
+	CP	D		;is he carrying it?
+	JP	Z,SKP1
+	LD	A,253		;or wearing it??
+HOPZ1:	CP	D
+	JP	HOPZ
+;
+ISOC:	CP	OC
+	JR	NZ,ISOW
+	LD	A,254		;carrying only this time
+	JR	HOPZ1
+;
+ISOW:	CP	OW
+	JR	NZ,ISOH
+	LD	A,253		;wearing perhaps?
+	JR	HOPZ1
+;
+ISOH:	CP	OH
+	JR	NZ,ISOWC
+	LD	HL,FL14
+	LD	A,(HL)		;here only?
+	JR	HOPZ1
+;
+ISOWC:	CP	OWC
+	JR	NZ,ISONP
+	LD	A,254
+	CP	D		;is object worn...
+	JP	Z,SKP1
+	DEC	A		;or perhaps carried??
+	JR	HOPZ1
+;
+ISONP:	CP	ONP
+	JR	NZ,ISONC	;now for opposites to above.
+	LD	HL,FL14
+	LD	A,(HL)
+	CP	D
+	JP	NZ,SKP1
+	LD	A,254
+	CP	D		;exactly as above but opposite
+	JP	NZ,SKP1		;result.
+HOPNZ1:	CP	D
+	JP	HOPNZ
+;
+ISONC:	CP	ONC
+	JR	NZ,ISONW	;is object NOT carried?
+	LD	A,254
+	JP	HOPNZ1
+;
+ISONW:	CP	ONW
+	JR	NZ,ISNWC	;is it NOT worn?
+	LD	A,253
+	JP	HOPNZ1
+;
+ISNWC:	CP	NWC
+	JR	NZ,ISONH	;NOT worn or carried?
+	LD	A,254
+	CP	D
+	JP	NZ,SKP1
+	DEC	A
+	JP	HOPNZ1
+;
+ISONH:	CP	ONH
+	JR	NZ,ISOE		;NOT here?
+	LD	HL,FL14
+	LD	A,(HL)
+	JP	HOPNZ1
+;
+ISOE:	CP	OE
+	JR	NZ,ISONE	;does it even EXIST?
+	LD	A,255
+	JP	HOPNZ1
+;
+ISONE:	CP	ONE
+	JR	NZ,IS@L		;and opposite question.
+	LD	A,255
+	JP	HOPZ1
+;
+IS@L:	CP	ZL
+	JR	NZ,ISN@L	;is it anywhere in particular
+	LD	A,(IY+2)
+	CP	D
+	INC	IY
+	JP	HOPZ
+;
+ISN@L:	LD	A,(IY+2)	;or not.
+	CP	D
+	INC	IY
+	JP	HOPNZ
+;
+ISRND:	CP	RND
+	JR	NZ,ISTF		;looking for a random choice?
+RANDOM:	CALL	RANM
+	CP	(IY+1)
+	JP	C,SKP1
+	JP	FAILTHS
+;
+ISTF:	PUSH	DE
+	LD	HL,FLAG
+	LD	E,(IY+1)
+	LD	D,0
+	ADD	HL,DE
+	POP	DE
+	CP	TF
+	JR	NZ,ISNTF	;do we want to test a flag?
+	LD	A,(HL)
+	CP	(IY+2)
+	INC	IY
+	JP	HOPZ
+;
+ISNTF:	CP	NTF
+	JR	NZ,ISGE		;or test it for NOT a value?
+	LD	A,(HL)
+	CP	(IY+2)
+	INC	IY
+	JP	HOPNZ
+;
+ISGE:	CP	GES
+	JR	NZ,ISLT		;greater than or equal test
+	LD	A,(HL)
+	CP	(IY+2)
+	INC	IY
+	JP	Z,SKP1
+	JP	NC,SKP1
+	JP	FAILTHS
+;
+ISLT:	CP	LTS
+	JR	NZ,DANGER	;less than test
+	LD	A,(HL)
+	CP	(IY+2)
+	INC	IY
+	JP	C,SKP1
+	JP	FAILTHS
+;
+DANGER:	LD	HL,MSG		;reserved for emergencies?
+	LD	B,26
+	CALL	MFETCH		;and print error message
+	JP	FAILTHS
+;
+;This is ACTION section. This only reached assuming that
+;all the above conditions (as applicable) have been met.
+;
+ACTONIT: INC	IY		;skip over the delimiter.
+	LD	A,(IY+0)
+	CP	255		;get action key - check last one
+	JR	NZ,ACTO1	;Ok, get next key set.
+	INC	IY
+	JP	NEXTK		;Else finish.
+;
+ACTO1:	CP	SMA
+	JR	NZ,LB24		;set 1st optional message?
+	LD	A,(IY+1)
+	LD	(XNCO),A
+HOPC:	INC	IY
+	JP	ACTONIT
+;
+LB24:	CP	GRUN
+	JR	NZ,APF
+	JP	RUN
+;
+APF:	CP	PF
+	JR	NZ,ASMB		;print a flag value?
+	PUSH	HL
+	PUSH	IX
+	LD	E,(IY+1)
+	LD	HL,FLAG
+	LD	D,0
+	ADD	HL,DE
+	PUSH	HL
+	POP	IX
+	CALL	PNUMBER		;this prints the decimal value
+	POP	IX
+	POP	HL
+	JR	HOPC
+;
+ASMB:	CP	SMB
+	JR	NZ,AWT		;set 2nd optional message?
+	LD	A,(IY+1)
+	LD	(XBEFA),A
+	JR	HOPC
+;
+AWT:	CP	WT
+	JR	NZ,AINV		;wait around, perhaps?
+	LD	B,(IY+1)
+WTLP:	PUSH	BC		; a really simple delay loop
+	LD	B,255
+WTLP1:	PUSH	BC
+	LD	B,255
+LZL0:	PUSH	AF		;clumsy, but it works
+	POP	AF
+	PUSH	AF
+	POP	AF
+	DJNZ	LZL0
+	POP	BC
+	DJNZ	WTLP1
+	POP	BC
+	DJNZ	WTLP
+	JP	HOPC
+;
+AINV:	CP	INV
+	JR	NZ,ALA		;an inventory perhaps?
+	LD	C,0		;Yes? well print carrying.
+	CALL	ICANC
+	LD	C,1		;also wearing.
+	CALL	ICANC
+	JP	ACTONIT
+;
+ALA:	CP	LA
+	JR	NZ,AEX		;a look around, maybe?
+	LD	C,2
+	CALL	ICANC
+	JP	ACTONIT
+;
+AEX:	CP	EXTB
+	JR	NZ,AQT		;Exit the table maybe?
+	CALL	IBTCH
+	JP	Z,AFTDK
+	JP	AFTDK
+;
+AQT:	CP	QT
+	JR	NZ,AOK		;Want to quit...
+	LD	HL,MSG		;quitting with...
+	LD	B,27
+	CALL	MFETCH
+	PUSH	IX
+	LD	IX,FLAG+13
+	CALL	PNUMBER		;decimal number
+	POP	IX
+	LD	B,28
+	CALL	MFETCH		;points.
+;
+	JP	SYSRET		; EXIT HERE
+;
+AOK:	CP	OK
+	JR	NZ,ASC		;print OK and wait?
+	CALL	IBTCH
+	JP	Z,AFTDK
+	LD	HL,MSG
+	LD	B,29
+	JP	HOPM
+;
+ASC:	CP	SC
+	JR	NZ,AMV		;present score?
+	LD	HL,MSG
+	PUSH	IX
+	PUSH	IY
+	PUSH	DE
+	LD	B,30
+	CALL	MFETCH
+	POP	DE
+	POP	IY
+	POP	IX
+	PUSH	IX
+	LD	IX,FLAG+13
+	CALL	PNUMBER		;just like quitting only
+	POP	IX		;different...
+	CALL	CRLF
+	JP	ACTONIT
+;
+AMV:	CP	MV
+	JR	NZ,APR		;change locations, perhaps?
+	LD	HL,FL14
+	LD	A,(IY+1)
+	CP	RTN		;is this a return?
+	JR	NZ,AMV1
+	LD	HL,FL20
+	LD	A,(HL)
+AMV1:	PUSH	AF
+	LD	HL,FL14
+	LD	A,(HL)
+	LD	HL,FL20
+	LD	(HL),A
+	LD	HL,FL14
+	POP	AF
+	LD	(HL),A		;simply enter up new location
+	JP	RUN
+;
+APR:	CP	PR
+	JR	NZ,APRM		;print a mess. from UMESS table
+	LD	HL,UMESS
+APRPL:	LD	B,(IY+1)
+	PUSH	IX
+	PUSH	IY
+	PUSH	DE
+	CALL	MFETCH
+	POP	DE
+	POP	IY
+	POP	IX
+	JP	HOPC
+;
+APRM:	CP	PRM
+	JR	NZ,AFLIP	;or from MESS table.. ?
+	LD	HL,MSG
+	JR	APRPL
+;
+AFLIP:	LD	HL,FLAG		;talking about FLAGS now
+	PUSH	DE
+	LD	D,0
+	LD	E,(IY+1)
+	ADD	HL,DE		;HL points to relevant flag.
+	POP	DE
+	CP	FLIP
+	JR	NZ,AIN		;flip a flag?
+	LD	A,(HL)
+	OR	A
+	JR	NZ,MAKO
+	LD	A,1
+	JR	MAKO1
+MAKO:	XOR	A
+MAKO1:	LD	(HL),A
+	JP	HOPC
+;
+AIN:	CP	INF
+	JR	NZ,ADEF		;increment it?
+	INC	(HL)
+	JP	ACTONIT
+;
+ADEF:	CP	DEF
+	JR	NZ,ASF		;or decrement it?
+	DEC	(HL)
+	JP	ACTONIT
+;
+ASF:	CP	SF
+	JR	NZ,LB41		;set to a new value?
+	LD	A,(IY+2)
+	LD	(HL),A
+	INC	IY
+	JP	HOPC
+;
+LB41:	CP	ATF
+	JR	NZ,LB42		;add to flag
+	LD	A,(IY+2)
+	LD	(IY+2),0	;wipeout value so it won't be
+	ADD	A,(HL)		;used again.
+	JR	C,BRBXA
+	LD	(HL),A
+	JR	BXRL
+BRBXA:	LD	(HL),255	;if >255 then make 255
+BXRL:	INC	IY
+	JP	HOPC
+;
+LB42:	CP	SFF
+	JR	NZ,ADL		;subtract from flag
+	LD	A,(HL)
+	SUB	(IY+2)
+	LD	(IY+2),0
+	JR	C,SEFAP
+	LD	(HL),A
+	JR	SAFAP
+SEFAP:	LD	(HL),0		;if <0 then make 0
+SAFAP:	INC	IY
+	JP	HOPC
+;
+ADL:	CP	DL
+	JR	NZ,ROBJ		;describe a location
+	LD	HL,FL14
+	LD	B,(HL)
+	LD	HL,LOC
+	PUSH	IX
+	PUSH	IY
+	PUSH	DE
+	CALL	MFETCH
+	POP	DE
+	POP	IY
+	POP	IX
+	JP	ACTONIT
+;
+ROBJ:	LD	A,(IY+1)	;put obj. no into (IX+1)
+	OR	A
+	JR	Z,BMISTHS
+	LD	(IX+1),A
+	LD	D,A
+	JR	MISSTHS
+;
+BMISTHS: LD	A,(IX+1)
+	LD	D,A
+	OR	A
+	JR	NZ,MISSTHS
+	LD	HL,MSG		;problems? print a message.
+	LD	B,33
+	JR	ACDANX
+;
+MISSTHS: LD	HL,OBJLOC
+MX5D:	LD	A,(HL)
+	OR	A
+	JP	Z,ACDANGR	;can't find object?
+	CP	D
+	JR	Z,FNDOBX
+	INC	HL
+	INC	HL
+	JR	MX5D
+FNDOBX:	LD	A,(HL)		;save last object
+	LD	(LSTOBJ),A
+	INC	HL
+;
+;In case of twin-state objects, check for the correct version.
+;
+	LD	A,(IY+1)
+	OR	A
+	JR	NZ,ALAXZ
+	LD	A,(HL)
+	CP	252		;if not correct, go on to
+	JR	NZ,ALAXZ	;the next one
+	INC	HL
+	INC	HL
+;
+ALAXZ:	LD	D,(HL)		;put present place in D reg.
+	JP	ANOTX
+;
+ACDANGR: LD	HL,MSG		;Problems-stop batching & print
+	LD	B,31
+ACDANX:	JP	HOPM
+;
+ANOTX:	LD	A,(IY+0)
+	CP	DSCOB
+	JR	NZ,LB45
+	LD	HL,OBJDSK
+	INC	HL		;miss 1st zero
+NOTHR:	LD	A,(HL)
+	OR	A
+	JR	Z,NODSC
+	CP	(IX+1)
+	INC	HL		;won't set flags
+	JP	NZ,NOXR
+	CALL	MPRINT		;print relevant msg
+	JP	HOPC
+NOXR:	LD	A,(HL)
+	INC	HL
+	OR	A
+	JR	Z,NOTHR
+	JR	NOXR
+NODSC:	LD	HL,MSG
+	LD	B,45
+	JP	HOPM
+;
+LB45:	CP	SWP
+	JR	NZ,AGET		;swap twin-state objects
+	LD	A,(HL)
+	PUSH	AF
+	INC	HL		;this is very clumsy.
+	INC	HL
+	LD	A,(HL)
+	DEC	HL
+	DEC	HL
+	LD	(HL),A
+	INC	HL
+	INC	HL
+	POP	AF
+	LD	(HL),A
+	DEC	HL
+	DEC	HL
+	JP	HOPC
+;
+AGET:	CP	TKE
+	JR	NZ,AWR		;want to take an object?
+	CALL	TOOMNY		;test to see if we are carrying
+	LD	(HL),254	;too much perhaps.
+BRTSB:	JP	HOPC
+;
+AWR:	CP	WR
+	JR	NZ,ADR		;wear an item, maybe..
+	CALL	TOOMNY		;Check again
+	LD	(HL),253
+	JR	BRTSB
+;
+ADR:	CP	DR
+	JR	NZ,APU		;drop something - that's easy
+ADR1:	PUSH	IX
+	LD	IX,FLAG
+	LD	A,(IX+14)
+	LD	(HL),A
+	POP	IX
+	JR	BRTSB
+;
+APU:	CP	PU
+	JR	NZ,ACR		;transfer an item to a new loc.
+	LD	A,(IY+2)
+	LD	(HL),A
+	INC	IY
+	JR	BRTSB
+;
+ACR:	CP	CR		;create something, even.
+	JR	Z,ADR1
+	CP	DES
+	JR	NZ,DANGA
+	LD	(HL),255
+	JR	BRTSB
+;
+DANGA:	LD	HL,MSG		;problems - print error msg.
+	LD	B,32
+	JP	HOPM
+;
+;Check here to see if we are carrying more items than entry in
+;the flag table.
+;
+TOOMNY: PUSH	IX		;simple totalling.
+	LD	IX,FLAG
+	LD	A,(IX+2)
+	ADD	A,(IX+18)	;total worn or carried.
+	CP	(IX+3)
+	JR	C,TOEMNY
+	LD	HL,MSG
+	LD	B,38
+	CALL	MFETCH		;if over, print 'Can't carry'
+	POP	IX
+	POP	IX
+	DEC	IY
+	JP	HOMU
+TOEMNY: POP	IX
+	RET
+;
+;Optional messages. If either is required, will be printed once
+;only. If required again, may be set again using SMA and SMB
+;commands in the action table.
+;
+ONCO:	LD	A,(XNCO)	;load with last entry
+	LD	B,A
+	XOR	A
+	LD	(XNCO),A
+	JR	BEFAD
+BEFA:	LD	A,(XBEFA)
+	LD	B,A
+	XOR	A
+	LD	(XBEFA),A
+BEFAD:	LD	A,B
+	OR	A
+	RET	Z		;return if no message
+	LD	HL,UMESS
+	JP	MFETCH
+;
+;This routine prints out a decimal number pointed to by IX. The
+;range is 0-255. This could probably be made a lot shorter.
+PNUMBER: PUSH IX
+	PUSH	IY
+	LD	IY,NSTORE
+	LD	(IY+0),0	;put zeros in buffer
+	LD	(IY+1),0
+	LD	(IY+2),0
+	LD	A,(IX+0)
+	LD	(IY+3),A
+BM1:	SUB	100		;hundreds
+	JR	C,BM2
+	INC	(IY+0)
+	LD	(IY+3),A
+	JR	BM1
+BM2:	LD	A,(IY+3)
+	SUB	10		;tens
+	JR	C,BM3
+	INC	(IY+1)
+	LD	(IY+3),A
+	JR	BM2
+BM3:	LD	A,(IY+3)
+	SUB	01		;units
+	JR	C,BM4
+	INC	(IY+2)
+	LD	(IY+3),A
+	JR	BM3
+BM4:	LD	A,(IY+0)
+	OR	A
+	JR	Z,BM5
+	CALL	CCOUT		;print with leading zero
+BM5:	LD	A,(IY+1)	;suppressed on 1st digit
+	CALL	CCOUT
+BM6:	LD	A,(IY+2)
+	CALL	CCOUT
+	POP	IY
+	POP	IX
+	RET
+;
+CCOUT:	OR	A		;simply add 30 to print.
+	ADD	A,30H
+	JP	COUT
+;
+;Random number gen. Nothing flash, but it works. Seeded from
+;the refresh register at the start of the game and each
+;move so it should be random.
+;
+RANM:	LD	A,(RANSEED)	;number is returned in acc.
+	PUSH	BC
+	LD	B,A
+	LD	A,R
+	ADD	A,B
+	LD	(RANSEED),A
+	POP	BC
+	RET
+;
+;This routine describes location, and also all available exits
+;together with a description of items that can be seen.
+;
+DESCR:
+	LD	IX,FLAG		;point to flag table
+	CALL	CRLF		;for neatness
+	LD	HL,LOC		;set up pointer to place descr.
+	LD	B,(IX+14)
+	CALL	MFETCH		;print description of
+				;current location
+	LD	A,(IX+16)	;check for visibility
+	OR	A		;test it
+	JP	Z,EN1		;and perhaps miss out dirs.
+	LD	A,(IX+15)
+	CP	0FEH		;do we print them?
+	JR	Z,EN1
+	LD	HL,MSG		;Ok, print the directions.
+	LD	B,14
+	CALL	MFETCH		;print : EXITS ARE...
+	LD	DE,WAYOUT	;set up possibilities
+WLOOP:	LD	A,(DE)		;and start looking
+	INC	DE		;Skip the rest.
+	INC	DE
+	INC	DE
+	OR	A
+	JR	Z,ENXX
+	LD	B,A
+	CALL	MFETCH		;print a possible direction
+	JP	WLOOP		;go back for some more
+ENXX:	CALL	CRLF		;when finished, tidy up
+EN1:	LD	C,2
+	CALL	ICANC		;I can see...
+	CALL	ONCO		;1st optional msg
+	RET
+;
+;Here we take user input and convert into single byte tokens.
+;Tokens placed in CODBUF.
+;
+ENTRI:	LD	HL,CODBUF	;look first in case we
+	LD	DE,CODBUF	;are in the middle of a batch
+	LD	A,(HL)		;of commands.
+	OR	A
+	JR	Z,ENTRX
+BUFFZ:	LD	A,(HL)
+	INC	HL
+	OR	A
+	JR	NZ,BUFFY
+	LD	HL,CODBUF
+	LD	(HL),A
+	JR	ENTRI
+BUFFY:	CP	THEN
+	JR	NZ,BUFFZ
+BUFFY1:	LD	A,(HL)
+	INC	HL
+	CP	THEN
+	JR	Z,BUFFY1
+	DEC	HL
+	PUSH	HL
+	LD	BC,1
+XXLDR:	LD	A,(HL)
+	OR	A
+	JR	Z,XLDR
+	INC	HL
+	INC	BC
+	JR	XXLDR
+XLDR:	POP	HL
+	LDIR
+	JP	SRTOUT
+;
+ENTRX:	CALL	RANM		;set up specials (FL21 & 22)
+	AND	01H		;here. Make complementary
+	LD	HL,FL21		;but random.
+	LD	(HL),A
+	XOR	1
+	INC	HL
+	LD	(HL),A
+	LD	HL,CODBUF	;Actual start. Zero 1st byte
+	XOR	A		;in code buffer.
+	LD	(HL),A
+	LD	HL,BUFFER	;point to entry buffer
+	LD	BC,0
+	CALL	CRLF
+	LD	A,'>'		;print a prompt
+	CALL	COUT
+ENT1:	CALL	CHRIN		;get a character
+	CP	0DH		;end of line?
+	JR	Z,ENDIN
+	CP	7FH		;backspace?
+	JR	Z,BACKS
+	CP	5FH		;both types
+	JR	Z,BACKS
+	CP	15H		;CTL-U for scrap line
+	JR	NZ,CONVUP
+	LD	A,'*'
+	CALL	COUT
+	JR	ENTRX		;try again
+CONVUP:	OR	A
+	BIT	6,A
+	JP	Z,NOCONV	;check for upper case
+	RES	5,A		;if not, make it so.
+NOCONV:	CP	20H
+	JR	Z,MISTRP
+	CP	'A'
+	JR	C,ENT1
+MISTRP:	LD	(HL),A		;save a good character
+	INC	HL
+	INC	B
+	LD	A,B
+	CP	LINLEN		;get present count
+	JR	NC,ENDIN
+	JR	ENT1		;go back for another
+BACKS:	LD	A,B
+	OR	A
+	JR	Z,ENT1
+	DEC	HL		;or perhaps back up one char.
+	DEC	B
+;
+	LD	A,08H
+	CALL	COUT		;print backspace
+	LD	A,20H
+	CALL	COUT
+	LD	A,08H
+	CALL	COUT
+;
+	JP	ENT1
+;
+ENDIN:	LD	(HL),0		;End of line.
+	CALL	CRLF
+	LD	A,B
+	OR	A
+	JP	NZ,CON
+	JP	ENTRI
+;
+;This is where we convert from buffer into single byte tokens.
+;
+CON:	LD	DE,BUFFER	;point to the input buffer
+	LD	C,0
+	LD	HL,CODBUF	;and to the final code buffer.
+MORC:	LD	IY,TABKEY	;point to the lookup table
+MORX:	CALL	FIND1ST
+	JP	Z,ENDMESS
+XX:	LD	B,(IY+0)
+	INC	IY
+	LD	A,B
+	OR	A
+	JP	Z,MORC
+MORXX:	LD	A,(IX+0)
+	CP	(IY+0)		;Start the comparison
+	JR	NZ,MISS
+	LD	A,(IX+1)
+	CP	(IY+1)
+	JR	NZ,MISS
+	LD	A,(IX+2)
+	CP	(IY+2)
+	JR	NZ,MISS
+	LD	A,(IY+3)
+	AND	7FH		;reset 8th bit
+	CP	(IX+3)
+	JR	NZ,MISS
+GOTONE:	LD	A,C		;is this the 1st word?
+	OR	A
+	JR	NZ,GHIR
+	LD	A,B
+	CP	AGAIN
+	JR	NZ,GHIR		;is the word 'AGAIN'?
+	LD	HL,CODB2	;if so then retrieve old buffer
+	LD	DE,CODBUF	;and substitute into new buffer
+	LD	BC,15		;and pretend you've just typed
+	LDIR			;it all in again!
+;
+GHIR:	LD	(HL),B		;If we get this far, success.
+	INC	HL
+	LD	C,1		;set flag to say we found
+	JP	MORC		;at least 1 word.
+MISS:	LD	A,(IY+3)	;Check end of this block.
+	INC	IY
+	INC	IY
+	INC	IY
+	INC	IY
+	OR	A
+	JP	M,XX
+	JP	MORXX
+ENDMESS: LD	(HL),0		;Clear last 3
+	INC	HL
+	LD	(HL),0
+	INC	HL
+	LD	(HL),0
+	LD	A,C
+	OR	A
+	JR	NZ,GOTALOT
+	LD	HL,MSG
+	LD	B,1
+	CALL	MFETCH		;select 1st message - WHAT!
+	JP	ENTRI		;and try again
+GOTALOT: LD	HL,CODBUF	;Save line in spare buffer.
+	LD	DE,CODB2
+	LD	BC,15
+	LDIR
+	RET			;else return.
+;
+FIND1ST: LD	A,(DE)		;Get 1st 4 letters and pad
+	OR	A		;if necessary
+	RET	Z
+	CP	20H
+	JR	NZ,BRP
+	INC	DE
+	JR	FIND1ST
+;
+BRP:	PUSH	HL
+	LD	IX,BLK4
+	PUSH	IX
+	POP	HL
+	LD	(IX+0),20H	;Firstly, empty buffer
+	LD	(IX+1),20H
+	LD	(IX+2),20H
+	LD	(IX+3),20H
+	LD	B,4		;4 chars.
+PRP:	LD	A,(DE)
+	OR	A
+	JR	Z,FX
+	CP	20H		;if space or zero, quit
+	JR	Z,FX
+	LD	(HL),A
+	INC	HL
+	INC	DE
+	DJNZ	PRP
+BRT:	LD	A,(DE)		;find end of word if > 4 chars.
+	OR	A
+	JR	Z,FX
+	CP	20H
+	JR	Z,FX
+	INC	DE
+	JR	BRT
+FX:	CP	0FFH		;Zero flag must not be set
+	POP	HL		;on return.
+	RET
+;
+;Character I/O section.
+;
+CRLF:	EX	AF,AF'		;pretty obviously prints a CRLF
+	XOR	A		;sequence.
+	LD	(CCOUNT),A	;Also zeroes char. count
+	LD	A,0DH
+	CALL	COUT
+	LD	A,0AH
+	CALL	COUT
+	EX	AF,AF'
+	RET
+;
+CHRIN:	EXX
+	LD	C,1
+	CALL	5		;CP/M I/O
+	EXX
+	RET
+;
+COUT:	CALL	CHROUT		;print char in Acc.
+	OR	A
+	PUSH	AF
+	LD	A,(CCOUNT)
+	INC	A		;Inc. char. count
+	LD	(CCOUNT),A
+	CP	LINLEN
+	JR	C,BOX
+	POP	AF
+	PUSH	AF
+	CP	21H		;space char. + 1
+	JR	NC,BODX
+	CALL	CRLF
+BODX:	CP	08		;backspace
+	JP	NZ,BOX
+	LD	A,(CCOUNT)
+	DEC	A
+	DEC	A
+	LD	(CCOUNT),A
+BOX:	POP	AF
+	RET
+;
+CHROUT:	PUSH	AF		;CP/M I/O
+	EXX
+	LD	C,2
+	LD	E,A
+	CALL	5
+	EXX
+	POP	AF
+	RET
+;
+; STABLE : This routine sets up the flags per the written
+;		specifications.
+;
+STABLE:	LD	IX,FLAG		;point to flag table.
+	INC	(IX+4)		;These three are easy.
+	INC	(IX+5)
+	INC	(IX+6)
+	LD	HL,FLAG+6
+	LD	B,3
+STAB1:	INC	HL
+	LD	A,(HL)
+	OR	A
+	JR	Z,STAB2
+	DEC	(HL)
+STAB2:	DJNZ	STAB1
+	LD	A,(IX+17)
+	DEC	A
+	AND	(IX+10)
+	OR	(IX+1)
+	LD	(IX+16),A	;Save real light/dark.
+	LD	A,(IX+17)
+	DEC	A
+	JR	NZ,STABQW
+	LD	HL,FLAG+9
+	LD	B,2
+STAB4:	INC	HL
+	LD	A,(HL)
+	OR	A
+	JR	Z,STAB4A
+	DEC	(HL)
+STAB4A:	DJNZ	STAB4
+STABQW:	LD	A,(IX+10)
+	OR	A
+	JR	NZ,STAB9
+	INC	(IX+12)
+	JR	STAB5
+STAB9:	LD	(IX+12),0
+STAB5:	LD	B,254
+	CALL	STAB51
+	LD	B,253
+	LD	IX,FLAG+16
+	CALL	STAB51
+	LD	IX,FLAG+14
+	LD	B,(IX+0)
+	LD	IX,FLAG+17
+STAB51:	LD	(IX+2),0	;find out how many objects are
+	LD	HL,OBJLOC	;carried.
+	INC	HL		;Can't say OBJLOC+1 because
+STAB5A: LD	A,(HL)		;it's EXTERNAL.
+	OR	A
+	JR	Z,STAB6
+	INC	HL
+	INC	HL
+	CP	B
+	JR	NZ,STAB5A
+	INC	(IX+2)
+	JR	STAB5A
+STAB6:	LD	IX,FLAG
+	RET
+;
+; MFETCH: This routine selects and prints a message. HL must
+;	point to the table, and B reg. contains a number
+;	1 to 255. The message is selected and printed. 0 is
+;	the delimiter and '%' will echo as a CRLF sequence.
+;	'>' acts to terminate batches but will not print.
+;	ALSO HANDLES DESCRIPTIONS, STORING DIRECTION DATA.
+;
+; MPRINT: This may be used as a separate routine. HL points
+;	to first byte. Delimiters as above.
+;
+MFETCH:	PUSH	HL		;save registers
+	PUSH	AF
+	LD	A,0		;load Acc. with terminator
+LOOPF:	PUSH	BC		;Save the count
+	LD	BC,0		;up to 64K!
+	CPIR			;look for zeros..FAST
+	POP	BC		;get count back
+	DJNZ	LOOPF		;Again?
+	LD	A,(HL)
+	CP	0FCH		;Is this location description?
+	JP	C,MPRX		;4 different varieties.
+	CP	0FEH		;255=normal, 254=no directions
+	JR	NC,MPML		;253=dark
+	INC	A		;252=dark & no directions ever.
+	INC	A
+	LD	(IX+1),0	;Save either dark...
+	JR	MPM
+MPML:	LD	(IX+1),1	;or light status.
+MPM:	PUSH	DE
+	LD	DE,WAYOUT-1
+	LD	(IX+15),A	;Store SEE/NOT SEE directions
+BRPX:	INC	HL		;in flag table + 15.
+	INC	DE
+	LD	A,(HL)
+	CP	0FFH
+	JR	Z,BLTX
+	LD	(DE),A
+	JR	BRPX
+BLTX:	PUSH	AF
+	XOR	A
+	LD	(DE),A
+	POP	AF
+	POP	DE
+	INC	HL
+	LD	A,(IX+17)
+	DEC	A
+	AND	(IX+10)
+	OR	(IX+1)
+	LD	(IX+16),A
+	JP	Z,MPREND
+	JR	MPRX
+;
+;Standard (well nearly) HL-POINTS-TO-MESSAGE type of routine.
+;
+MPRINT:	PUSH	HL		;save registers
+	PUSH	AF
+MPRX:	LD	A,(HL)		;get a character
+	OR	A		;test it
+	JP	Z,MPREND	;No more, perhaps?
+	INC	HL		;ready for next char.
+	CP	3EH
+	JR	NZ,LB53		; '>' Terminate batch?
+	XOR	A
+	LD	(CODBUF),A
+	JR	MPRX
+LB53:	CP	25H
+	JR	NZ,LB54		; '%' looking for a CRLF?
+	CALL	CRLF
+	JR	MPRX
+LB54:	CP	7BH
+	JR	NZ,LB55		; '(' Starting new conditional?
+	LD	A,(HL)
+	CP	'/'		;Negative form?
+	JR	Z,FRTHR		;section added Feb.
+	XOR	A		;1981 for negative
+	LD	(TE1),A		;flags.
+	JR	FRTHR1
+FRTHR:	LD	A,1
+	LD	(TE1),A
+	INC	HL
+FRTHR1:	LD	A,(HL)
+	PUSH	HL
+	PUSH	BC
+	PUSH	AF
+	LD	HL,SPEC		;point to base
+	INC	(HL)		;effectively PUSH stack
+	LD	B,(HL)
+LZL1:	INC	HL		;get new count in B
+	DJNZ	LZL1		;Find new entry
+	POP	AF		;retrieve FLAG no.
+	SUB	62
+	LD	(HL),A		;save it.
+	POP	BC
+	POP	HL
+	INC	HL		;skip over No.
+	JP	MPRX
+LB55:	CP	7DH
+	JR	NZ,LB56		; ')' Ending a conditional?
+	LD	A,(SPEC)
+	SUB	1
+	JR	NC,SRXX
+	XOR	A
+SRXX:	LD	(SPEC),A	;effectively POP stack
+	JP	MPRX
+;
+;Now to check flags pointed to by the various 'STACK' levels.
+;To do this it is necessary to find offset into the FLAG table
+;and then test the location, for EVERY level currently active.
+;
+LB56:	PUSH	AF		;check ALL levels for true
+	LD	A,(SPEC)
+	OR	A		;test DEPTH
+	JP	Z,LOVEL		;miss out altogether if ZERO
+	PUSH	HL		;Else start testing!
+	PUSH	BC
+	LD	C,1		;assume true until otherwise
+	LD	B,A		;Set no. of levels in counter
+	LD	HL,SPEC		;Set HL to bottom level-1
+LOOPQ:	INC	HL
+	LD	A,(HL)		;put FLAG offset in A for now
+	PUSH	HL
+	PUSH	BC
+	LD	HL,FL20		;HL to the flags-1
+	LD	B,A
+LZL2:	INC	HL		;get LEVELS parameter from A.
+	DJNZ	LZL2		;got correct flag now.
+	LD	A,(HL)		;Hold condition in A
+	POP	BC
+	POP	HL
+	OR	A
+	JR	NZ,ARX
+	LD	C,A		;if Zero, kill C.
+ARX:	DJNZ	LOOPQ		;Outer loop
+	LD	A,C		;Save C..
+	POP	BC
+	POP	HL		;End outer loop
+	OR	A		;Test final condition
+	JR	NZ,LOVELX
+	LD	A,(TE1)		;check negation flag
+	OR	A
+	JR	Z,LOVELY
+	JR	LOVEL
+LOVELX:	LD	A,(TE1)
+	OR	A
+	JR	Z,LOVEL
+LOVELY:	POP	AF		;if Zero, don't print
+	JP	MPRX
+LOVEL:	POP	AF
+MPRZA:	CALL	COUT		;actually print the char.
+	JP	MPRX		;then back for more
+MPREND:	POP	AF
+	POP	HL		;restore registers
+	RET			;and return.
+;
+;This section deals with objects. The routine ICANC should be
+;entered with the C register containing 0, 1, or 2 and the routine
+;will print out what it can see according to the required mode.
+;All registers are returned intact.
+;The display will insert '&' between objects if more than 1.
+;
+; Enter with the C register containing :
+;
+; 0 - I am carrying the following...
+; 1 - I am wearing the following...
+; 2 - I can see the following...
+;
+;If no objects are found then 'nothing special' will be sent out.
+;
+ICANC:	EX	AF,AF'		;save all registers
+	LD	A,C
+	EXX
+	LD	C,A
+	PUSH	IX
+	PUSH	IY
+	LD	HL,MSG		;initial message
+	LD	IX,FLAG
+	LD	A,(IX+16)
+	OR	A
+	JR	NZ,ICANQ
+	LD	A,C
+	CP	1
+	JR	Z,ICAN3		;Don't want 2 lots of dark!
+	LD	B,15
+	CALL	MFETCH		;send dark message
+	JR	ICAN3
+ICANQ:	LD	IY,OBJLOC
+	PUSH	BC
+	LD	A,16		;set to 'I am carrying..'
+	ADD	A,C		;and add offset
+	LD	C,A
+	LD	B,C
+	CALL	MFETCH		;print as appropriate
+	LD	HL,UMESS
+	POP	BC
+	DEC	C
+	DEC	C
+	DEC	C		;return true value
+	LD	A,C
+	CP	255
+	JR	NZ,ICANY
+	LD	C,(IX+14)	;then load present location
+ICANX:	LD	DE,0
+ICAN1:	LD	D,(IY+0)
+	LD	A,(IY+1)
+	OR	A
+	JR	Z,ICANZ
+	INC	IY		;on to next two
+	INC	IY
+	CP	C
+	JR	NZ,ICAN1
+	LD	A,E
+	OR	A
+	JR	Z,NOAND
+	LD	A,' '
+	CALL	COUT
+	LD	A,'&'
+	CALL	COUT
+	LD	A,' '
+	CALL	COUT
+NOAND:	PUSH	DE
+	CALL	FINDMS
+	POP	DE
+	INC	E		;increment items found
+	JR	ICAN1
+ICANZ:	LD	A,E
+	OR	A
+	JR	NZ,ICAN2	;if not Zero then CRLF
+	LD	HL,MSG
+	LD	B,19
+	CALL	MFETCH		;else 'nothing special'
+ICAN2:	LD	A,'.'
+	CALL	COUT
+	CALL	CRLF
+ICAN3:	POP	IY
+	POP	IX
+	EXX
+	EX	AF,AF'
+	RET
+ICANY:	CP	254		;This corrects a bit of bad
+	JR	NZ,ICANZ1	;design in the first place.
+	LD	C,253
+	JR	ICANX
+ICANZ1:	LD	C,254
+	JR	ICANX
+;
+;This routine (FINDMS) looks thru the object table for object
+;in D register and prints the correct message.
+;
+FINDMS:	PUSH	IX
+	LD	IX,OBJDES
+FIND1:	LD	A,(IX+0)
+	LD	B,(IX+1)
+	CP	D
+	JR	Z,FIND2
+	INC	IX
+	INC	IX
+	JR	FIND1
+FIND2:	POP	IX
+	CALL	MFETCH
+	RET
+;
+;
+;DUMMY CSEG ADDED HERE TO TRY TO FORCE CORRECT LINKING - WJS
+;
+	CSEG
+DMMY1:	DEFB	0
+	DEFS	1
+;
+;The end. The database file is linked here.
+;
+	END
+

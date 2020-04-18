@@ -1,0 +1,220 @@
+.HE
+.L-
+  *****************************************************************
+  *                                                               *
+  *           Print this document in the following way:           *
+  *                                                               *
+  *           1. Exit Turbo Pascal                                *
+  *           2. Activate the TLIST program                       *
+  *           3. Answer READ.ME and press <RETURN>                *
+  *           4. Press <RETURN> to question about Options.        *
+  *                                                               *
+  *                                                               * 
+  *  If you want to change the left margin use the directive:     * 
+  *  .PO (Page Offset E.g. .PO8) (the dot must be in column one). *
+  *                                                               *
+  *  You may also use the .PL directive to set Page Length        *
+  *                                                               *
+  *****************************************************************
+.L+
+.PO8
+.PL66
+
+
+
+
+
+
+
+
+
+
+
+               Addendum to TURBO REFERENCE MANUAL
+                    Z80 CP/M-80 8-bit Version
+                          October 1983
+
+
+
+
+
+
+
+
+
+
+
+
+
+          (C) Copyright 1983 Borland International Inc.
+.HEAddendum to the TURBO Pascal Reference Manual        page: #  \First printing November 1983  
+.PAŠ
+.FO                                                   Continued....
+
+-----------------------------------------------------------------
+                    GETTING STARTED RIGHT NOW
+-----------------------------------------------------------------
+
+
+
+
+   1. Make a copy of the distribution disk to a fresh disk.
+
+   2. Start TINST from your copy and select your terminal.
+
+   3. Exit TINST and type:  TURBO
+
+   4. Type O for Options then C for Com file and Q for Quit.
+
+   5. Type Y for Yes
+
+   6. Type M for Main file and answer: MC
+
+   7. Type R for Run
+
+
+Thå compileò wilì no÷ compilå thå filå MC.PAÓ anä makå the
+file MC.COM which will be executed immediately. 
+
+If you run out of space on your disk, you may delete the 
+TINST*.* files since they are only needed to install TURBO.
+.paŠ
+-----------------------------------------------------------------
+                 FILES ON THE DISTRIBUTION DISK
+-----------------------------------------------------------------
+
+
+
+
+----------------------------------------------------------------
+!    THE FILE YOU MUST HAVE TO DEVELOP AND COMPILE PROGRAMS    !
+----------------------------------------------------------------
+! TURBO.COM         Compiler and  Editor                       !
+----------------------------------------------------------------
+
+
+----------------------------------------------------------------
+!             OPTIONAL FILES WHEN DEVELOPING PROGRAMS          !
+----------------------------------------------------------------
+! TURBOMSG.OVR      Error messages (You may omit this file)    !
+! TURBO.OVÒ         eXecutå commanä (Yoõ maù omiô thió file)   !
+! TLIST.COM         Program lister                             !
+----------------------------------------------------------------
+
+
+----------------------------------------------------------------
+!          FILES YOU ONLY NEED WHEN YOU INSTALL TURBO          !
+----------------------------------------------------------------
+! TINST.COM              Installation program                  !
+! TINSTMSG.OVR           Message file for TINST                !
+! TINST.DTA              Terminal definitions for TINST        !
+---------------------------------------------------------------
+Oncå yoõ havå installeä TURBÏ tï youò satisfaction¬ yoõ maù 
+delete these files from your working copy of TURBO Pascal.
+
+Iæ  yoõ havå installeä ne÷ terminaló theî yoõ shoulä firsô makå á
+copù oæ TINST.DTÁ tï savå youò corrections.
+
+
+-----------------------------------------------------------------
+!                FILES WITH DEMONSTRATION PROGRAMS              ! 
+-----------------------------------------------------------------
+! MC.PAS                  MicroCalc (spread sheet demo program) !
+! MC-MOD##.INC            Include files for MC.PAS              !
+! MC.HLP                  On-line manual for MicroCalc          !
+! MCDEMO.MCS              Example spread sheet definition       !
+-----------------------------------------------------------------
+
+.paŠ----------------------------------------------------------------
+                   CORRECTIONS TO THE MANUAL:
+----------------------------------------------------------------
+
+PAGE 66
+
+Examples of string comparisons:
+
+   'A' < 'B'        is TRUE
+   'A' > 'b'        is FALSE
+
+
+PAGE 126
+
+Thå Iniô procedurå shoulä bå CRTinit¬ anä thå Exiô procedure
+should be CRTexit.
+
+
+PAGE 213
+
+The X compiler directive is valid for the CP/M-80 implementation
+only.
+  
+
+   
+
+
+
+.paŠ---------------------------------------------------------------
+          MURPHY DELETED THE FOLLOWING FROM THE MANUAL:
+---------------------------------------------------------------
+
+
+Procedure Halt;
+
+Thió procedurå stoðs program executioî and exits the program.
+
+
+Function UpCase(Ch: Char): Char;
+
+Thió  functioî returnó thå uppercaså equivalenô oæ thå  parameteò 
+Ch®  Exampleº  iæ  C±  haó thå valuå 'a§ theî UpCase(C1© haó  thå 
+valuå 'A'.
+
+
+Function Chr(I: IExpr): Char; 
+
+This function returns the character with the ASCII value I.
+Example: Chr(65) returns the value 'A'.
+
+
+.paŠ-----------------------------------------------------------------
+              LIST OF COMMON QUESTIONS AND ANSWERS
+-----------------------------------------------------------------
+
+Q: How do I use the system?
+A: Please read the manual.
+
+Q: Is TURBO an interpretor like UCSD? 
+A: No, it generates ultra-fast machine code.
+
+Q: Do I need  the TURBO system to run programs developed in 
+   TURBO pascal?
+A: No, make a .COM file.
+
+Q: How many lines of code can the compiler handle.
+A: No limit (The object code, however, cannot excede 64 KB)
+
+Q: How many significant digits does TURBO support in 
+   floating point?
+A: 11.
+
+Q: Why do I get garbage on the screen when starting the TURBO
+   editor.
+A: You have not installed TURBO for your terminal.
+
+Q: What do I do when I run out of space using the editor?
+Aº Spliô youò sourcå codå (seå manuaì $É directive.)
+
+Q: What do I do when I run out of space while compiling?
+A: Use the $I directive and/or generate a .COM or .CMD file.
+
+Q: How do I make a .COM (.CMD) file?
+A: Type O from the main menu then type C.
+
+Q: What do I do when the compiler generates too much code?
+A: Read the appendicies about compiler switches and .CHN files.
+
+Q: Does TURBO Pascal support overlays?
+A: No, but you may chain with common variables 
+   (Ask Borland about "Borland Pascal" with overlays.)
+
+.PAŠ
