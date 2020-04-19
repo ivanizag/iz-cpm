@@ -6,7 +6,7 @@ use std::io::prelude::*;
 use clap::{Arg, App};
 
 use z80::cpu::Cpu;
-use z80::memory_io::*;
+use z80::machine::*;
 use z80::registers::*;
 use z80::state::State;
 
@@ -88,7 +88,7 @@ fn main() {
 
 
     state.reg.set_pc(0x100);
-    cpu.trace = cpu_trace;
+    cpu.set_trace(cpu_trace);
     loop {
         cpu.execute_instruction(&mut state, &mut machine);
 

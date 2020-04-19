@@ -5,7 +5,7 @@ use std::sync::mpsc::TryRecvError;
 use std::thread;
 use std::time::Duration;
 
-use z80::memory_io::*;
+use z80::machine::*;
 use super::cpm_machine::*;
 
 pub struct CpmConsole {

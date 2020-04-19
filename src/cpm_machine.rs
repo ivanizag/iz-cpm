@@ -1,4 +1,4 @@
-use z80::memory_io::*;
+use z80::machine::*;
 
 pub struct CpmMachine {
     mem: [u8; PLAIN_MEMORY_SIZE],

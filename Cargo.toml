@@ -1,14 +1,13 @@
 [package]
-name = "z80"
+name = "rcpm"
 version = "0.1.0"
 authors = ["Ivan Izaguirre <ivanizag@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [[bin]]
-name = "cpm"
-path = "src/cpm/cpm.rs"
+name = "rcpm"
+path = "src/main.rs"
 
 [dependencies]
+z80 = { path = "../rust-z80" }
 clap = "^2"

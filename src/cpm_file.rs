@@ -4,7 +4,7 @@ use std::io;
 use std::io::Read;
 use std::io::Seek;
 
-use z80::memory_io::*;
+use z80::machine::*;
 
 use super::fcb::*;
 use super::cpm_machine::*;
