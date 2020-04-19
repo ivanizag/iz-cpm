@@ -5,9 +5,9 @@ authors = ["Ivan Izaguirre <ivanizag@gmail.com>"]
 edition = "2018"
 
 [[bin]]
-name = "rcpm"
+name = "iz-cpm"
 path = "src/main.rs"
 
 [dependencies]
-z80 = { path = "../rust-z80" }
+iz80 = { path = "../iz80" }
 clap = "^2"

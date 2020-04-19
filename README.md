@@ -1,18 +1,24 @@
-# rust-z80
-Work in progress
+# iz-cpm
+Work in process
 
-Runs Tiny Basic (version from [cpuville.com](http://cpuville.com/Code/Tiny-BASIC.html):
+CP/M Emulation. Emulation of the CP/M services on top of the host OS. Z80 CP/M binaries work directly with the host os FS.
+
+## Commands
+
+
+Run Tiny Basic :
 ```
-cargo run --bin cpuville
+cargo run src/rom/TINYBAS.COM
 ```
 
-Passes the ZEXALL tests:
+Run Zork 1, Zork 2 or Zork 3:
 ```
-cargo test --release -- --nocapture --ignored
+cd src/rom
+cargo run ZORK1.COM
 ```
 
-Initial support of CP/M binaries:
+Run the ZEXALL test suite (very long, better compiling in release mode):
 ```
-cargo run --bin cpm -- src/cpm/rom/TINYBAS.COM
+carg run --release src/rom/zexall.com
 ```
 

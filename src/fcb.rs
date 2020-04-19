@@ -1,4 +1,4 @@
-use z80::machine::*;
+use iz80::Machine;
 use super::cpm_machine::*;
 
 /*

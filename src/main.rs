@@ -1,14 +1,8 @@
-extern crate z80;
-extern crate clap;
-
 use std::fs::File;
 use std::io::prelude::*;
 use clap::{Arg, App};
 
-use z80::cpu::Cpu;
-use z80::machine::*;
-use z80::registers::*;
-use z80::state::State;
+use iz80::*;
 
 mod cpm_console;
 mod cpm_drive;
@@ -92,22 +86,7 @@ fn main() {
     loop {
         cpu.execute_instruction(&mut state, &mut machine);
 
-        if false /*cpu_trace*/ {
-            // CPU registers
-            println!("PC({:04x}) AF({:04x}) BC({:04x}) DE({:04x}) HL({:04x}) SP({:04x}) IX({:04x}) IY({:04x}) Flags({:08b})",
-                state.reg.get_pc(),
-                state.reg.get16(Reg16::AF),
-                state.reg.get16(Reg16::BC),
-                state.reg.get16(Reg16::DE),
-                state.reg.get16(Reg16::HL),
-                state.reg.get16(Reg16::SP),
-                state.reg.get16(Reg16::IX),
-                state.reg.get16(Reg16::IY),
-                state.reg.get8(Reg8::F)
-            );
-        }
-
-        let pc = state.reg.get_pc();
+        let pc = state.reg.pc();
         // We fo the BIOS actions outside the emulation.
         if pc >= BIOS_BASE_ADDRESS {
             let offset = pc - BIOS_BASE_ADDRESS;

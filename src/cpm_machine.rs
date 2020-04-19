@@ -1,7 +1,7 @@
-use z80::machine::*;
+use iz80::Machine;
 
 pub struct CpmMachine {
-    mem: [u8; PLAIN_MEMORY_SIZE],
+    mem: [u8; 65536],
     in_values: [u8; 256],
     in_called: bool,
     in_port: u8,
@@ -13,7 +13,7 @@ pub struct CpmMachine {
 impl CpmMachine {
     pub fn new() -> CpmMachine {
         CpmMachine {
-            mem: [0; PLAIN_MEMORY_SIZE],
+            mem: [0; 65536],
             in_values: [0; 256],
             out_called: false,
             out_port: 0,
