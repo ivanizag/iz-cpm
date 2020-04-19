@@ -1,7 +1,9 @@
 # iz-cpm
 Work in process
 
-CP/M Emulation. Emulation of the CP/M services on top of the host OS. Z80 CP/M binaries work directly with the host os FS.
+CP/M Emulation. Emulation of the CP/M services on top of the host OS. Z80 CP/M binaries work directly with the host operating system file system.
+
+Uses the [iz80](https://github.com/ivanizag/iz80) library for Z80 emulation.
 
 ## Commands
 

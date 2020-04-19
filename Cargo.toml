@@ -9,5 +9,5 @@ name = "iz-cpm"
 path = "src/main.rs"
 
 [dependencies]
-iz80 = { path = "../iz80" }
+iz80 = "^0.1"
 clap = "^2"
