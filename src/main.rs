@@ -123,11 +123,27 @@ fn main() {
                 match command {
                     0 => { // BOOT: Cold Start Routine
                         println!("Terminated. cold restart");
-                        break;                                }
+                        break;
+                    }
                     1 => { // WBOOT: Warm boot.
                         // Reload command processor. We will go back to the host.
                         println!("Terminated, warm restart");
-                        break;                                }
+                        break;
+                    }
+                    2 => { // CONST: Check for console ready
+                        let res8 = cpm_console.status();
+                        cpu.registers().set_a(res8);
+                    }
+                    3 => { // CONIN: Console Input
+                        let res8 = cpm_console.read();
+                        cpu.registers().set_a(res8);
+                    }
+                    10 => { // SETSEC: Set sector number
+                        let sector = cpu.registers().get8(Reg8::C);
+                        if call_trace {
+                            println!("Set sector: {}", sector);
+                        }
+                    }
                     _ => {
                         print!("BIOS command {} not implemented.\n", command);
                         panic!("BIOS command not implemented");
@@ -166,6 +182,9 @@ fn main() {
                 9 => { // C_WRITESTR - Output string
                     cpm_console.write_string(arg16, &machine);
                 },
+                10 => { // C_READSTR
+                    cpm_console.read_string(arg16, &mut machine);
+                },
                 11 => { // C_STAT - Console status
                     res8 = Some(cpm_console.status());
                 },
@@ -190,6 +209,14 @@ fn main() {
                     let fcb = Fcb::new(arg16, &machine);
                     res8 = Some(cpm_file.close(&fcb));
                 },
+                19 => { // F_DELETE - Delete file
+                    let fcb = Fcb::new(arg16, &machine);
+                    if call_trace {
+                        print!("[[Delete file {}]]", fcb.get_name());
+                    }
+                    // TODO
+                    res8 = Some(0);
+                }
                 220 /*20*/ => { // F_READ - read next record
                     /*
                     Given that the FCB addressed by DE has been activated through an

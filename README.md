@@ -19,6 +19,18 @@ cd src/rom
 cargo run ZORK1.COM
 ```
 
+Run LISP/80 vesion 1.1:
+```
+cd src/rom/Lisp-80
+cargo run LISP_80.COM
+```
+
+Run MULISP-80 ([manual](http://www.retroarchive.org/docs/mulisp_mustar.pdf)):
+```
+cd src/rom/Lisp-80
+cargo run MULISP.COM
+```
+
 Run the ZEXALL test suite (very long, better compiling in release mode):
 ```
 carg run --release src/rom/zexall.com

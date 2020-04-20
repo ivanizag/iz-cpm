@@ -99,6 +99,43 @@ impl CpmConsole {
         stdout().flush().unwrap();
     }
 
+    pub fn read_string(&mut self, address: u16, machine: &mut CpmMachine) -> u8 {
+        /*
+        The Read Buffer function reads a line of edited console input
+        into a buffer addressed by registers DE. Console input is
+        terminated when either input buffer overflows or a carriage
+        return or line-feed is typed. The Read Buffer takes the form:
+            DE:	+0  +1  +2  +3  +4  +5  +6  +7  +8  ...  +n
+	            mx  nc  cl  c2  c3  c4  c5  c6  c7  ...  ??
+        where mx is the maximum number of characters that the buffer
+        will hold, 1 to 255, and nc is the number of characters read
+        (set by FDOS upon return) followed by the characters read from
+        the console. If nc < mx, then uninitialized positions follow
+        the last character, denoted by ?? in the above figure.
+
+        TODO: Process controls characters
+        */
+        let max_size = machine.peek(address + 0);
+        let mut size = 0;
+        let mut pos = address + 2;
+        loop {
+            let ch = self.read();
+            if ch == 10 || ch == 13 { // CR of LF
+                break;
+            }
+            machine.poke(pos, ch);
+            size += 1;
+            pos += 1;
+            if size >= max_size {
+                // Buffer full
+                break;
+            }
+        }
+
+        machine.poke(address + 1, size);
+        size
+    }
+
     pub fn status(&self) -> u8 {
         /*
         The Console Status function checks to see if a character has
