@@ -38,10 +38,11 @@ fn main() {
     let call_trace = matches.is_present("call_trace");
     let cpu_trace = matches.is_present("cpu_trace");
     
-    // Init system
+    // Init device
     let mut machine = CpmMachine::new();
-    let mut state = State::new();
     let mut cpu = Cpu::new();
+
+    // Init cpm
     let mut cpm_console = CpmConsole::new();
     let mut cpm_drive= CpmDrive::new();
     let mut cpm_file = CpmFile::new();
@@ -81,12 +82,12 @@ fn main() {
 
 
 
-    state.reg.set_pc(0x100);
+    cpu.registers().set_pc(0x100);
     cpu.set_trace(cpu_trace);
     loop {
-        cpu.execute_instruction(&mut state, &mut machine);
+        cpu.execute_instruction(&mut machine);
 
-        let pc = state.reg.pc();
+        let pc = cpu.registers().pc();
         // We fo the BIOS actions outside the emulation.
         if pc >= BIOS_BASE_ADDRESS {
             let offset = pc - BIOS_BASE_ADDRESS;
@@ -139,53 +140,57 @@ fn main() {
         if pc == 0x0007 {
             cpm_console.pool_keyboard();
 
-            let command = state.reg.get8(Reg8::C);
+            let command = cpu.registers().get8(Reg8::C);
             if call_trace /*&& command > 11*/ {
                 print!("\n[[BDOS command {}]]", command);
             }
+
+            let arg8 = cpu.registers().get8(Reg8::E);
+            let arg16 = cpu.registers().get16(Reg16::DE);
+            
 
             match command {
                 // See https://www.seasip.info/Cpm/bdos.html
                 // See http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch5.htm
                 1=> { // C_READ - Console input
-                    state.reg.set_a(cpm_console.read())
+                    cpu.registers().set_a(cpm_console.read())
                 }
                 2 => { // C_WRITE - Console output
-                    cpm_console.write(state.reg.get8(Reg8::E));
+                    cpm_console.write(arg8);
                 },
                 6 => { // C_RAWIO - Direct console I/O
-                    state.reg.set_a(cpm_console.raw_io(state.reg.get8(Reg8::E)))
+                    cpu.registers().set_a(cpm_console.raw_io(arg8))
                 }
                 9 => { // C_WRITESTR - Output string
-                    let address = state.reg.get16(Reg16::DE);
+                    let address = cpu.registers().get16(Reg16::DE);
                     cpm_console.write_string(address, &machine);
                 },
                 11 => { // C_STAT - Console status
-                    state.reg.set_a(cpm_console.status());
+                    cpu.registers().set_a(cpm_console.status());
                 },
                 12 => { // S_BDOSVER - Return version number
-                    state.reg.set16(Reg16::HL, get_version());
+                    cpu.registers().set_a(get_version() as u8);
+                    cpu.registers().set16(Reg16::HL, get_version());
                 },
                 13 => { // DRV_ALLRESET - Reset disk system
                     cpm_drive.reset();
                     cpm_file.reset();
                 },
                 14 => { // DRV_SET - Select disk
-                    let selected = state.reg.get8(Reg8::E);
-                    cpm_drive.select(selected);
+                    cpm_drive.select(arg8);
                 },
                 15 => { // F_OPEN - Open file
-                    let fcb = Fcb::new(state.reg.get16(Reg16::DE), &machine);
+                    let fcb = Fcb::new(arg16, &machine);
                     if call_trace {
                         print!("[[Open file {}]]", fcb.get_name());
                     }
                     let res = cpm_file.open(&fcb);
-                    state.reg.set_a(res);
+                    cpu.registers().set_a(res);
                 },
                 16 => { // F_CLOSE - Close file
-                    let fcb = Fcb::new(state.reg.get16(Reg16::DE), &machine);
+                    let fcb = Fcb::new(arg16, &machine);
                     let res = cpm_file.close(&fcb);
-                    state.reg.set_a(res);
+                    cpu.registers().set_a(res);
                 },
                 220 /*20*/ => { // F_READ - read next record
                     /*
@@ -201,28 +206,24 @@ fn main() {
                     nonzero value is returned if no data exist at the next record
                     position (for example, end-of-file occurs). 
                     */
-                    //let res = cpm_file.read(mem, Reg16::DE);
+                    //let res = cpm_file.read(mem, arg16);
                     //state.reg.set_a(res);
                     //TODO
-                    state.reg.set_a(0xff);
+                    cpu.registers().set_a(0xff);
                 },
                 24 => { // DRV_LOGINVEC - Return Log-in Vector
                     let vector = cpm_drive.get_log_in_vector();
-                    state.reg.set16(Reg16::HL, vector);
-                    state.reg.set_a(vector as u8);
+                    cpu.registers().set16(Reg16::HL, vector);
+                    cpu.registers().set_a(vector as u8);
                 },
                 25 => { // DRV_GET - Return current disk
-                    state.reg.set_a(cpm_drive.get_current());
+                    cpu.registers().set_a(cpm_drive.get_current());
                 },
                 26 => { // F_DMAOFF - Set DMA address
-                    let dma = state.reg.get16(Reg16::DE);
-                    if call_trace {
-                        print!("[Set dma {:04x}]", dma);
-                    }
-                    cpm_file.set_dma(dma);
+                    cpm_file.set_dma(arg16);
                 },
                 33 => { // F_READRAND - Random access read record
-                    let fcb = Fcb::new(state.reg.get16(Reg16::DE), &machine);
+                    let fcb = Fcb::new(arg16, &machine);
                     if call_trace {
                         print!("[Read record {:x} into {:04x}]",
                             fcb.get_random_record_number(), cpm_file.get_dma());
@@ -231,7 +232,7 @@ fn main() {
                     if res == 0 {
                         cpm_file.load_buffer(&mut machine);
                     }
-                    state.reg.set_a(res);
+                    cpu.registers().set_a(res);
                 }
 
                 _ => {

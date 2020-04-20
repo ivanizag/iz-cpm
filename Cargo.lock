@@ -52,9 +52,9 @@ dependencies = [
 
 [[package]]
 name = "iz80"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c380320a26fec890aea0b49a5edd10d5c3d86671c8baa8bdf7abbaa1e1f266eb"
+checksum = "7509ddc1ac89064b2a0c4c35a26c766e5b9e050ffa007431231dd5811b7d3310"
 
 [[package]]
 name = "libc"
