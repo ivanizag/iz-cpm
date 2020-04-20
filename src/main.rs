@@ -147,30 +147,30 @@ fn main() {
 
             let arg8 = cpu.registers().get8(Reg8::E);
             let arg16 = cpu.registers().get16(Reg16::DE);
-            
+
+            let mut res8: Option<u8> = None;
+            let mut res16: Option<u16> = None;
 
             match command {
                 // See https://www.seasip.info/Cpm/bdos.html
                 // See http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch5.htm
                 1=> { // C_READ - Console input
-                    cpu.registers().set_a(cpm_console.read())
+                    res8 = Some(cpm_console.read())
                 }
                 2 => { // C_WRITE - Console output
                     cpm_console.write(arg8);
                 },
                 6 => { // C_RAWIO - Direct console I/O
-                    cpu.registers().set_a(cpm_console.raw_io(arg8))
+                    res8 = Some(cpm_console.raw_io(arg8))
                 }
                 9 => { // C_WRITESTR - Output string
-                    let address = cpu.registers().get16(Reg16::DE);
-                    cpm_console.write_string(address, &machine);
+                    cpm_console.write_string(arg16, &machine);
                 },
                 11 => { // C_STAT - Console status
-                    cpu.registers().set_a(cpm_console.status());
+                    res8 = Some(cpm_console.status());
                 },
                 12 => { // S_BDOSVER - Return version number
-                    cpu.registers().set_a(get_version() as u8);
-                    cpu.registers().set16(Reg16::HL, get_version());
+                    res16 = Some(get_version());
                 },
                 13 => { // DRV_ALLRESET - Reset disk system
                     cpm_drive.reset();
@@ -184,13 +184,11 @@ fn main() {
                     if call_trace {
                         print!("[[Open file {}]]", fcb.get_name());
                     }
-                    let res = cpm_file.open(&fcb);
-                    cpu.registers().set_a(res);
+                    res8 = Some(cpm_file.open(&fcb));
                 },
                 16 => { // F_CLOSE - Close file
                     let fcb = Fcb::new(arg16, &machine);
-                    let res = cpm_file.close(&fcb);
-                    cpu.registers().set_a(res);
+                    res8 = Some(cpm_file.close(&fcb));
                 },
                 220 /*20*/ => { // F_READ - read next record
                     /*
@@ -209,15 +207,13 @@ fn main() {
                     //let res = cpm_file.read(mem, arg16);
                     //state.reg.set_a(res);
                     //TODO
-                    cpu.registers().set_a(0xff);
+                    res8 = Some(0xff);
                 },
                 24 => { // DRV_LOGINVEC - Return Log-in Vector
-                    let vector = cpm_drive.get_log_in_vector();
-                    cpu.registers().set16(Reg16::HL, vector);
-                    cpu.registers().set_a(vector as u8);
+                    res16 = Some(cpm_drive.get_log_in_vector());
                 },
                 25 => { // DRV_GET - Return current disk
-                    cpu.registers().set_a(cpm_drive.get_current());
+                    res8 = Some(cpm_drive.get_current());
                 },
                 26 => { // F_DMAOFF - Set DMA address
                     cpm_file.set_dma(arg16);
@@ -232,13 +228,28 @@ fn main() {
                     if res == 0 {
                         cpm_file.load_buffer(&mut machine);
                     }
-                    cpu.registers().set_a(res);
+                    res8 = Some(res);
                 }
 
                 _ => {
                     print!("BDOS command {} not implemented.\n", command);
                     panic!("BDOS command not implemented");
                 }
+            }
+
+            /*
+            Single byte values are returned in register A, with double
+            byte values returned in HL, a zero value is returned when the
+            function number is out of range. For reasons of compatibility,
+            register A = L and register B = H upon return in all cases.
+            */
+            if let Some(a) = res8 {
+                cpu.registers().set8(Reg8::A, a);
+                cpu.registers().set8(Reg8::L, a);
+            } else if let Some(hl) = res16 {
+                cpu.registers().set16(Reg16::HL, hl);
+                cpu.registers().set8(Reg8::A, hl as u8);
+                cpu.registers().set8(Reg8::B, (hl>>8) as u8);
             }
         }
     }
@@ -253,7 +264,7 @@ fn get_version() -> u16 {
     register L, with subsequent version 2 releases in the hexadecimal
     range 21, 22, through 2F. Using Function 12, for example, the
     user can write application programs that provide both sequential
-    and random access functions. 
+    and random access functions.
     */
     0x0022 // CP/M 2.2 for Z80
 }

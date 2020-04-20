@@ -1,5 +1,5 @@
 [package]
-name = "rcpm"
+name = "iz-cpm"
 version = "0.1.0"
 authors = ["Ivan Izaguirre <ivanizag@gmail.com>"]
 edition = "2018"
