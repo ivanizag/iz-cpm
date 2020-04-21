@@ -16,7 +16,26 @@ use self::cpm_file::*;
 use self::cpm_machine::*;
 use self::fcb::*;
 
-const BIOS_BASE_ADDRESS: u16 = 0xfa00;
+const BIOS_BASE_ADDRESS: u16 = 0xff00;
+const BDOS_BASE_ADDRESS: u16 = 0xfe80;
+
+const BIOS_COMMAND_NAMES: [&'static str; 16] = [
+    "BOOT", "WBOOT", "CONST", "CONIN", "CONOUT",
+    "LIST", "PUNCH", "READER", "SELDSK", "SETTRK",
+    "SETSEC", "SETDMA", "READ", "WRITE", "LISTST",
+    "SECTRAN"];
+
+const BDOS_COMMAND_NAMES: [&'static str; 38] = [
+    "P_TERMCPM", "C_READ", "C_WRITE", "A_READ", "A_WRITE",
+    "L_WRITE", "C_RAWIO", "A_STATIN", "A_STATOUT", "C_WRITESTR",
+    "C_READSTR", "C_STAT", "S_BDOSVER", "DRV_ALLRESET", "DRV_SET",
+    "F_OPEN", "F_CLOSE", "F_SFIRST", "F_SNEXT", "F_DELETE",
+    "F_READ", "F_WRITE", "F_MAKE", "F_RENAME", "DRV_LOGINVEC",
+    "DRV_GET", "F_DMAOFF", "DRV_ALLOCVEC", "DRV_SETRO", "DRV_ROVEC",
+    "F_ATTRIB", "DRV_DPB", "F_USERNUM", "F_READRAND", "F_WRITERAND",
+    "F_SIZE", "F_RANDREC", "DRV_RESET"]; 
+
+
 
 fn main() {
     // Parse arguments
@@ -37,6 +56,7 @@ fn main() {
     let filename = matches.value_of("INPUT").unwrap();
     let call_trace = matches.is_present("call_trace");
     let cpu_trace = matches.is_present("cpu_trace");
+    let call_trace_skip_console = true;
     
     // Init device
     let mut machine = CpmMachine::new();
@@ -60,27 +80,22 @@ fn main() {
     .org $0
         jp BIOS_BASE_ADDRESS + 3
     */
-    let warm_start = BIOS_BASE_ADDRESS + 3; // Warm start is the second entrypoin in BIOS*/ 
     machine.poke(0, 0xc3 /* jp nnnn */);
-    machine.poke(1, warm_start as u8);
-    machine.poke(2, (warm_start >> 8) as u8);
+    machine.poke16(1, BIOS_BASE_ADDRESS + 3); // Warm start is the second entrypoin in BIOS
     // We put ret on all the addresses
     for i in 0..0x80 { // 0x34 should be enough to cover the 17 entry points.
         machine.poke(BIOS_BASE_ADDRESS + i, 0xc9 /*ret*/);
     }
 
     /*
-    Setup BDOS: System call 5
+    Setup BDOS location and entry point
     .org $5
-        out ($0), a
-        ret
+        jp BDOS_BASE_ADDRESS
     */
-    let code = [0xD3, 0x00, 0xC9];
-    for i in 0..code.len() {
-        machine.poke(5 + i as u16, code[i]);
-    }
-
-
+    machine.poke(5, 0xc3 /* jp nnnn */);
+    machine.poke16(6, BDOS_BASE_ADDRESS);
+    // We put ret on that address
+    machine.poke(BDOS_BASE_ADDRESS, 0xc9 /*ret*/);
 
     cpu.registers().set_pc(0x100);
     cpu.set_trace(cpu_trace);
@@ -98,7 +113,12 @@ fn main() {
                 */
                 let command = offset / 3;
                 if call_trace {
-                    print!("\n[[BIOS function {}]]", command);
+                    let name = if command < BIOS_COMMAND_NAMES.len() as u16 {
+                        BIOS_COMMAND_NAMES[command as usize]
+                    } else {
+                        "unknown"
+                    };
+                    print!("\n[[BIOS command {}: {}]]", command, name);
                 }
                 /*
                 See: http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch6.htm#Table_6-5
@@ -152,17 +172,27 @@ fn main() {
             }
         }
 
-        // We do the BDOS actions outside the emulation just before the RTS
-        if pc == 0x0007 {
-            cpm_console.pool_keyboard();
+        if pc == BDOS_BASE_ADDRESS - 1 {
+            // Guard to detect code reaching BDOS (usually NOPs)
+            panic!("Executing into BDOS area");
 
-            let command = cpu.registers().get8(Reg8::C);
-            if call_trace /*&& command > 11*/ {
-                print!("\n[[BDOS command {}]]", command);
-            }
+        }
+
+        if pc == BDOS_BASE_ADDRESS {
+            cpm_console.pool_keyboard();
 
             let arg8 = cpu.registers().get8(Reg8::E);
             let arg16 = cpu.registers().get16(Reg16::DE);
+
+            let command = cpu.registers().get8(Reg8::C);
+            if call_trace && !(call_trace_skip_console && command <= 12) {
+                let name = if command < BDOS_COMMAND_NAMES.len() as u8 {
+                    BDOS_COMMAND_NAMES[command as usize]
+                } else {
+                    "unknown"
+                };
+                print!("\n[[BDOS command {}: {}]]", command, name);
+            }
 
             let mut res8: Option<u8> = None;
             let mut res16: Option<u16> = None;
@@ -199,43 +229,44 @@ fn main() {
                     cpm_drive.select(arg8);
                 },
                 15 => { // F_OPEN - Open file
-                    let fcb = Fcb::new(arg16, &machine);
+                    let mut fcb = Fcb::new(arg16, &mut machine);
                     if call_trace {
                         print!("[[Open file {}]]", fcb.get_name());
                     }
-                    res8 = Some(cpm_file.open(&fcb));
+                    res8 = Some(cpm_file.open(&mut fcb));
                 },
                 16 => { // F_CLOSE - Close file
-                    let fcb = Fcb::new(arg16, &machine);
+                    let fcb = Fcb::new(arg16, &mut machine);
                     res8 = Some(cpm_file.close(&fcb));
                 },
                 19 => { // F_DELETE - Delete file
-                    let fcb = Fcb::new(arg16, &machine);
+                    let fcb = Fcb::new(arg16, &mut machine);
                     if call_trace {
                         print!("[[Delete file {}]]", fcb.get_name());
                     }
                     // TODO
                     res8 = Some(0);
                 }
-                220 /*20*/ => { // F_READ - read next record
-                    /*
-                    Given that the FCB addressed by DE has been activated through an
-                    Open or Make function, the Read Sequential function reads the
-                    next 128-byte record from the file into memory at the current DMA
-                    address. The record is read from position cr of the extent, and
-                    the cr field is automatically incremented to the next record
-                    position. If the cr field overflows, the next logical extent is
-                    automatically opened and the cr field is reset to zero in
-                    preparation for the next read operation. The value 00H is returned
-                    in the A register if the read operation was successful, while a
-                    nonzero value is returned if no data exist at the next record
-                    position (for example, end-of-file occurs). 
-                    */
-                    //let res = cpm_file.read(mem, arg16);
-                    //state.reg.set_a(res);
-                    //TODO
-                    res8 = Some(0xff);
+                20 => { // F_READ - read next record
+                    let mut fcb = Fcb::new(arg16, &mut machine);
+                    if call_trace {
+                        print!("[Read record {:x} into {:04x}]",
+                            fcb.get_sequential_record_number(), cpm_file.get_dma());
+                    }
+                    let res = cpm_file.read(&mut fcb);
+                    if res == 0 {
+                        cpm_file.load_buffer(&mut machine);
+                    }
+                    res8 = Some(res);
                 },
+                22 => { // F_MAKE - Create file
+                    let fcb = Fcb::new(arg16, &mut machine);
+                    if call_trace {
+                        print!("[[Create file {}]]", fcb.get_name());
+                    }
+                    // TODO
+                    res8 = Some(0);
+                }
                 24 => { // DRV_LOGINVEC - Return Log-in Vector
                     res16 = Some(cpm_drive.get_log_in_vector());
                 },
@@ -245,10 +276,13 @@ fn main() {
                 26 => { // F_DMAOFF - Set DMA address
                     cpm_file.set_dma(arg16);
                 },
+                32 => { // F_USERNUM - Get/set user number
+                    res8 = Some(cpm_file.get_set_user_number(arg8));
+                }
                 33 => { // F_READRAND - Random access read record
-                    let fcb = Fcb::new(arg16, &machine);
+                    let fcb = Fcb::new(arg16, &mut machine);
                     if call_trace {
-                        print!("[Read record {:x} into {:04x}]",
+                        print!("[Read random record {:x} into {:04x}]",
                             fcb.get_random_record_number(), cpm_file.get_dma());
                     }
                     let res = cpm_file.read_rand(&fcb);
@@ -273,10 +307,16 @@ fn main() {
             if let Some(a) = res8 {
                 cpu.registers().set8(Reg8::A, a);
                 cpu.registers().set8(Reg8::L, a);
+                if call_trace && !(call_trace_skip_console && command <= 12) {
+                    print!("[[=>{:02x}]]", a);
+                }
             } else if let Some(hl) = res16 {
                 cpu.registers().set16(Reg16::HL, hl);
                 cpu.registers().set8(Reg8::A, hl as u8);
                 cpu.registers().set8(Reg8::B, (hl>>8) as u8);
+                if call_trace && !(call_trace_skip_console && command <= 12) {
+                    print!("[[=>{:02x}]]", hl);
+                }
             }
         }
     }

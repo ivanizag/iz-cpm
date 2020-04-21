@@ -39,8 +39,8 @@ impl CpmDrive {
         default drive. Drive code values between 1 and 16 ignore the
         selected default drive and directly reference drives A through P.
         */
-        self.current = selected;
-        self.selected_bitmap &= 1<<selected;
+        self.current = selected & 0x0f;
+        self.selected_bitmap &= 1<<self.current;
     }
 
     pub fn get_current(&self) -> u8 {

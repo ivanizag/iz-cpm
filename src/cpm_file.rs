@@ -13,6 +13,7 @@ const DEFAULT_DMA: u16 = 0x0080;
 const RECORD_SIZE: usize = 128;
 
 pub struct CpmFile {
+    user: u8,
     dma: u16,
     buffer: [u8; RECORD_SIZE],
     file: Option<fs::File> // TODO: support more that one file opened
@@ -21,6 +22,7 @@ pub struct CpmFile {
 impl CpmFile {
     pub fn new() -> CpmFile {
         CpmFile {
+            user: 0,
             dma: DEFAULT_DMA,
             buffer: [0; RECORD_SIZE],
             file: None
@@ -65,7 +67,7 @@ impl CpmFile {
         self.dma
     }
 
-    pub fn open(&mut self, fcb: &Fcb) -> u8 {
+    pub fn open(&mut self, fcb: &mut Fcb) -> u8 {
         /*
         The Open File operation is used to activate a file that currently
         exists in the disk directory for the currently active user number.
@@ -96,6 +98,7 @@ impl CpmFile {
             Ok(path) => {
                 let file = fs::File::open(path).unwrap();
                 self.file = Some(file);
+                fcb.init();
                 0
             }
         }
@@ -123,6 +126,25 @@ impl CpmFile {
                 0
             }
         }
+    }
+
+    pub fn read(&mut self, fcb: &mut Fcb) -> u8 {
+        /*
+        Given that the FCB addressed by DE has been activated through an
+        Open or Make function, the Read Sequential function reads the
+        next 128-byte record from the file into memory at the current DMA
+        address. The record is read from position cr of the extent, and
+        the cr field is automatically incremented to the next record
+        position. If the cr field overflows, the next logical extent is
+        automatically opened and the cr field is reset to zero in
+        preparation for the next read operation. The value 00H is returned
+        in the A register if the read operation was successful, while a
+        nonzero value is returned if no data exist at the next record
+        position (for example, end-of-file occurs). 
+        */
+        let record = fcb.get_sequential_record_number();
+        fcb.inc_current_record();
+        self.read_record_in_buffer(record as u16)
     }
 
     pub fn read_rand(&mut self, fcb: &Fcb) -> u8 {
@@ -187,14 +209,18 @@ impl CpmFile {
         return codes can be treated as missing data, with zero return
         codes indicating operation complete. 
         */
+        let record = fcb.get_random_record_number();
+        if record > 65535 {
+            return 6; //06	seek Past Physical end of disk
+        }
+
+        self.read_record_in_buffer(record as u16)
+    }
+
+    fn read_record_in_buffer(&mut self, record: u16) -> u8 {
         match &mut self.file {
             None => 4, //04 file is not opened
             Some(os_file) => {
-                let record = fcb.get_random_record_number();
-                if record > 65535 {
-                    return 6; //06	seek Past Physical end of disk
-                }
-
                 let file_offset = record as u64 * RECORD_SIZE as u64;
                 let res = os_file.seek(io::SeekFrom::Start(file_offset));
                 if let Err(_) = res {
@@ -237,6 +263,21 @@ impl CpmFile {
             }
         }
         Err(io::Error::new(io::ErrorKind::NotFound, ""))
+    }
+
+    pub fn get_set_user_number(&mut self, user: u8) -> u8 {
+        /*
+        An application program can change or interrogate the currently
+        active user number by calling Function 32. If register E = 0FFH,
+        the value of the current user number is returned in register A,
+        where the value is in the range of 0 to 15. If register E is
+        not 0FFH, the current user number is changed to the value of E,
+        modulo 16.
+        */
+        if user != 0xff {
+            self.user = user &0x0f;
+        }
+        self.user
     }
 }
 
