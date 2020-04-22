@@ -16,8 +16,12 @@ use self::cpm_file::*;
 use self::cpm_machine::*;
 use self::fcb::*;
 
-const BIOS_BASE_ADDRESS: u16 = 0xff00;
-const BDOS_BASE_ADDRESS: u16 = 0xfe80;
+const SYSTEM_PARAMS_ADDRESS: u16 = 0x0080;
+const TPA_BASE_ADDRESS:      u16 = 0x0100;
+//const CCP_BASE_ADDRESS:      u16 = 0xf000;
+const TPA_STACK_ADDRESS:     u16 = 0xf080; // 16 bytes for an 8 level stack
+const BIOS_BASE_ADDRESS:     u16 = 0xff00;
+const BDOS_BASE_ADDRESS:     u16 = 0xfe80;
 
 const BIOS_COMMAND_NAMES: [&'static str; 16] = [
     "BOOT", "WBOOT", "CONST", "CONIN", "CONOUT",
@@ -40,10 +44,14 @@ const BDOS_COMMAND_NAMES: [&'static str; 38] = [
 fn main() {
     // Parse arguments
     let matches = App::new("Z80 CP/M 2.2 emulator")
-        .arg(Arg::with_name("INPUT")
+        .arg(Arg::with_name("CMD")
             .help("The z80 image to run")
             .required(true)
             .index(1))
+            .arg(Arg::with_name("ARGS")
+            .help("Parameters for the given command")
+            .required(false)
+            .index(2))
         .arg(Arg::with_name("call_trace")
             .short("t")
             .long("call-trace")
@@ -53,10 +61,15 @@ fn main() {
             .long("cpu-trace")
             .help("Trace BDOS and BIOS calls"))
         .get_matches();
-    let filename = matches.value_of("INPUT").unwrap();
+    let filename = matches.value_of("CMD").unwrap();
+    let params = matches.value_of("ARGS");
     let call_trace = matches.is_present("call_trace");
     let cpu_trace = matches.is_present("cpu_trace");
     let call_trace_skip_console = true;
+
+    if let Some(p) = params {
+        println!("Paramenters: <{}>", p);
+    }
     
     // Init device
     let mut machine = CpmMachine::new();
@@ -68,12 +81,55 @@ fn main() {
     let mut cpm_file = CpmFile::new();
 
     // Load program
+    /*
+    If the file is found, it is assumed to be a memory image of a program that
+    executes in the TPA and thus implicity originates at TBASE in memory. The
+    CCP loads the COM file from the disk into memory starting at TBASE and can
+    extend up to CBASE. 
+    */
     let mut file = File::open(filename).unwrap();
-    let mut buf = [0u8;65536];
+    let mut buf = [0u8;65536 - (TPA_BASE_ADDRESS as usize)];
     let size = file.read(&mut buf).unwrap();
     for i in 0..size {
-        machine.poke(0x100 + i as u16, buf[i]);
+        machine.poke(TPA_BASE_ADDRESS + i as u16, buf[i]);
     }
+
+    // Copy parameters
+    /*
+    As an added convenience, the default buffer area at location BOOT+0080H is
+    initialized to the command line tail typed by the operator following the
+    program name. The first position contains the number of characters, with
+    the characters themselves following the character count. The characters are
+    translated to upper-case ASCII with uninitialized memory following the last
+    valid character. 
+    */
+    match params {
+        None => machine.poke(SYSTEM_PARAMS_ADDRESS, 0),
+        Some(p) => {
+            let mut len = p.len();
+            if len > 0x7E {
+                len = 0x7E; // Max 0x7E chars for parameters
+            }
+            machine.poke(SYSTEM_PARAMS_ADDRESS, (len + 1) as u8);
+            machine.poke(SYSTEM_PARAMS_ADDRESS, ' ' as u8);
+            let p_bytes = p.as_bytes();
+            for i in 0..len {
+                machine.poke(SYSTEM_PARAMS_ADDRESS + (i as u16) + 2, p_bytes[i]);
+            }
+        }
+    }
+    /*
+    Upon entry to a transient program, the CCP leaves the stack pointer set to
+    an eight-level stack area with the CCP return address pushed onto the stack,
+    leaving seven levels before overflow occurs. 
+    */
+    let mut sp = TPA_STACK_ADDRESS;
+    // Push 0x0000
+    machine.poke(sp, (0x0000 >> 8) as u8);
+    sp -= 1;
+    machine.poke(sp, 0x0000 as u8);
+    sp -= 1;
+    cpu.registers().set16(Reg16::SP, sp);
 
     /*
     Setup BIOS location and entry points
@@ -151,10 +207,22 @@ fn main() {
                         break;
                     }
                     2 => { // CONST: Check for console ready
+                        /*
+                        You should sample the status of the currently assigned
+                        console device and return 0FFH in register A if a
+                        character is ready to read and 00H in register A if no
+                        console characters are ready. 
+                        */
                         let res8 = cpm_console.status();
                         cpu.registers().set_a(res8);
                     }
                     3 => { // CONIN: Console Input
+                        /*
+                        The next console character is read into register A, and
+                        the parity bit is set, high-order bit, to zero. If no
+                        console character is ready, wait until a character is
+                        typed before returning. 
+                        */
                         let res8 = cpm_console.read();
                         cpu.registers().set_a(res8);
                     }

@@ -1,0 +1,2125 @@
+Paramenters: <AA.ASM>
+==== 0100: 31 00 02  LD SP, 0200h
+PC(0103) AF(ffff) BC(0000) DE(0000) HL(0000) SP(0200) IX(0000) IY(0000) Flags(11111111)
+==== 0103: 2a 06 00  LD HL, (0006h)
+PC(0106) AF(ffff) BC(0000) DE(0000) HL(fe80) SP(0200) IX(0000) IY(0000) Flags(11111111)
+==== 0106: 22 cd 01  LD (01cdh), HL
+PC(0109) AF(ffff) BC(0000) DE(0000) HL(fe80) SP(0200) IX(0000) IY(0000) Flags(11111111)
+==== 0109: c3 00 02  JP 0200h
+PC(0200) AF(ffff) BC(0000) DE(0000) HL(fe80) SP(0200) IX(0000) IY(0000) Flags(11111111)
+==== 0200: c3 e0 0c  JP 0ce0h
+PC(0ce0) AF(ffff) BC(0000) DE(0000) HL(fe80) SP(0200) IX(0000) IY(0000) Flags(11111111)
+==== 0ce0: 21 a0 0f  LD HL, 0fa0h
+PC(0ce3) AF(ffff) BC(0000) DE(0000) HL(0fa0) SP(0200) IX(0000) IY(0000) Flags(11111111)
+==== 0ce3: cd bc 0c  CALL 0cbch
+PC(0cbc) AF(ffff) BC(0000) DE(0000) HL(0fa0) SP(01fe) IX(0000) IY(0000) Flags(11111111)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(43ff) BC(0000) DE(0000) HL(0fa0) SP(01fe) IX(0000) IY(0000) Flags(11111111)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(43ff) BC(0000) DE(0000) HL(0fa0) SP(01fc) IX(0000) IY(0000) Flags(11111111)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(43ff) BC(0000) DE(0000) HL(0fa0) SP(01fa) IX(0000) IY(0000) Flags(11111111)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(43ff) BC(0000) DE(0000) HL(0fa0) SP(01f8) IX(0000) IY(0000) Flags(11111111)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(43ff) BC(0000) DE(0000) HL(0fa0) SP(01f6) IX(0000) IY(0000) Flags(11111111)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(43ff) BC(0002) DE(0000) HL(0fa0) SP(01f6) IX(0000) IY(0000) Flags(11111111)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(43ff) BC(0002) DE(0043) HL(0fa0) SP(01f6) IX(0000) IY(0000) Flags(11111111)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(43ff) BC(0002) DE(0043) HL(0fa0) SP(01f4) IX(0000) IY(0000) Flags(11111111)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(43ff) BC(0002) DE(0043) HL(0fa0) SP(01f4) IX(0000) IY(0000) Flags(11111111)
+C==== fe80: c9 00 00  RET
+PC(0ee7) AF(43ff) BC(0002) DE(0043) HL(0fa0) SP(01f6) IX(0000) IY(0000) Flags(11111111)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(43ff) BC(0002) DE(0043) HL(0fa0) SP(01f8) IX(0000) IY(0000) Flags(11111111)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(43ff) BC(0002) DE(0000) HL(0fa0) SP(01fa) IX(0000) IY(0000) Flags(11111111)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(43ff) BC(0000) DE(0000) HL(0fa0) SP(01fc) IX(0000) IY(0000) Flags(11111111)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(43ff) BC(0000) DE(0000) HL(0fa0) SP(01fe) IX(0000) IY(0000) Flags(11111111)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(43ff) BC(0000) DE(0000) HL(0fa0) SP(01fe) IX(0000) IY(0000) Flags(11111111)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(43ff) BC(0000) DE(0000) HL(0fa1) SP(01fe) IX(0000) IY(0000) Flags(11111111)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(431a) BC(0000) DE(0000) HL(0fa1) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(431a) BC(0000) DE(0000) HL(0fa1) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(501a) BC(0000) DE(0000) HL(0fa1) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(501a) BC(0000) DE(0000) HL(0fa1) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(501a) BC(0000) DE(0000) HL(0fa1) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(501a) BC(0000) DE(0000) HL(0fa1) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(501a) BC(0000) DE(0000) HL(0fa1) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(501a) BC(0002) DE(0000) HL(0fa1) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(501a) BC(0002) DE(0050) HL(0fa1) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(501a) BC(0002) DE(0050) HL(0fa1) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(501a) BC(0002) DE(0050) HL(0fa1) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+P==== fe80: c9 00 00  RET
+PC(0ee7) AF(501a) BC(0002) DE(0050) HL(0fa1) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(501a) BC(0002) DE(0050) HL(0fa1) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(501a) BC(0002) DE(0000) HL(0fa1) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(501a) BC(0000) DE(0000) HL(0fa1) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(501a) BC(0000) DE(0000) HL(0fa1) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(501a) BC(0000) DE(0000) HL(0fa1) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(501a) BC(0000) DE(0000) HL(0fa2) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(501a) BC(0000) DE(0000) HL(0fa2) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(501a) BC(0000) DE(0000) HL(0fa2) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(2f1a) BC(0000) DE(0000) HL(0fa2) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(2f1a) BC(0000) DE(0000) HL(0fa2) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(2f1a) BC(0000) DE(0000) HL(0fa2) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(2f1a) BC(0000) DE(0000) HL(0fa2) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(2f1a) BC(0000) DE(0000) HL(0fa2) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(2f1a) BC(0002) DE(0000) HL(0fa2) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(2f1a) BC(0002) DE(002f) HL(0fa2) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(2f1a) BC(0002) DE(002f) HL(0fa2) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(2f1a) BC(0002) DE(002f) HL(0fa2) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+/==== fe80: c9 00 00  RET
+PC(0ee7) AF(2f1a) BC(0002) DE(002f) HL(0fa2) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(2f1a) BC(0002) DE(002f) HL(0fa2) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(2f1a) BC(0002) DE(0000) HL(0fa2) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(2f1a) BC(0000) DE(0000) HL(0fa2) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(2f1a) BC(0000) DE(0000) HL(0fa2) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(2f1a) BC(0000) DE(0000) HL(0fa2) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(2f1a) BC(0000) DE(0000) HL(0fa3) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(2f0a) BC(0000) DE(0000) HL(0fa3) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(2f0a) BC(0000) DE(0000) HL(0fa3) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(4d0a) BC(0000) DE(0000) HL(0fa3) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(4d0a) BC(0000) DE(0000) HL(0fa3) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(4d0a) BC(0000) DE(0000) HL(0fa3) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(4d0a) BC(0000) DE(0000) HL(0fa3) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(4d0a) BC(0000) DE(0000) HL(0fa3) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(4d0a) BC(0002) DE(0000) HL(0fa3) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(4d0a) BC(0002) DE(004d) HL(0fa3) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(4d0a) BC(0002) DE(004d) HL(0fa3) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(4d0a) BC(0002) DE(004d) HL(0fa3) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+M==== fe80: c9 00 00  RET
+PC(0ee7) AF(4d0a) BC(0002) DE(004d) HL(0fa3) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(4d0a) BC(0002) DE(004d) HL(0fa3) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(4d0a) BC(0002) DE(0000) HL(0fa3) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(4d0a) BC(0000) DE(0000) HL(0fa3) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(4d0a) BC(0000) DE(0000) HL(0fa3) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(4d0a) BC(0000) DE(0000) HL(0fa3) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(4d0a) BC(0000) DE(0000) HL(0fa4) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(4d0a) BC(0000) DE(0000) HL(0fa4) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(4d0a) BC(0000) DE(0000) HL(0fa4) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(200a) BC(0000) DE(0000) HL(0fa4) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(200a) BC(0000) DE(0000) HL(0fa4) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(200a) BC(0000) DE(0000) HL(0fa4) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(200a) BC(0000) DE(0000) HL(0fa4) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(200a) BC(0000) DE(0000) HL(0fa4) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(200a) BC(0002) DE(0000) HL(0fa4) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(200a) BC(0002) DE(0020) HL(0fa4) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(200a) BC(0002) DE(0020) HL(0fa4) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(200a) BC(0002) DE(0020) HL(0fa4) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+ ==== fe80: c9 00 00  RET
+PC(0ee7) AF(200a) BC(0002) DE(0020) HL(0fa4) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(200a) BC(0002) DE(0020) HL(0fa4) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(200a) BC(0002) DE(0000) HL(0fa4) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(200a) BC(0000) DE(0000) HL(0fa4) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(200a) BC(0000) DE(0000) HL(0fa4) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(200a) BC(0000) DE(0000) HL(0fa4) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(200a) BC(0000) DE(0000) HL(0fa5) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(201a) BC(0000) DE(0000) HL(0fa5) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(201a) BC(0000) DE(0000) HL(0fa5) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(411a) BC(0000) DE(0000) HL(0fa5) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(411a) BC(0000) DE(0000) HL(0fa5) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(411a) BC(0000) DE(0000) HL(0fa5) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(411a) BC(0000) DE(0000) HL(0fa5) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(411a) BC(0000) DE(0000) HL(0fa5) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(411a) BC(0002) DE(0000) HL(0fa5) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(411a) BC(0002) DE(0041) HL(0fa5) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(411a) BC(0002) DE(0041) HL(0fa5) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(411a) BC(0002) DE(0041) HL(0fa5) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+A==== fe80: c9 00 00  RET
+PC(0ee7) AF(411a) BC(0002) DE(0041) HL(0fa5) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(411a) BC(0002) DE(0041) HL(0fa5) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(411a) BC(0002) DE(0000) HL(0fa5) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(411a) BC(0000) DE(0000) HL(0fa5) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(411a) BC(0000) DE(0000) HL(0fa5) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(411a) BC(0000) DE(0000) HL(0fa5) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(411a) BC(0000) DE(0000) HL(0fa6) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(411a) BC(0000) DE(0000) HL(0fa6) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(411a) BC(0000) DE(0000) HL(0fa6) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(531a) BC(0000) DE(0000) HL(0fa6) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(531a) BC(0000) DE(0000) HL(0fa6) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(531a) BC(0000) DE(0000) HL(0fa6) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(531a) BC(0000) DE(0000) HL(0fa6) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(531a) BC(0000) DE(0000) HL(0fa6) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(531a) BC(0002) DE(0000) HL(0fa6) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(531a) BC(0002) DE(0053) HL(0fa6) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(531a) BC(0002) DE(0053) HL(0fa6) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(531a) BC(0002) DE(0053) HL(0fa6) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+S==== fe80: c9 00 00  RET
+PC(0ee7) AF(531a) BC(0002) DE(0053) HL(0fa6) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(531a) BC(0002) DE(0053) HL(0fa6) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(531a) BC(0002) DE(0000) HL(0fa6) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(531a) BC(0000) DE(0000) HL(0fa6) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(531a) BC(0000) DE(0000) HL(0fa6) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(531a) BC(0000) DE(0000) HL(0fa6) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(531a) BC(0000) DE(0000) HL(0fa7) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(531a) BC(0000) DE(0000) HL(0fa7) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(531a) BC(0000) DE(0000) HL(0fa7) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(531a) BC(0000) DE(0000) HL(0fa7) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(531a) BC(0000) DE(0000) HL(0fa7) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(531a) BC(0000) DE(0000) HL(0fa7) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(531a) BC(0000) DE(0000) HL(0fa7) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(531a) BC(0000) DE(0000) HL(0fa7) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(531a) BC(0002) DE(0000) HL(0fa7) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(531a) BC(0002) DE(0053) HL(0fa7) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(531a) BC(0002) DE(0053) HL(0fa7) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(531a) BC(0002) DE(0053) HL(0fa7) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+S==== fe80: c9 00 00  RET
+PC(0ee7) AF(531a) BC(0002) DE(0053) HL(0fa7) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(531a) BC(0002) DE(0053) HL(0fa7) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(531a) BC(0002) DE(0000) HL(0fa7) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(531a) BC(0000) DE(0000) HL(0fa7) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(531a) BC(0000) DE(0000) HL(0fa7) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(531a) BC(0000) DE(0000) HL(0fa7) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(531a) BC(0000) DE(0000) HL(0fa8) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(531a) BC(0000) DE(0000) HL(0fa8) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(531a) BC(0000) DE(0000) HL(0fa8) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(451a) BC(0000) DE(0000) HL(0fa8) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(451a) BC(0000) DE(0000) HL(0fa8) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(451a) BC(0000) DE(0000) HL(0fa8) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(451a) BC(0000) DE(0000) HL(0fa8) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(451a) BC(0000) DE(0000) HL(0fa8) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(451a) BC(0002) DE(0000) HL(0fa8) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(451a) BC(0002) DE(0045) HL(0fa8) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(451a) BC(0002) DE(0045) HL(0fa8) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(451a) BC(0002) DE(0045) HL(0fa8) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+E==== fe80: c9 00 00  RET
+PC(0ee7) AF(451a) BC(0002) DE(0045) HL(0fa8) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(451a) BC(0002) DE(0045) HL(0fa8) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(451a) BC(0002) DE(0000) HL(0fa8) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(451a) BC(0000) DE(0000) HL(0fa8) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(451a) BC(0000) DE(0000) HL(0fa8) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(451a) BC(0000) DE(0000) HL(0fa8) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(451a) BC(0000) DE(0000) HL(0fa9) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(451a) BC(0000) DE(0000) HL(0fa9) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(451a) BC(0000) DE(0000) HL(0fa9) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(4d1a) BC(0000) DE(0000) HL(0fa9) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(4d1a) BC(0000) DE(0000) HL(0fa9) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(4d1a) BC(0000) DE(0000) HL(0fa9) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(4d1a) BC(0000) DE(0000) HL(0fa9) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(4d1a) BC(0000) DE(0000) HL(0fa9) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(4d1a) BC(0002) DE(0000) HL(0fa9) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(4d1a) BC(0002) DE(004d) HL(0fa9) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(4d1a) BC(0002) DE(004d) HL(0fa9) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(4d1a) BC(0002) DE(004d) HL(0fa9) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+M==== fe80: c9 00 00  RET
+PC(0ee7) AF(4d1a) BC(0002) DE(004d) HL(0fa9) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(4d1a) BC(0002) DE(004d) HL(0fa9) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(4d1a) BC(0002) DE(0000) HL(0fa9) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(4d1a) BC(0000) DE(0000) HL(0fa9) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(4d1a) BC(0000) DE(0000) HL(0fa9) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(4d1a) BC(0000) DE(0000) HL(0fa9) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(4d1a) BC(0000) DE(0000) HL(0faa) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(4d0a) BC(0000) DE(0000) HL(0faa) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(4d0a) BC(0000) DE(0000) HL(0faa) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(420a) BC(0000) DE(0000) HL(0faa) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(420a) BC(0000) DE(0000) HL(0faa) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(420a) BC(0000) DE(0000) HL(0faa) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(420a) BC(0000) DE(0000) HL(0faa) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(420a) BC(0000) DE(0000) HL(0faa) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(420a) BC(0002) DE(0000) HL(0faa) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(420a) BC(0002) DE(0042) HL(0faa) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(420a) BC(0002) DE(0042) HL(0faa) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(420a) BC(0002) DE(0042) HL(0faa) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+B==== fe80: c9 00 00  RET
+PC(0ee7) AF(420a) BC(0002) DE(0042) HL(0faa) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(420a) BC(0002) DE(0042) HL(0faa) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(420a) BC(0002) DE(0000) HL(0faa) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(420a) BC(0000) DE(0000) HL(0faa) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(420a) BC(0000) DE(0000) HL(0faa) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(420a) BC(0000) DE(0000) HL(0faa) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(420a) BC(0000) DE(0000) HL(0fab) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(421a) BC(0000) DE(0000) HL(0fab) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(421a) BC(0000) DE(0000) HL(0fab) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(4c1a) BC(0000) DE(0000) HL(0fab) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(4c1a) BC(0000) DE(0000) HL(0fab) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(4c1a) BC(0000) DE(0000) HL(0fab) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(4c1a) BC(0000) DE(0000) HL(0fab) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(4c1a) BC(0000) DE(0000) HL(0fab) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(4c1a) BC(0002) DE(0000) HL(0fab) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(4c1a) BC(0002) DE(004c) HL(0fab) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(4c1a) BC(0002) DE(004c) HL(0fab) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(4c1a) BC(0002) DE(004c) HL(0fab) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+L==== fe80: c9 00 00  RET
+PC(0ee7) AF(4c1a) BC(0002) DE(004c) HL(0fab) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(4c1a) BC(0002) DE(004c) HL(0fab) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(4c1a) BC(0002) DE(0000) HL(0fab) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(4c1a) BC(0000) DE(0000) HL(0fab) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(4c1a) BC(0000) DE(0000) HL(0fab) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(4c1a) BC(0000) DE(0000) HL(0fab) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(4c1a) BC(0000) DE(0000) HL(0fac) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(4c1a) BC(0000) DE(0000) HL(0fac) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(4c1a) BC(0000) DE(0000) HL(0fac) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(451a) BC(0000) DE(0000) HL(0fac) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(451a) BC(0000) DE(0000) HL(0fac) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(451a) BC(0000) DE(0000) HL(0fac) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(451a) BC(0000) DE(0000) HL(0fac) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(451a) BC(0000) DE(0000) HL(0fac) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(451a) BC(0002) DE(0000) HL(0fac) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(451a) BC(0002) DE(0045) HL(0fac) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(451a) BC(0002) DE(0045) HL(0fac) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(451a) BC(0002) DE(0045) HL(0fac) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+E==== fe80: c9 00 00  RET
+PC(0ee7) AF(451a) BC(0002) DE(0045) HL(0fac) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(451a) BC(0002) DE(0045) HL(0fac) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(451a) BC(0002) DE(0000) HL(0fac) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(451a) BC(0000) DE(0000) HL(0fac) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(451a) BC(0000) DE(0000) HL(0fac) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(451a) BC(0000) DE(0000) HL(0fac) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(451a) BC(0000) DE(0000) HL(0fad) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(451a) BC(0000) DE(0000) HL(0fad) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(451a) BC(0000) DE(0000) HL(0fad) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(521a) BC(0000) DE(0000) HL(0fad) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(521a) BC(0000) DE(0000) HL(0fad) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(521a) BC(0000) DE(0000) HL(0fad) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(521a) BC(0000) DE(0000) HL(0fad) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(521a) BC(0000) DE(0000) HL(0fad) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(521a) BC(0002) DE(0000) HL(0fad) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(521a) BC(0002) DE(0052) HL(0fad) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(521a) BC(0002) DE(0052) HL(0fad) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(521a) BC(0002) DE(0052) HL(0fad) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+R==== fe80: c9 00 00  RET
+PC(0ee7) AF(521a) BC(0002) DE(0052) HL(0fad) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(521a) BC(0002) DE(0052) HL(0fad) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(521a) BC(0002) DE(0000) HL(0fad) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(521a) BC(0000) DE(0000) HL(0fad) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(521a) BC(0000) DE(0000) HL(0fad) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(521a) BC(0000) DE(0000) HL(0fad) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(521a) BC(0000) DE(0000) HL(0fae) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(521a) BC(0000) DE(0000) HL(0fae) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(521a) BC(0000) DE(0000) HL(0fae) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(201a) BC(0000) DE(0000) HL(0fae) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(201a) BC(0000) DE(0000) HL(0fae) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(201a) BC(0000) DE(0000) HL(0fae) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(201a) BC(0000) DE(0000) HL(0fae) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(201a) BC(0000) DE(0000) HL(0fae) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(201a) BC(0002) DE(0000) HL(0fae) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(201a) BC(0002) DE(0020) HL(0fae) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(201a) BC(0002) DE(0020) HL(0fae) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(201a) BC(0002) DE(0020) HL(0fae) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+ ==== fe80: c9 00 00  RET
+PC(0ee7) AF(201a) BC(0002) DE(0020) HL(0fae) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(201a) BC(0002) DE(0020) HL(0fae) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(201a) BC(0002) DE(0000) HL(0fae) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(201a) BC(0000) DE(0000) HL(0fae) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(201a) BC(0000) DE(0000) HL(0fae) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(201a) BC(0000) DE(0000) HL(0fae) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(201a) BC(0000) DE(0000) HL(0faf) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(201a) BC(0000) DE(0000) HL(0faf) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(201a) BC(0000) DE(0000) HL(0faf) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(2d1a) BC(0000) DE(0000) HL(0faf) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(2d1a) BC(0000) DE(0000) HL(0faf) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(2d1a) BC(0000) DE(0000) HL(0faf) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(2d1a) BC(0000) DE(0000) HL(0faf) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(2d1a) BC(0000) DE(0000) HL(0faf) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(2d1a) BC(0002) DE(0000) HL(0faf) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(2d1a) BC(0002) DE(002d) HL(0faf) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(2d1a) BC(0002) DE(002d) HL(0faf) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(2d1a) BC(0002) DE(002d) HL(0faf) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+-==== fe80: c9 00 00  RET
+PC(0ee7) AF(2d1a) BC(0002) DE(002d) HL(0faf) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(2d1a) BC(0002) DE(002d) HL(0faf) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(2d1a) BC(0002) DE(0000) HL(0faf) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(2d1a) BC(0000) DE(0000) HL(0faf) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(2d1a) BC(0000) DE(0000) HL(0faf) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(2d1a) BC(0000) DE(0000) HL(0faf) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(2d1a) BC(0000) DE(0000) HL(0fb0) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(2d0a) BC(0000) DE(0000) HL(0fb0) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(2d0a) BC(0000) DE(0000) HL(0fb0) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(200a) BC(0000) DE(0000) HL(0fb0) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(200a) BC(0000) DE(0000) HL(0fb0) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(200a) BC(0000) DE(0000) HL(0fb0) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(200a) BC(0000) DE(0000) HL(0fb0) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(200a) BC(0000) DE(0000) HL(0fb0) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(200a) BC(0002) DE(0000) HL(0fb0) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(200a) BC(0002) DE(0020) HL(0fb0) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(200a) BC(0002) DE(0020) HL(0fb0) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(200a) BC(0002) DE(0020) HL(0fb0) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+ ==== fe80: c9 00 00  RET
+PC(0ee7) AF(200a) BC(0002) DE(0020) HL(0fb0) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(200a) BC(0002) DE(0020) HL(0fb0) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(200a) BC(0002) DE(0000) HL(0fb0) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(200a) BC(0000) DE(0000) HL(0fb0) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(200a) BC(0000) DE(0000) HL(0fb0) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(200a) BC(0000) DE(0000) HL(0fb0) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(200a) BC(0000) DE(0000) HL(0fb1) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(201a) BC(0000) DE(0000) HL(0fb1) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(201a) BC(0000) DE(0000) HL(0fb1) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(561a) BC(0000) DE(0000) HL(0fb1) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(561a) BC(0000) DE(0000) HL(0fb1) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(561a) BC(0000) DE(0000) HL(0fb1) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(561a) BC(0000) DE(0000) HL(0fb1) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(561a) BC(0000) DE(0000) HL(0fb1) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(561a) BC(0002) DE(0000) HL(0fb1) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(561a) BC(0002) DE(0056) HL(0fb1) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(561a) BC(0002) DE(0056) HL(0fb1) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(561a) BC(0002) DE(0056) HL(0fb1) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+V==== fe80: c9 00 00  RET
+PC(0ee7) AF(561a) BC(0002) DE(0056) HL(0fb1) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(561a) BC(0002) DE(0056) HL(0fb1) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(561a) BC(0002) DE(0000) HL(0fb1) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(561a) BC(0000) DE(0000) HL(0fb1) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(561a) BC(0000) DE(0000) HL(0fb1) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(561a) BC(0000) DE(0000) HL(0fb1) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(561a) BC(0000) DE(0000) HL(0fb2) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(561a) BC(0000) DE(0000) HL(0fb2) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(561a) BC(0000) DE(0000) HL(0fb2) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(451a) BC(0000) DE(0000) HL(0fb2) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(451a) BC(0000) DE(0000) HL(0fb2) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(451a) BC(0000) DE(0000) HL(0fb2) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(451a) BC(0000) DE(0000) HL(0fb2) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(451a) BC(0000) DE(0000) HL(0fb2) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(451a) BC(0002) DE(0000) HL(0fb2) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(451a) BC(0002) DE(0045) HL(0fb2) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(451a) BC(0002) DE(0045) HL(0fb2) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(451a) BC(0002) DE(0045) HL(0fb2) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+E==== fe80: c9 00 00  RET
+PC(0ee7) AF(451a) BC(0002) DE(0045) HL(0fb2) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(451a) BC(0002) DE(0045) HL(0fb2) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(451a) BC(0002) DE(0000) HL(0fb2) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(451a) BC(0000) DE(0000) HL(0fb2) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(451a) BC(0000) DE(0000) HL(0fb2) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(451a) BC(0000) DE(0000) HL(0fb2) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(451a) BC(0000) DE(0000) HL(0fb3) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(451a) BC(0000) DE(0000) HL(0fb3) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(451a) BC(0000) DE(0000) HL(0fb3) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(521a) BC(0000) DE(0000) HL(0fb3) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(521a) BC(0000) DE(0000) HL(0fb3) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(521a) BC(0000) DE(0000) HL(0fb3) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(521a) BC(0000) DE(0000) HL(0fb3) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(521a) BC(0000) DE(0000) HL(0fb3) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(521a) BC(0002) DE(0000) HL(0fb3) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(521a) BC(0002) DE(0052) HL(0fb3) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(521a) BC(0002) DE(0052) HL(0fb3) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(521a) BC(0002) DE(0052) HL(0fb3) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+R==== fe80: c9 00 00  RET
+PC(0ee7) AF(521a) BC(0002) DE(0052) HL(0fb3) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(521a) BC(0002) DE(0052) HL(0fb3) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(521a) BC(0002) DE(0000) HL(0fb3) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(521a) BC(0000) DE(0000) HL(0fb3) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(521a) BC(0000) DE(0000) HL(0fb3) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(521a) BC(0000) DE(0000) HL(0fb3) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(521a) BC(0000) DE(0000) HL(0fb4) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(521a) BC(0000) DE(0000) HL(0fb4) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(521a) BC(0000) DE(0000) HL(0fb4) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(201a) BC(0000) DE(0000) HL(0fb4) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(201a) BC(0000) DE(0000) HL(0fb4) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(201a) BC(0000) DE(0000) HL(0fb4) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(201a) BC(0000) DE(0000) HL(0fb4) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(201a) BC(0000) DE(0000) HL(0fb4) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(201a) BC(0002) DE(0000) HL(0fb4) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(201a) BC(0002) DE(0020) HL(0fb4) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(201a) BC(0002) DE(0020) HL(0fb4) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(201a) BC(0002) DE(0020) HL(0fb4) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+ ==== fe80: c9 00 00  RET
+PC(0ee7) AF(201a) BC(0002) DE(0020) HL(0fb4) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(201a) BC(0002) DE(0020) HL(0fb4) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(201a) BC(0002) DE(0000) HL(0fb4) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(201a) BC(0000) DE(0000) HL(0fb4) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(201a) BC(0000) DE(0000) HL(0fb4) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(201a) BC(0000) DE(0000) HL(0fb4) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(201a) BC(0000) DE(0000) HL(0fb5) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(201a) BC(0000) DE(0000) HL(0fb5) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(201a) BC(0000) DE(0000) HL(0fb5) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(321a) BC(0000) DE(0000) HL(0fb5) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(321a) BC(0000) DE(0000) HL(0fb5) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(321a) BC(0000) DE(0000) HL(0fb5) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(321a) BC(0000) DE(0000) HL(0fb5) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(321a) BC(0000) DE(0000) HL(0fb5) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(321a) BC(0002) DE(0000) HL(0fb5) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(321a) BC(0002) DE(0032) HL(0fb5) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(321a) BC(0002) DE(0032) HL(0fb5) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(321a) BC(0002) DE(0032) HL(0fb5) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+2==== fe80: c9 00 00  RET
+PC(0ee7) AF(321a) BC(0002) DE(0032) HL(0fb5) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(321a) BC(0002) DE(0032) HL(0fb5) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(321a) BC(0002) DE(0000) HL(0fb5) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(321a) BC(0000) DE(0000) HL(0fb5) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(321a) BC(0000) DE(0000) HL(0fb5) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(321a) BC(0000) DE(0000) HL(0fb5) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(321a) BC(0000) DE(0000) HL(0fb6) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(321a) BC(0000) DE(0000) HL(0fb6) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(321a) BC(0000) DE(0000) HL(0fb6) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(2e1a) BC(0000) DE(0000) HL(0fb6) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(2e1a) BC(0000) DE(0000) HL(0fb6) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(2e1a) BC(0000) DE(0000) HL(0fb6) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(2e1a) BC(0000) DE(0000) HL(0fb6) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(2e1a) BC(0000) DE(0000) HL(0fb6) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(2e1a) BC(0002) DE(0000) HL(0fb6) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(2e1a) BC(0002) DE(002e) HL(0fb6) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(2e1a) BC(0002) DE(002e) HL(0fb6) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(2e1a) BC(0002) DE(002e) HL(0fb6) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+.==== fe80: c9 00 00  RET
+PC(0ee7) AF(2e1a) BC(0002) DE(002e) HL(0fb6) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(2e1a) BC(0002) DE(002e) HL(0fb6) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(2e1a) BC(0002) DE(0000) HL(0fb6) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(2e1a) BC(0000) DE(0000) HL(0fb6) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(2e1a) BC(0000) DE(0000) HL(0fb6) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(2e1a) BC(0000) DE(0000) HL(0fb6) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(2e1a) BC(0000) DE(0000) HL(0fb7) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(2e0a) BC(0000) DE(0000) HL(0fb7) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(2e0a) BC(0000) DE(0000) HL(0fb7) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(300a) BC(0000) DE(0000) HL(0fb7) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(300a) BC(0000) DE(0000) HL(0fb7) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(300a) BC(0000) DE(0000) HL(0fb7) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(300a) BC(0000) DE(0000) HL(0fb7) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(300a) BC(0000) DE(0000) HL(0fb7) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(300a) BC(0002) DE(0000) HL(0fb7) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(300a) BC(0002) DE(0030) HL(0fb7) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(300a) BC(0002) DE(0030) HL(0fb7) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(300a) BC(0002) DE(0030) HL(0fb7) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+0==== fe80: c9 00 00  RET
+PC(0ee7) AF(300a) BC(0002) DE(0030) HL(0fb7) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(300a) BC(0002) DE(0030) HL(0fb7) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(300a) BC(0002) DE(0000) HL(0fb7) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(300a) BC(0000) DE(0000) HL(0fb7) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(300a) BC(0000) DE(0000) HL(0fb7) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(300a) BC(0000) DE(0000) HL(0fb7) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(300a) BC(0000) DE(0000) HL(0fb8) SP(01fe) IX(0000) IY(0000) Flags(00001010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(301a) BC(0000) DE(0000) HL(0fb8) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(301a) BC(0000) DE(0000) HL(0fb8) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(0d1a) BC(0000) DE(0000) HL(0fb8) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(0d1a) BC(0000) DE(0000) HL(0fb8) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(0d1a) BC(0000) DE(0000) HL(0fb8) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(0d1a) BC(0000) DE(0000) HL(0fb8) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(0d1a) BC(0000) DE(0000) HL(0fb8) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(0d1a) BC(0002) DE(0000) HL(0fb8) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(0d1a) BC(0002) DE(000d) HL(0fb8) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(0d1a) BC(0002) DE(000d) HL(0fb8) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(0d1a) BC(0002) DE(000d) HL(0fb8) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== fe80: c9 00 00  RET
+PC(0ee7) AF(0d1a) BC(0002) DE(000d) HL(0fb8) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(0d1a) BC(0002) DE(000d) HL(0fb8) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(0d1a) BC(0002) DE(0000) HL(0fb8) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(0d1a) BC(0000) DE(0000) HL(0fb8) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(0d1a) BC(0000) DE(0000) HL(0fb8) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(0d1a) BC(0000) DE(0000) HL(0fb8) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(0d1a) BC(0000) DE(0000) HL(0fb9) SP(01fe) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(0d4a) BC(0000) DE(0000) HL(0fb9) SP(01fe) IX(0000) IY(0000) Flags(01001010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cc7) AF(0d4a) BC(0000) DE(0000) HL(0fb9) SP(01fe) IX(0000) IY(0000) Flags(01001010)
+==== 0cc7: 3e 0a cd  LD A, 0ah
+PC(0cc9) AF(0a4a) BC(0000) DE(0000) HL(0fb9) SP(01fe) IX(0000) IY(0000) Flags(01001010)
+==== 0cc9: cd de 0e  CALL 0edeh
+PC(0ede) AF(0a4a) BC(0000) DE(0000) HL(0fb9) SP(01fc) IX(0000) IY(0000) Flags(01001010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(0a4a) BC(0000) DE(0000) HL(0fb9) SP(01fa) IX(0000) IY(0000) Flags(01001010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(0a4a) BC(0000) DE(0000) HL(0fb9) SP(01f8) IX(0000) IY(0000) Flags(01001010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(0a4a) BC(0000) DE(0000) HL(0fb9) SP(01f6) IX(0000) IY(0000) Flags(01001010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(0a4a) BC(0002) DE(0000) HL(0fb9) SP(01f6) IX(0000) IY(0000) Flags(01001010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(0a4a) BC(0002) DE(000a) HL(0fb9) SP(01f6) IX(0000) IY(0000) Flags(01001010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(0a4a) BC(0002) DE(000a) HL(0fb9) SP(01f4) IX(0000) IY(0000) Flags(01001010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(0a4a) BC(0002) DE(000a) HL(0fb9) SP(01f4) IX(0000) IY(0000) Flags(01001010)
+
+==== fe80: c9 00 00  RET
+PC(0ee7) AF(0a4a) BC(0002) DE(000a) HL(0fb9) SP(01f6) IX(0000) IY(0000) Flags(01001010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(0a4a) BC(0002) DE(000a) HL(0fb9) SP(01f8) IX(0000) IY(0000) Flags(01001010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(0a4a) BC(0002) DE(0000) HL(0fb9) SP(01fa) IX(0000) IY(0000) Flags(01001010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(0a4a) BC(0000) DE(0000) HL(0fb9) SP(01fc) IX(0000) IY(0000) Flags(01001010)
+==== 0eea: c9 4f cd  RET
+PC(0ccc) AF(0a4a) BC(0000) DE(0000) HL(0fb9) SP(01fe) IX(0000) IY(0000) Flags(01001010)
+==== 0ccc: c9 11 5c  RET
+PC(0ce6) AF(0a4a) BC(0000) DE(0000) HL(0fb9) SP(0200) IX(0000) IY(0000) Flags(01001010)
+==== 0ce6: c3 3f 0d  JP 0d3fh
+PC(0d3f) AF(0a4a) BC(0000) DE(0000) HL(0fb9) SP(0200) IX(0000) IY(0000) Flags(01001010)
+==== 0d3f: 3a 5c 00  LD A, (005ch)
+PC(0d42) AF(004a) BC(0000) DE(0000) HL(0fb9) SP(0200) IX(0000) IY(0000) Flags(01001010)
+==== 0d42: fe 20 ca  CP A, 20h
+PC(0d44) AF(00a3) BC(0000) DE(0000) HL(0fb9) SP(0200) IX(0000) IY(0000) Flags(10100011)
+==== 0d44: ca bb 0d  JP Z, 0dbbh
+PC(0d47) AF(00a3) BC(0000) DE(0000) HL(0fb9) SP(0200) IX(0000) IY(0000) Flags(10100011)
+==== 0d47: 0e 19 cd  LD C, 19h
+PC(0d49) AF(00a3) BC(0019) DE(0000) HL(0fb9) SP(0200) IX(0000) IY(0000) Flags(10100011)
+==== 0d49: cd 05 00  CALL 0005h
+PC(0005) AF(00a3) BC(0019) DE(0000) HL(0fb9) SP(01fe) IX(0000) IY(0000) Flags(10100011)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(00a3) BC(0019) DE(0000) HL(0fb9) SP(01fe) IX(0000) IY(0000) Flags(10100011)
+
+[[BDOS command 25: DRV_GET(0000)]][[=>00]]==== fe80: c9 00 00  RET
+PC(0d4c) AF(00a3) BC(0019) DE(0000) HL(0f00) SP(0200) IX(0000) IY(0000) Flags(10100011)
+==== 0d4c: 32 34 02  LD (0234h), A
+PC(0d4f) AF(00a3) BC(0019) DE(0000) HL(0f00) SP(0200) IX(0000) IY(0000) Flags(10100011)
+==== 0d4f: 21 64 00  LD HL, 0064h
+PC(0d52) AF(00a3) BC(0019) DE(0000) HL(0064) SP(0200) IX(0000) IY(0000) Flags(10100011)
+==== 0d52: cd ae 0c  CALL 0caeh
+PC(0cae) AF(00a3) BC(0019) DE(0000) HL(0064) SP(01fe) IX(0000) IY(0000) Flags(10100011)
+==== 0cae: 23 7e fe  INC HL
+PC(0caf) AF(00a3) BC(0019) DE(0000) HL(0065) SP(01fe) IX(0000) IY(0000) Flags(10100011)
+==== 0caf: 7e fe 20  LD A, (HL)
+PC(0cb0) AF(00a3) BC(0019) DE(0000) HL(0065) SP(01fe) IX(0000) IY(0000) Flags(10100011)
+==== 0cb0: fe 20 ca  CP A, 20h
+PC(0cb2) AF(00a3) BC(0019) DE(0000) HL(0065) SP(01fe) IX(0000) IY(0000) Flags(10100011)
+==== 0cb2: ca b8 0c  JP Z, 0cb8h
+PC(0cb5) AF(00a3) BC(0019) DE(0000) HL(0065) SP(01fe) IX(0000) IY(0000) Flags(10100011)
+==== 0cb5: de 41 c9  SBC A, 41h
+PC(0cb7) AF(bebb) BC(0019) DE(0000) HL(0065) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cb7: c9 3a 34  RET
+PC(0d55) AF(bebb) BC(0019) DE(0000) HL(0065) SP(0200) IX(0000) IY(0000) Flags(10111011)
+==== 0d55: 32 35 02  LD (0235h), A
+PC(0d58) AF(bebb) BC(0019) DE(0000) HL(0065) SP(0200) IX(0000) IY(0000) Flags(10111011)
+==== 0d58: cd ae 0c  CALL 0caeh
+PC(0cae) AF(bebb) BC(0019) DE(0000) HL(0065) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cae: 23 7e fe  INC HL
+PC(0caf) AF(bebb) BC(0019) DE(0000) HL(0066) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0caf: 7e fe 20  LD A, (HL)
+PC(0cb0) AF(00bb) BC(0019) DE(0000) HL(0066) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cb0: fe 20 ca  CP A, 20h
+PC(0cb2) AF(00a3) BC(0019) DE(0000) HL(0066) SP(01fe) IX(0000) IY(0000) Flags(10100011)
+==== 0cb2: ca b8 0c  JP Z, 0cb8h
+PC(0cb5) AF(00a3) BC(0019) DE(0000) HL(0066) SP(01fe) IX(0000) IY(0000) Flags(10100011)
+==== 0cb5: de 41 c9  SBC A, 41h
+PC(0cb7) AF(bebb) BC(0019) DE(0000) HL(0066) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cb7: c9 3a 34  RET
+PC(0d5b) AF(bebb) BC(0019) DE(0000) HL(0066) SP(0200) IX(0000) IY(0000) Flags(10111011)
+==== 0d5b: 32 37 02  LD (0237h), A
+PC(0d5e) AF(bebb) BC(0019) DE(0000) HL(0066) SP(0200) IX(0000) IY(0000) Flags(10111011)
+==== 0d5e: cd ae 0c  CALL 0caeh
+PC(0cae) AF(bebb) BC(0019) DE(0000) HL(0066) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cae: 23 7e fe  INC HL
+PC(0caf) AF(bebb) BC(0019) DE(0000) HL(0067) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0caf: 7e fe 20  LD A, (HL)
+PC(0cb0) AF(00bb) BC(0019) DE(0000) HL(0067) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cb0: fe 20 ca  CP A, 20h
+PC(0cb2) AF(00a3) BC(0019) DE(0000) HL(0067) SP(01fe) IX(0000) IY(0000) Flags(10100011)
+==== 0cb2: ca b8 0c  JP Z, 0cb8h
+PC(0cb5) AF(00a3) BC(0019) DE(0000) HL(0067) SP(01fe) IX(0000) IY(0000) Flags(10100011)
+==== 0cb5: de 41 c9  SBC A, 41h
+PC(0cb7) AF(bebb) BC(0019) DE(0000) HL(0067) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cb7: c9 3a 34  RET
+PC(0d61) AF(bebb) BC(0019) DE(0000) HL(0067) SP(0200) IX(0000) IY(0000) Flags(10111011)
+==== 0d61: 32 36 02  LD (0236h), A
+PC(0d64) AF(bebb) BC(0019) DE(0000) HL(0067) SP(0200) IX(0000) IY(0000) Flags(10111011)
+==== 0d64: 21 38 02  LD HL, 0238h
+PC(0d67) AF(bebb) BC(0019) DE(0000) HL(0238) SP(0200) IX(0000) IY(0000) Flags(10111011)
+==== 0d67: cd cd 0c  CALL 0ccdh
+PC(0ccd) AF(bebb) BC(0019) DE(0000) HL(0238) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0ccd: 11 5c 00  LD DE, 005ch
+PC(0cd0) AF(bebb) BC(0019) DE(005c) HL(0238) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd0: 06 09 1a  LD B, 09h
+PC(0cd2) AF(bebb) BC(0919) DE(005c) HL(0238) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(00bb) BC(0919) DE(005c) HL(0238) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0919) DE(005c) HL(0238) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0919) DE(005c) HL(0238) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0919) DE(005c) HL(0238) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0919) DE(005c) HL(0239) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0919) DE(005d) HL(0239) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(000b) BC(0819) DE(005d) HL(0239) SP(01fe) IX(0000) IY(0000) Flags(00001011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(000b) BC(0819) DE(005d) HL(0239) SP(01fe) IX(0000) IY(0000) Flags(00001011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(000b) BC(0819) DE(005d) HL(0239) SP(01fe) IX(0000) IY(0000) Flags(00001011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0819) DE(005d) HL(0239) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0819) DE(005d) HL(0239) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0819) DE(005d) HL(0239) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0819) DE(005d) HL(023a) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0819) DE(005e) HL(023a) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0003) BC(0719) DE(005e) HL(023a) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(0003) BC(0719) DE(005e) HL(023a) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0003) BC(0719) DE(005e) HL(023a) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0719) DE(005e) HL(023a) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0719) DE(005e) HL(023a) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0719) DE(005e) HL(023a) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0719) DE(005e) HL(023b) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0719) DE(005f) HL(023b) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0003) BC(0619) DE(005f) HL(023b) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(0003) BC(0619) DE(005f) HL(023b) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0003) BC(0619) DE(005f) HL(023b) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0619) DE(005f) HL(023b) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0619) DE(005f) HL(023b) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0619) DE(005f) HL(023b) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0619) DE(005f) HL(023c) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0619) DE(0060) HL(023c) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0003) BC(0519) DE(0060) HL(023c) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(0003) BC(0519) DE(0060) HL(023c) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0003) BC(0519) DE(0060) HL(023c) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0519) DE(0060) HL(023c) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0519) DE(0060) HL(023c) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0519) DE(0060) HL(023c) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0519) DE(0060) HL(023d) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0519) DE(0061) HL(023d) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0003) BC(0419) DE(0061) HL(023d) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(0003) BC(0419) DE(0061) HL(023d) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0003) BC(0419) DE(0061) HL(023d) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0419) DE(0061) HL(023d) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0419) DE(0061) HL(023d) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0419) DE(0061) HL(023d) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0419) DE(0061) HL(023e) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0419) DE(0062) HL(023e) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0003) BC(0319) DE(0062) HL(023e) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(0003) BC(0319) DE(0062) HL(023e) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0003) BC(0319) DE(0062) HL(023e) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0319) DE(0062) HL(023e) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0319) DE(0062) HL(023e) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0319) DE(0062) HL(023e) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0319) DE(0062) HL(023f) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0319) DE(0063) HL(023f) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0003) BC(0219) DE(0063) HL(023f) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(0003) BC(0219) DE(0063) HL(023f) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0003) BC(0219) DE(0063) HL(023f) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0219) DE(0063) HL(023f) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0219) DE(0063) HL(023f) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0219) DE(0063) HL(023f) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0219) DE(0063) HL(0240) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0219) DE(0064) HL(0240) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0003) BC(0119) DE(0064) HL(0240) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(0003) BC(0119) DE(0064) HL(0240) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0003) BC(0119) DE(0064) HL(0240) SP(01fe) IX(0000) IY(0000) Flags(00000011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0119) DE(0064) HL(0240) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0119) DE(0064) HL(0240) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0119) DE(0064) HL(0240) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0119) DE(0064) HL(0241) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0119) DE(0065) HL(0241) SP(01fe) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0043) BC(0019) DE(0065) HL(0241) SP(01fe) IX(0000) IY(0000) Flags(01000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cdf) AF(0043) BC(0019) DE(0065) HL(0241) SP(01fe) IX(0000) IY(0000) Flags(01000011)
+==== 0cdf: c9 21 a0  RET
+PC(0d6a) AF(0043) BC(0019) DE(0065) HL(0241) SP(0200) IX(0000) IY(0000) Flags(01000011)
+==== 0d6a: cd 28 0d  CALL 0d28h
+PC(0d28) AF(0043) BC(0019) DE(0065) HL(0241) SP(01fe) IX(0000) IY(0000) Flags(01000011)
+==== 0d28: 3a 36 02  LD A, (0236h)
+PC(0d2b) AF(be43) BC(0019) DE(0065) HL(0241) SP(01fe) IX(0000) IY(0000) Flags(01000011)
+==== 0d2b: fe 19 c8  CP A, 19h
+PC(0d2d) AF(be8a) BC(0019) DE(0065) HL(0241) SP(01fe) IX(0000) IY(0000) Flags(10001010)
+==== 0d2d: c8 fe 17  RET Z
+PC(0d2e) AF(be8a) BC(0019) DE(0065) HL(0241) SP(01fe) IX(0000) IY(0000) Flags(10001010)
+==== 0d2e: fe 17 c9  CP A, 17h
+PC(0d30) AF(be82) BC(0019) DE(0065) HL(0241) SP(01fe) IX(0000) IY(0000) Flags(10000010)
+==== 0d30: c9 3a 36  RET
+PC(0d6d) AF(be82) BC(0019) DE(0065) HL(0241) SP(0200) IX(0000) IY(0000) Flags(10000010)
+==== 0d6d: ca 83 0d  JP Z, 0d83h
+PC(0d70) AF(be82) BC(0019) DE(0065) HL(0241) SP(0200) IX(0000) IY(0000) Flags(10000010)
+==== 0d70: 21 59 02  LD HL, 0259h
+PC(0d73) AF(be82) BC(0019) DE(0065) HL(0259) SP(0200) IX(0000) IY(0000) Flags(10000010)
+==== 0d73: e5 e5 cd  PUSH HL
+PC(0d74) AF(be82) BC(0019) DE(0065) HL(0259) SP(01fe) IX(0000) IY(0000) Flags(10000010)
+==== 0d74: e5 cd cd  PUSH HL
+PC(0d75) AF(be82) BC(0019) DE(0065) HL(0259) SP(01fc) IX(0000) IY(0000) Flags(10000010)
+==== 0d75: cd cd 0c  CALL 0ccdh
+PC(0ccd) AF(be82) BC(0019) DE(0065) HL(0259) SP(01fa) IX(0000) IY(0000) Flags(10000010)
+==== 0ccd: 11 5c 00  LD DE, 005ch
+PC(0cd0) AF(be82) BC(0019) DE(005c) HL(0259) SP(01fa) IX(0000) IY(0000) Flags(10000010)
+==== 0cd0: 06 09 1a  LD B, 09h
+PC(0cd2) AF(be82) BC(0919) DE(005c) HL(0259) SP(01fa) IX(0000) IY(0000) Flags(10000010)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0082) BC(0919) DE(005c) HL(0259) SP(01fa) IX(0000) IY(0000) Flags(10000010)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0919) DE(005c) HL(0259) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0919) DE(005c) HL(0259) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0919) DE(005c) HL(0259) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0919) DE(005c) HL(025a) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0919) DE(005d) HL(025a) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(000b) BC(0819) DE(005d) HL(025a) SP(01fa) IX(0000) IY(0000) Flags(00001011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(000b) BC(0819) DE(005d) HL(025a) SP(01fa) IX(0000) IY(0000) Flags(00001011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(000b) BC(0819) DE(005d) HL(025a) SP(01fa) IX(0000) IY(0000) Flags(00001011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0819) DE(005d) HL(025a) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0819) DE(005d) HL(025a) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0819) DE(005d) HL(025a) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0819) DE(005d) HL(025b) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0819) DE(005e) HL(025b) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0003) BC(0719) DE(005e) HL(025b) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(0003) BC(0719) DE(005e) HL(025b) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0003) BC(0719) DE(005e) HL(025b) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0719) DE(005e) HL(025b) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0719) DE(005e) HL(025b) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0719) DE(005e) HL(025b) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0719) DE(005e) HL(025c) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0719) DE(005f) HL(025c) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0003) BC(0619) DE(005f) HL(025c) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(0003) BC(0619) DE(005f) HL(025c) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0003) BC(0619) DE(005f) HL(025c) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0619) DE(005f) HL(025c) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0619) DE(005f) HL(025c) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0619) DE(005f) HL(025c) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0619) DE(005f) HL(025d) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0619) DE(0060) HL(025d) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0003) BC(0519) DE(0060) HL(025d) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(0003) BC(0519) DE(0060) HL(025d) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0003) BC(0519) DE(0060) HL(025d) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0519) DE(0060) HL(025d) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0519) DE(0060) HL(025d) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0519) DE(0060) HL(025d) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0519) DE(0060) HL(025e) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0519) DE(0061) HL(025e) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0003) BC(0419) DE(0061) HL(025e) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(0003) BC(0419) DE(0061) HL(025e) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0003) BC(0419) DE(0061) HL(025e) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0419) DE(0061) HL(025e) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0419) DE(0061) HL(025e) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0419) DE(0061) HL(025e) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0419) DE(0061) HL(025f) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0419) DE(0062) HL(025f) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0003) BC(0319) DE(0062) HL(025f) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(0003) BC(0319) DE(0062) HL(025f) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0003) BC(0319) DE(0062) HL(025f) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0319) DE(0062) HL(025f) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0319) DE(0062) HL(025f) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0319) DE(0062) HL(025f) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0319) DE(0062) HL(0260) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0319) DE(0063) HL(0260) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0003) BC(0219) DE(0063) HL(0260) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(0003) BC(0219) DE(0063) HL(0260) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0003) BC(0219) DE(0063) HL(0260) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0219) DE(0063) HL(0260) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0219) DE(0063) HL(0260) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0219) DE(0063) HL(0260) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0219) DE(0063) HL(0261) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0219) DE(0064) HL(0261) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0003) BC(0119) DE(0064) HL(0261) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cd2) AF(0003) BC(0119) DE(0064) HL(0261) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cd2: 1a fe 3f  LD A, (DE)
+PC(0cd3) AF(0003) BC(0119) DE(0064) HL(0261) SP(01fa) IX(0000) IY(0000) Flags(00000011)
+==== 0cd3: fe 3f ca  CP A, 3fh
+PC(0cd5) AF(00bb) BC(0119) DE(0064) HL(0261) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd5: ca bb 0d  JP Z, 0dbbh
+PC(0cd8) AF(00bb) BC(0119) DE(0064) HL(0261) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd8: 77 23 13  LD (HL), A
+PC(0cd9) AF(00bb) BC(0119) DE(0064) HL(0261) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cd9: 23 13 05  INC HL
+PC(0cda) AF(00bb) BC(0119) DE(0064) HL(0262) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cda: 13 05 c2  INC DE
+PC(0cdb) AF(00bb) BC(0119) DE(0065) HL(0262) SP(01fa) IX(0000) IY(0000) Flags(10111011)
+==== 0cdb: 05 c2 d2  DEC B
+PC(0cdc) AF(0043) BC(0019) DE(0065) HL(0262) SP(01fa) IX(0000) IY(0000) Flags(01000011)
+==== 0cdc: c2 d2 0c  JP NZ, 0cd2h
+PC(0cdf) AF(0043) BC(0019) DE(0065) HL(0262) SP(01fa) IX(0000) IY(0000) Flags(01000011)
+==== 0cdf: c9 21 a0  RET
+PC(0d78) AF(0043) BC(0019) DE(0065) HL(0262) SP(01fc) IX(0000) IY(0000) Flags(01000011)
+==== 0d78: cd 31 0d  CALL 0d31h
+PC(0d31) AF(0043) BC(0019) DE(0065) HL(0262) SP(01fa) IX(0000) IY(0000) Flags(01000011)
+==== 0d31: 3a 36 02  LD A, (0236h)
+PC(0d34) AF(be43) BC(0019) DE(0065) HL(0262) SP(01fa) IX(0000) IY(0000) Flags(01000011)
+==== 0d34: cd a1 0c  CALL 0ca1h
+PC(0ca1) AF(be43) BC(0019) DE(0065) HL(0262) SP(01f8) IX(0000) IY(0000) Flags(01000011)
+==== 0ca1: 21 34 02  LD HL, 0234h
+PC(0ca4) AF(be43) BC(0019) DE(0065) HL(0234) SP(01f8) IX(0000) IY(0000) Flags(01000011)
+==== 0ca4: be c8 77  CP A, _HL
+PC(0ca5) AF(be82) BC(0019) DE(0065) HL(0234) SP(01f8) IX(0000) IY(0000) Flags(10000010)
+==== 0ca5: c8 77 5f  RET Z
+PC(0ca6) AF(be82) BC(0019) DE(0065) HL(0234) SP(01f8) IX(0000) IY(0000) Flags(10000010)
+==== 0ca6: 77 5f 0e  LD (HL), A
+PC(0ca7) AF(be82) BC(0019) DE(0065) HL(0234) SP(01f8) IX(0000) IY(0000) Flags(10000010)
+==== 0ca7: 5f 0e 0e  LD E, A
+PC(0ca8) AF(be82) BC(0019) DE(00be) HL(0234) SP(01f8) IX(0000) IY(0000) Flags(10000010)
+==== 0ca8: 0e 0e cd  LD C, 0eh
+PC(0caa) AF(be82) BC(000e) DE(00be) HL(0234) SP(01f8) IX(0000) IY(0000) Flags(10000010)
+==== 0caa: cd 05 00  CALL 0005h
+PC(0005) AF(be82) BC(000e) DE(00be) HL(0234) SP(01f6) IX(0000) IY(0000) Flags(10000010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(be82) BC(000e) DE(00be) HL(0234) SP(01f6) IX(0000) IY(0000) Flags(10000010)
+
+[[BDOS command 14: DRV_SET(00be)]]==== fe80: c9 00 00  RET
+PC(0cad) AF(be82) BC(000e) DE(00be) HL(0234) SP(01f8) IX(0000) IY(0000) Flags(10000010)
+==== 0cad: c9 23 7e  RET
+PC(0d37) AF(be82) BC(000e) DE(00be) HL(0234) SP(01fa) IX(0000) IY(0000) Flags(10000010)
+==== 0d37: c9 3a 37  RET
+PC(0d7b) AF(be82) BC(000e) DE(00be) HL(0234) SP(01fc) IX(0000) IY(0000) Flags(10000010)
+==== 0d7b: d1 cd 0b  POP DE
+PC(0d7c) AF(be82) BC(000e) DE(0259) HL(0234) SP(01fe) IX(0000) IY(0000) Flags(10000010)
+==== 0d7c: cd 0b 0d  CALL 0d0bh
+PC(0d0b) AF(be82) BC(000e) DE(0259) HL(0234) SP(01fc) IX(0000) IY(0000) Flags(10000010)
+==== 0d0b: 0e 13 c3  LD C, 13h
+PC(0d0d) AF(be82) BC(0013) DE(0259) HL(0234) SP(01fc) IX(0000) IY(0000) Flags(10000010)
+==== 0d0d: c3 05 00  JP 0005h
+PC(0005) AF(be82) BC(0013) DE(0259) HL(0234) SP(01fc) IX(0000) IY(0000) Flags(10000010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(be82) BC(0013) DE(0259) HL(0234) SP(01fc) IX(0000) IY(0000) Flags(10000010)
+
+[[BDOS command 19: F_DELETE(0259)]][[Delete file         .PRN]][[=>ff]]==== fe80: c9 00 00  RET
+PC(0d7f) AF(ff82) BC(0013) DE(0259) HL(02ff) SP(01fe) IX(0000) IY(0000) Flags(10000010)
+==== 0d7f: d1 cd 10  POP DE
+PC(0d80) AF(ff82) BC(0013) DE(0259) HL(02ff) SP(0200) IX(0000) IY(0000) Flags(10000010)
+==== 0d80: cd 10 0d  CALL 0d10h
+PC(0d10) AF(ff82) BC(0013) DE(0259) HL(02ff) SP(01fe) IX(0000) IY(0000) Flags(10000010)
+==== 0d10: 0e 16 cd  LD C, 16h
+PC(0d12) AF(ff82) BC(0016) DE(0259) HL(02ff) SP(01fe) IX(0000) IY(0000) Flags(10000010)
+==== 0d12: cd 05 00  CALL 0005h
+PC(0005) AF(ff82) BC(0016) DE(0259) HL(02ff) SP(01fc) IX(0000) IY(0000) Flags(10000010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(ff82) BC(0016) DE(0259) HL(02ff) SP(01fc) IX(0000) IY(0000) Flags(10000010)
+
+[[BDOS command 22: F_MAKE(0259)]][[Create file         .PRN]][[=>ff]]==== fe80: c9 00 00  RET
+PC(0d15) AF(ff82) BC(0016) DE(0259) HL(02ff) SP(01fe) IX(0000) IY(0000) Flags(10000010)
+==== 0d15: fe ff c0  CP A, ffh
+PC(0d17) AF(ff6a) BC(0016) DE(0259) HL(02ff) SP(01fe) IX(0000) IY(0000) Flags(01101010)
+==== 0d17: c0 21 d0  RET NZ
+PC(0d18) AF(ff6a) BC(0016) DE(0259) HL(02ff) SP(01fe) IX(0000) IY(0000) Flags(01101010)
+==== 0d18: 21 d0 0f  LD HL, 0fd0h
+PC(0d1b) AF(ff6a) BC(0016) DE(0259) HL(0fd0) SP(01fe) IX(0000) IY(0000) Flags(01101010)
+==== 0d1b: cd bc 0c  CALL 0cbch
+PC(0cbc) AF(ff6a) BC(0016) DE(0259) HL(0fd0) SP(01fc) IX(0000) IY(0000) Flags(01101010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(4e6a) BC(0016) DE(0259) HL(0fd0) SP(01fc) IX(0000) IY(0000) Flags(01101010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(4e6a) BC(0016) DE(0259) HL(0fd0) SP(01fa) IX(0000) IY(0000) Flags(01101010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(4e6a) BC(0016) DE(0259) HL(0fd0) SP(01f8) IX(0000) IY(0000) Flags(01101010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(4e6a) BC(0016) DE(0259) HL(0fd0) SP(01f6) IX(0000) IY(0000) Flags(01101010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(4e6a) BC(0016) DE(0259) HL(0fd0) SP(01f4) IX(0000) IY(0000) Flags(01101010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(4e6a) BC(0002) DE(0259) HL(0fd0) SP(01f4) IX(0000) IY(0000) Flags(01101010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(4e6a) BC(0002) DE(024e) HL(0fd0) SP(01f4) IX(0000) IY(0000) Flags(01101010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(4e6a) BC(0002) DE(024e) HL(0fd0) SP(01f2) IX(0000) IY(0000) Flags(01101010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(4e6a) BC(0002) DE(024e) HL(0fd0) SP(01f2) IX(0000) IY(0000) Flags(01101010)
+N==== fe80: c9 00 00  RET
+PC(0ee7) AF(4e6a) BC(0002) DE(024e) HL(0fd0) SP(01f4) IX(0000) IY(0000) Flags(01101010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(4e6a) BC(0002) DE(024e) HL(0fd0) SP(01f6) IX(0000) IY(0000) Flags(01101010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(4e6a) BC(0002) DE(0259) HL(0fd0) SP(01f8) IX(0000) IY(0000) Flags(01101010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(4e6a) BC(0016) DE(0259) HL(0fd0) SP(01fa) IX(0000) IY(0000) Flags(01101010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(4e6a) BC(0016) DE(0259) HL(0fd0) SP(01fc) IX(0000) IY(0000) Flags(01101010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(4e6a) BC(0016) DE(0259) HL(0fd0) SP(01fc) IX(0000) IY(0000) Flags(01101010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(4e6a) BC(0016) DE(0259) HL(0fd1) SP(01fc) IX(0000) IY(0000) Flags(01101010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(4e0a) BC(0016) DE(0259) HL(0fd1) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(4e0a) BC(0016) DE(0259) HL(0fd1) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(4f0a) BC(0016) DE(0259) HL(0fd1) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(4f0a) BC(0016) DE(0259) HL(0fd1) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(4f0a) BC(0016) DE(0259) HL(0fd1) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(4f0a) BC(0016) DE(0259) HL(0fd1) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(4f0a) BC(0016) DE(0259) HL(0fd1) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(4f0a) BC(0002) DE(0259) HL(0fd1) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(4f0a) BC(0002) DE(024f) HL(0fd1) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(4f0a) BC(0002) DE(024f) HL(0fd1) SP(01f2) IX(0000) IY(0000) Flags(00001010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(4f0a) BC(0002) DE(024f) HL(0fd1) SP(01f2) IX(0000) IY(0000) Flags(00001010)
+O==== fe80: c9 00 00  RET
+PC(0ee7) AF(4f0a) BC(0002) DE(024f) HL(0fd1) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(4f0a) BC(0002) DE(024f) HL(0fd1) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(4f0a) BC(0002) DE(0259) HL(0fd1) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(4f0a) BC(0016) DE(0259) HL(0fd1) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(4f0a) BC(0016) DE(0259) HL(0fd1) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(4f0a) BC(0016) DE(0259) HL(0fd1) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(4f0a) BC(0016) DE(0259) HL(0fd2) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(4f0a) BC(0016) DE(0259) HL(0fd2) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(4f0a) BC(0016) DE(0259) HL(0fd2) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(200a) BC(0016) DE(0259) HL(0fd2) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(200a) BC(0016) DE(0259) HL(0fd2) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(200a) BC(0016) DE(0259) HL(0fd2) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(200a) BC(0016) DE(0259) HL(0fd2) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(200a) BC(0016) DE(0259) HL(0fd2) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(200a) BC(0002) DE(0259) HL(0fd2) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(200a) BC(0002) DE(0220) HL(0fd2) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(200a) BC(0002) DE(0220) HL(0fd2) SP(01f2) IX(0000) IY(0000) Flags(00001010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(200a) BC(0002) DE(0220) HL(0fd2) SP(01f2) IX(0000) IY(0000) Flags(00001010)
+ ==== fe80: c9 00 00  RET
+PC(0ee7) AF(200a) BC(0002) DE(0220) HL(0fd2) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(200a) BC(0002) DE(0220) HL(0fd2) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(200a) BC(0002) DE(0259) HL(0fd2) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(200a) BC(0016) DE(0259) HL(0fd2) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(200a) BC(0016) DE(0259) HL(0fd2) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(200a) BC(0016) DE(0259) HL(0fd2) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(200a) BC(0016) DE(0259) HL(0fd3) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(201a) BC(0016) DE(0259) HL(0fd3) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(201a) BC(0016) DE(0259) HL(0fd3) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(441a) BC(0016) DE(0259) HL(0fd3) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(441a) BC(0016) DE(0259) HL(0fd3) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(441a) BC(0016) DE(0259) HL(0fd3) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(441a) BC(0016) DE(0259) HL(0fd3) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(441a) BC(0016) DE(0259) HL(0fd3) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(441a) BC(0002) DE(0259) HL(0fd3) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(441a) BC(0002) DE(0244) HL(0fd3) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(441a) BC(0002) DE(0244) HL(0fd3) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(441a) BC(0002) DE(0244) HL(0fd3) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+D==== fe80: c9 00 00  RET
+PC(0ee7) AF(441a) BC(0002) DE(0244) HL(0fd3) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(441a) BC(0002) DE(0244) HL(0fd3) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(441a) BC(0002) DE(0259) HL(0fd3) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(441a) BC(0016) DE(0259) HL(0fd3) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(441a) BC(0016) DE(0259) HL(0fd3) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(441a) BC(0016) DE(0259) HL(0fd3) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(441a) BC(0016) DE(0259) HL(0fd4) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(441a) BC(0016) DE(0259) HL(0fd4) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(441a) BC(0016) DE(0259) HL(0fd4) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(491a) BC(0016) DE(0259) HL(0fd4) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(491a) BC(0016) DE(0259) HL(0fd4) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(491a) BC(0016) DE(0259) HL(0fd4) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(491a) BC(0016) DE(0259) HL(0fd4) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(491a) BC(0016) DE(0259) HL(0fd4) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(491a) BC(0002) DE(0259) HL(0fd4) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(491a) BC(0002) DE(0249) HL(0fd4) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(491a) BC(0002) DE(0249) HL(0fd4) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(491a) BC(0002) DE(0249) HL(0fd4) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+I==== fe80: c9 00 00  RET
+PC(0ee7) AF(491a) BC(0002) DE(0249) HL(0fd4) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(491a) BC(0002) DE(0249) HL(0fd4) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(491a) BC(0002) DE(0259) HL(0fd4) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(491a) BC(0016) DE(0259) HL(0fd4) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(491a) BC(0016) DE(0259) HL(0fd4) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(491a) BC(0016) DE(0259) HL(0fd4) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(491a) BC(0016) DE(0259) HL(0fd5) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(491a) BC(0016) DE(0259) HL(0fd5) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(491a) BC(0016) DE(0259) HL(0fd5) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(521a) BC(0016) DE(0259) HL(0fd5) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(521a) BC(0016) DE(0259) HL(0fd5) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(521a) BC(0016) DE(0259) HL(0fd5) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(521a) BC(0016) DE(0259) HL(0fd5) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(521a) BC(0016) DE(0259) HL(0fd5) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(521a) BC(0002) DE(0259) HL(0fd5) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(521a) BC(0002) DE(0252) HL(0fd5) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(521a) BC(0002) DE(0252) HL(0fd5) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(521a) BC(0002) DE(0252) HL(0fd5) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+R==== fe80: c9 00 00  RET
+PC(0ee7) AF(521a) BC(0002) DE(0252) HL(0fd5) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(521a) BC(0002) DE(0252) HL(0fd5) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(521a) BC(0002) DE(0259) HL(0fd5) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(521a) BC(0016) DE(0259) HL(0fd5) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(521a) BC(0016) DE(0259) HL(0fd5) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(521a) BC(0016) DE(0259) HL(0fd5) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(521a) BC(0016) DE(0259) HL(0fd6) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(521a) BC(0016) DE(0259) HL(0fd6) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(521a) BC(0016) DE(0259) HL(0fd6) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(451a) BC(0016) DE(0259) HL(0fd6) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(451a) BC(0016) DE(0259) HL(0fd6) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(451a) BC(0016) DE(0259) HL(0fd6) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(451a) BC(0016) DE(0259) HL(0fd6) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(451a) BC(0016) DE(0259) HL(0fd6) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(451a) BC(0002) DE(0259) HL(0fd6) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(451a) BC(0002) DE(0245) HL(0fd6) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(451a) BC(0002) DE(0245) HL(0fd6) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(451a) BC(0002) DE(0245) HL(0fd6) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+E==== fe80: c9 00 00  RET
+PC(0ee7) AF(451a) BC(0002) DE(0245) HL(0fd6) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(451a) BC(0002) DE(0245) HL(0fd6) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(451a) BC(0002) DE(0259) HL(0fd6) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(451a) BC(0016) DE(0259) HL(0fd6) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(451a) BC(0016) DE(0259) HL(0fd6) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(451a) BC(0016) DE(0259) HL(0fd6) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(451a) BC(0016) DE(0259) HL(0fd7) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(451a) BC(0016) DE(0259) HL(0fd7) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(451a) BC(0016) DE(0259) HL(0fd7) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(431a) BC(0016) DE(0259) HL(0fd7) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(431a) BC(0016) DE(0259) HL(0fd7) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(431a) BC(0016) DE(0259) HL(0fd7) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(431a) BC(0016) DE(0259) HL(0fd7) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(431a) BC(0016) DE(0259) HL(0fd7) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(431a) BC(0002) DE(0259) HL(0fd7) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(431a) BC(0002) DE(0243) HL(0fd7) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(431a) BC(0002) DE(0243) HL(0fd7) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(431a) BC(0002) DE(0243) HL(0fd7) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+C==== fe80: c9 00 00  RET
+PC(0ee7) AF(431a) BC(0002) DE(0243) HL(0fd7) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(431a) BC(0002) DE(0243) HL(0fd7) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(431a) BC(0002) DE(0259) HL(0fd7) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(431a) BC(0016) DE(0259) HL(0fd7) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(431a) BC(0016) DE(0259) HL(0fd7) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(431a) BC(0016) DE(0259) HL(0fd7) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(431a) BC(0016) DE(0259) HL(0fd8) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(431a) BC(0016) DE(0259) HL(0fd8) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(431a) BC(0016) DE(0259) HL(0fd8) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(541a) BC(0016) DE(0259) HL(0fd8) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(541a) BC(0016) DE(0259) HL(0fd8) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(541a) BC(0016) DE(0259) HL(0fd8) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(541a) BC(0016) DE(0259) HL(0fd8) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(541a) BC(0016) DE(0259) HL(0fd8) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(541a) BC(0002) DE(0259) HL(0fd8) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(541a) BC(0002) DE(0254) HL(0fd8) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(541a) BC(0002) DE(0254) HL(0fd8) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(541a) BC(0002) DE(0254) HL(0fd8) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+T==== fe80: c9 00 00  RET
+PC(0ee7) AF(541a) BC(0002) DE(0254) HL(0fd8) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(541a) BC(0002) DE(0254) HL(0fd8) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(541a) BC(0002) DE(0259) HL(0fd8) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(541a) BC(0016) DE(0259) HL(0fd8) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(541a) BC(0016) DE(0259) HL(0fd8) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(541a) BC(0016) DE(0259) HL(0fd8) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(541a) BC(0016) DE(0259) HL(0fd9) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(541a) BC(0016) DE(0259) HL(0fd9) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(541a) BC(0016) DE(0259) HL(0fd9) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(4f1a) BC(0016) DE(0259) HL(0fd9) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(4f1a) BC(0016) DE(0259) HL(0fd9) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(4f1a) BC(0016) DE(0259) HL(0fd9) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(4f1a) BC(0016) DE(0259) HL(0fd9) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(4f1a) BC(0016) DE(0259) HL(0fd9) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(4f1a) BC(0002) DE(0259) HL(0fd9) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(4f1a) BC(0002) DE(024f) HL(0fd9) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(4f1a) BC(0002) DE(024f) HL(0fd9) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(4f1a) BC(0002) DE(024f) HL(0fd9) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+O==== fe80: c9 00 00  RET
+PC(0ee7) AF(4f1a) BC(0002) DE(024f) HL(0fd9) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(4f1a) BC(0002) DE(024f) HL(0fd9) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(4f1a) BC(0002) DE(0259) HL(0fd9) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(4f1a) BC(0016) DE(0259) HL(0fd9) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(4f1a) BC(0016) DE(0259) HL(0fd9) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(4f1a) BC(0016) DE(0259) HL(0fd9) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(4f1a) BC(0016) DE(0259) HL(0fda) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(4f0a) BC(0016) DE(0259) HL(0fda) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(4f0a) BC(0016) DE(0259) HL(0fda) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(520a) BC(0016) DE(0259) HL(0fda) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(520a) BC(0016) DE(0259) HL(0fda) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(520a) BC(0016) DE(0259) HL(0fda) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(520a) BC(0016) DE(0259) HL(0fda) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(520a) BC(0016) DE(0259) HL(0fda) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(520a) BC(0002) DE(0259) HL(0fda) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(520a) BC(0002) DE(0252) HL(0fda) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(520a) BC(0002) DE(0252) HL(0fda) SP(01f2) IX(0000) IY(0000) Flags(00001010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(520a) BC(0002) DE(0252) HL(0fda) SP(01f2) IX(0000) IY(0000) Flags(00001010)
+R==== fe80: c9 00 00  RET
+PC(0ee7) AF(520a) BC(0002) DE(0252) HL(0fda) SP(01f4) IX(0000) IY(0000) Flags(00001010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(520a) BC(0002) DE(0252) HL(0fda) SP(01f6) IX(0000) IY(0000) Flags(00001010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(520a) BC(0002) DE(0259) HL(0fda) SP(01f8) IX(0000) IY(0000) Flags(00001010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(520a) BC(0016) DE(0259) HL(0fda) SP(01fa) IX(0000) IY(0000) Flags(00001010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(520a) BC(0016) DE(0259) HL(0fda) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(520a) BC(0016) DE(0259) HL(0fda) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(520a) BC(0016) DE(0259) HL(0fdb) SP(01fc) IX(0000) IY(0000) Flags(00001010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(521a) BC(0016) DE(0259) HL(0fdb) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(521a) BC(0016) DE(0259) HL(0fdb) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(591a) BC(0016) DE(0259) HL(0fdb) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(591a) BC(0016) DE(0259) HL(0fdb) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(591a) BC(0016) DE(0259) HL(0fdb) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(591a) BC(0016) DE(0259) HL(0fdb) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(591a) BC(0016) DE(0259) HL(0fdb) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(591a) BC(0002) DE(0259) HL(0fdb) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(591a) BC(0002) DE(0259) HL(0fdb) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(591a) BC(0002) DE(0259) HL(0fdb) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(591a) BC(0002) DE(0259) HL(0fdb) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+Y==== fe80: c9 00 00  RET
+PC(0ee7) AF(591a) BC(0002) DE(0259) HL(0fdb) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(591a) BC(0002) DE(0259) HL(0fdb) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(591a) BC(0002) DE(0259) HL(0fdb) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(591a) BC(0016) DE(0259) HL(0fdb) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(591a) BC(0016) DE(0259) HL(0fdb) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(591a) BC(0016) DE(0259) HL(0fdb) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(591a) BC(0016) DE(0259) HL(0fdc) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(591a) BC(0016) DE(0259) HL(0fdc) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(591a) BC(0016) DE(0259) HL(0fdc) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(201a) BC(0016) DE(0259) HL(0fdc) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(201a) BC(0016) DE(0259) HL(0fdc) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(201a) BC(0016) DE(0259) HL(0fdc) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(201a) BC(0016) DE(0259) HL(0fdc) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(201a) BC(0016) DE(0259) HL(0fdc) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(201a) BC(0002) DE(0259) HL(0fdc) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(201a) BC(0002) DE(0220) HL(0fdc) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(201a) BC(0002) DE(0220) HL(0fdc) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(201a) BC(0002) DE(0220) HL(0fdc) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+ ==== fe80: c9 00 00  RET
+PC(0ee7) AF(201a) BC(0002) DE(0220) HL(0fdc) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(201a) BC(0002) DE(0220) HL(0fdc) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(201a) BC(0002) DE(0259) HL(0fdc) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(201a) BC(0016) DE(0259) HL(0fdc) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(201a) BC(0016) DE(0259) HL(0fdc) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(201a) BC(0016) DE(0259) HL(0fdc) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(201a) BC(0016) DE(0259) HL(0fdd) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(201a) BC(0016) DE(0259) HL(0fdd) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(201a) BC(0016) DE(0259) HL(0fdd) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(531a) BC(0016) DE(0259) HL(0fdd) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(531a) BC(0016) DE(0259) HL(0fdd) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(531a) BC(0016) DE(0259) HL(0fdd) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(531a) BC(0016) DE(0259) HL(0fdd) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(531a) BC(0016) DE(0259) HL(0fdd) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(531a) BC(0002) DE(0259) HL(0fdd) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(531a) BC(0002) DE(0253) HL(0fdd) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(531a) BC(0002) DE(0253) HL(0fdd) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(531a) BC(0002) DE(0253) HL(0fdd) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+S==== fe80: c9 00 00  RET
+PC(0ee7) AF(531a) BC(0002) DE(0253) HL(0fdd) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(531a) BC(0002) DE(0253) HL(0fdd) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(531a) BC(0002) DE(0259) HL(0fdd) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(531a) BC(0016) DE(0259) HL(0fdd) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(531a) BC(0016) DE(0259) HL(0fdd) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(531a) BC(0016) DE(0259) HL(0fdd) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(531a) BC(0016) DE(0259) HL(0fde) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(531a) BC(0016) DE(0259) HL(0fde) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(531a) BC(0016) DE(0259) HL(0fde) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(501a) BC(0016) DE(0259) HL(0fde) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(501a) BC(0016) DE(0259) HL(0fde) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(501a) BC(0016) DE(0259) HL(0fde) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(501a) BC(0016) DE(0259) HL(0fde) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(501a) BC(0016) DE(0259) HL(0fde) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(501a) BC(0002) DE(0259) HL(0fde) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(501a) BC(0002) DE(0250) HL(0fde) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(501a) BC(0002) DE(0250) HL(0fde) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(501a) BC(0002) DE(0250) HL(0fde) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+P==== fe80: c9 00 00  RET
+PC(0ee7) AF(501a) BC(0002) DE(0250) HL(0fde) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(501a) BC(0002) DE(0250) HL(0fde) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(501a) BC(0002) DE(0259) HL(0fde) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(501a) BC(0016) DE(0259) HL(0fde) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(501a) BC(0016) DE(0259) HL(0fde) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(501a) BC(0016) DE(0259) HL(0fde) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(501a) BC(0016) DE(0259) HL(0fdf) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(501a) BC(0016) DE(0259) HL(0fdf) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(501a) BC(0016) DE(0259) HL(0fdf) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(411a) BC(0016) DE(0259) HL(0fdf) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(411a) BC(0016) DE(0259) HL(0fdf) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(411a) BC(0016) DE(0259) HL(0fdf) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(411a) BC(0016) DE(0259) HL(0fdf) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(411a) BC(0016) DE(0259) HL(0fdf) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(411a) BC(0002) DE(0259) HL(0fdf) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(411a) BC(0002) DE(0241) HL(0fdf) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(411a) BC(0002) DE(0241) HL(0fdf) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(411a) BC(0002) DE(0241) HL(0fdf) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+A==== fe80: c9 00 00  RET
+PC(0ee7) AF(411a) BC(0002) DE(0241) HL(0fdf) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(411a) BC(0002) DE(0241) HL(0fdf) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(411a) BC(0002) DE(0259) HL(0fdf) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(411a) BC(0016) DE(0259) HL(0fdf) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(411a) BC(0016) DE(0259) HL(0fdf) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(411a) BC(0016) DE(0259) HL(0fdf) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(411a) BC(0016) DE(0259) HL(0fe0) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(411a) BC(0016) DE(0259) HL(0fe0) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(411a) BC(0016) DE(0259) HL(0fe0) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(431a) BC(0016) DE(0259) HL(0fe0) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(431a) BC(0016) DE(0259) HL(0fe0) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(431a) BC(0016) DE(0259) HL(0fe0) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(431a) BC(0016) DE(0259) HL(0fe0) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(431a) BC(0016) DE(0259) HL(0fe0) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(431a) BC(0002) DE(0259) HL(0fe0) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(431a) BC(0002) DE(0243) HL(0fe0) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(431a) BC(0002) DE(0243) HL(0fe0) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(431a) BC(0002) DE(0243) HL(0fe0) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+C==== fe80: c9 00 00  RET
+PC(0ee7) AF(431a) BC(0002) DE(0243) HL(0fe0) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(431a) BC(0002) DE(0243) HL(0fe0) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(431a) BC(0002) DE(0259) HL(0fe0) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(431a) BC(0016) DE(0259) HL(0fe0) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(431a) BC(0016) DE(0259) HL(0fe0) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(431a) BC(0016) DE(0259) HL(0fe0) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(431a) BC(0016) DE(0259) HL(0fe1) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(431a) BC(0016) DE(0259) HL(0fe1) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(431a) BC(0016) DE(0259) HL(0fe1) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(451a) BC(0016) DE(0259) HL(0fe1) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(451a) BC(0016) DE(0259) HL(0fe1) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(451a) BC(0016) DE(0259) HL(0fe1) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(451a) BC(0016) DE(0259) HL(0fe1) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(451a) BC(0016) DE(0259) HL(0fe1) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(451a) BC(0002) DE(0259) HL(0fe1) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(451a) BC(0002) DE(0245) HL(0fe1) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(451a) BC(0002) DE(0245) HL(0fe1) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(451a) BC(0002) DE(0245) HL(0fe1) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+E==== fe80: c9 00 00  RET
+PC(0ee7) AF(451a) BC(0002) DE(0245) HL(0fe1) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(451a) BC(0002) DE(0245) HL(0fe1) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(451a) BC(0002) DE(0259) HL(0fe1) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(451a) BC(0016) DE(0259) HL(0fe1) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(451a) BC(0016) DE(0259) HL(0fe1) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(451a) BC(0016) DE(0259) HL(0fe1) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(451a) BC(0016) DE(0259) HL(0fe2) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(451a) BC(0016) DE(0259) HL(0fe2) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cbc) AF(451a) BC(0016) DE(0259) HL(0fe2) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbc: 7e cd de  LD A, (HL)
+PC(0cbd) AF(0d1a) BC(0016) DE(0259) HL(0fe2) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cbd: cd de 0e  CALL 0edeh
+PC(0ede) AF(0d1a) BC(0016) DE(0259) HL(0fe2) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(0d1a) BC(0016) DE(0259) HL(0fe2) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(0d1a) BC(0016) DE(0259) HL(0fe2) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(0d1a) BC(0016) DE(0259) HL(0fe2) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(0d1a) BC(0002) DE(0259) HL(0fe2) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(0d1a) BC(0002) DE(020d) HL(0fe2) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(0d1a) BC(0002) DE(020d) HL(0fe2) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(0d1a) BC(0002) DE(020d) HL(0fe2) SP(01f2) IX(0000) IY(0000) Flags(00011010)
+==== fe80: c9 00 00  RET
+PC(0ee7) AF(0d1a) BC(0002) DE(020d) HL(0fe2) SP(01f4) IX(0000) IY(0000) Flags(00011010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(0d1a) BC(0002) DE(020d) HL(0fe2) SP(01f6) IX(0000) IY(0000) Flags(00011010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(0d1a) BC(0002) DE(0259) HL(0fe2) SP(01f8) IX(0000) IY(0000) Flags(00011010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(0d1a) BC(0016) DE(0259) HL(0fe2) SP(01fa) IX(0000) IY(0000) Flags(00011010)
+==== 0eea: c9 4f cd  RET
+PC(0cc0) AF(0d1a) BC(0016) DE(0259) HL(0fe2) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc0: 7e 23 fe  LD A, (HL)
+PC(0cc1) AF(0d1a) BC(0016) DE(0259) HL(0fe2) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc1: 23 fe 0d  INC HL
+PC(0cc2) AF(0d1a) BC(0016) DE(0259) HL(0fe3) SP(01fc) IX(0000) IY(0000) Flags(00011010)
+==== 0cc2: fe 0d c2  CP A, 0dh
+PC(0cc4) AF(0d4a) BC(0016) DE(0259) HL(0fe3) SP(01fc) IX(0000) IY(0000) Flags(01001010)
+==== 0cc4: c2 bc 0c  JP NZ, 0cbch
+PC(0cc7) AF(0d4a) BC(0016) DE(0259) HL(0fe3) SP(01fc) IX(0000) IY(0000) Flags(01001010)
+==== 0cc7: 3e 0a cd  LD A, 0ah
+PC(0cc9) AF(0a4a) BC(0016) DE(0259) HL(0fe3) SP(01fc) IX(0000) IY(0000) Flags(01001010)
+==== 0cc9: cd de 0e  CALL 0edeh
+PC(0ede) AF(0a4a) BC(0016) DE(0259) HL(0fe3) SP(01fa) IX(0000) IY(0000) Flags(01001010)
+==== 0ede: c5 d5 e5  PUSH BC
+PC(0edf) AF(0a4a) BC(0016) DE(0259) HL(0fe3) SP(01f8) IX(0000) IY(0000) Flags(01001010)
+==== 0edf: d5 e5 0e  PUSH DE
+PC(0ee0) AF(0a4a) BC(0016) DE(0259) HL(0fe3) SP(01f6) IX(0000) IY(0000) Flags(01001010)
+==== 0ee0: e5 0e 02  PUSH HL
+PC(0ee1) AF(0a4a) BC(0016) DE(0259) HL(0fe3) SP(01f4) IX(0000) IY(0000) Flags(01001010)
+==== 0ee1: 0e 02 5f  LD C, 02h
+PC(0ee3) AF(0a4a) BC(0002) DE(0259) HL(0fe3) SP(01f4) IX(0000) IY(0000) Flags(01001010)
+==== 0ee3: 5f cd 05  LD E, A
+PC(0ee4) AF(0a4a) BC(0002) DE(020a) HL(0fe3) SP(01f4) IX(0000) IY(0000) Flags(01001010)
+==== 0ee4: cd 05 00  CALL 0005h
+PC(0005) AF(0a4a) BC(0002) DE(020a) HL(0fe3) SP(01f2) IX(0000) IY(0000) Flags(01001010)
+==== 0005: c3 80 fe  JP fe80h
+PC(fe80) AF(0a4a) BC(0002) DE(020a) HL(0fe3) SP(01f2) IX(0000) IY(0000) Flags(01001010)
+
+==== fe80: c9 00 00  RET
+PC(0ee7) AF(0a4a) BC(0002) DE(020a) HL(0fe3) SP(01f4) IX(0000) IY(0000) Flags(01001010)
+==== 0ee7: e1 d1 c1  POP HL
+PC(0ee8) AF(0a4a) BC(0002) DE(020a) HL(0fe3) SP(01f6) IX(0000) IY(0000) Flags(01001010)
+==== 0ee8: d1 c1 c9  POP DE
+PC(0ee9) AF(0a4a) BC(0002) DE(0259) HL(0fe3) SP(01f8) IX(0000) IY(0000) Flags(01001010)
+==== 0ee9: c1 c9 4f  POP BC
+PC(0eea) AF(0a4a) BC(0016) DE(0259) HL(0fe3) SP(01fa) IX(0000) IY(0000) Flags(01001010)
+==== 0eea: c9 4f cd  RET
+PC(0ccc) AF(0a4a) BC(0016) DE(0259) HL(0fe3) SP(01fc) IX(0000) IY(0000) Flags(01001010)
+==== 0ccc: c9 11 5c  RET
+PC(0d1e) AF(0a4a) BC(0016) DE(0259) HL(0fe3) SP(01fe) IX(0000) IY(0000) Flags(01001010)
+==== 0d1e: c3 00 00  JP 0000h
+PC(0000) AF(0a4a) BC(0016) DE(0259) HL(0fe3) SP(01fe) IX(0000) IY(0000) Flags(01001010)
+==== 0000: c3 03 ff  JP ff03h
+PC(ff03) AF(0a4a) BC(0016) DE(0259) HL(0fe3) SP(01fe) IX(0000) IY(0000) Flags(01001010)
+
+[[BIOS command 1: WBOOT]]Terminated, warm restart
