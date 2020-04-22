@@ -95,6 +95,26 @@ impl <'a> Fcb<'_> {
         name
     }
 
+    pub fn get_name_host(&self) -> String {
+        let mut name = String::new();
+        for i in 0..8 {
+            let ch = self.get_byte(i + FCB_NAME_OFFSET) & 0x7F;
+            if ch == ' ' as u8 {
+                break;
+            }
+            name.push(ch as char)
+        }
+        name.push('.');
+        for i in 0..3 {
+            let ch = self.get_byte(i + FCB_EXTENSION_OFFSET) & 0x7F;
+            if ch == ' ' as u8 {
+                break;
+            }
+            name.push(ch as char)
+        }
+        name
+    }
+
     pub fn get_sequential_record_number(&self) -> u16 {
         (EXTENT_SIZE as u16) * (self.get_byte(FCB_EXTENT_OFFSET) as u16)
         + (self.get_byte(FCB_CURRENT_RECORD_OFFSET) as u16)

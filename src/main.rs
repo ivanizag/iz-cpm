@@ -185,13 +185,14 @@ fn main() {
             let arg16 = cpu.registers().get16(Reg16::DE);
 
             let command = cpu.registers().get8(Reg8::C);
-            if call_trace && !(call_trace_skip_console && command <= 12) {
+            let bdos_trace = call_trace && !(call_trace_skip_console && command <= 12);
+            if bdos_trace {
                 let name = if command < BDOS_COMMAND_NAMES.len() as u8 {
                     BDOS_COMMAND_NAMES[command as usize]
                 } else {
                     "unknown"
                 };
-                print!("\n[[BDOS command {}: {}]]", command, name);
+                print!("\n[[BDOS command {}: {}({:04x})]]", command, name, arg16);
             }
 
             let mut res8: Option<u8> = None;
@@ -244,10 +245,9 @@ fn main() {
                     if call_trace {
                         print!("[[Delete file {}]]", fcb.get_name());
                     }
-                    // TODO
-                    res8 = Some(0);
+                    res8 = Some(cpm_file.delete(&fcb));
                 }
-                20 => { // F_READ - read next record
+                20 => { // F_READ - Read next record
                     let mut fcb = Fcb::new(arg16, &mut machine);
                     if call_trace {
                         print!("[Read record {:x} into {:04x}]",
@@ -259,13 +259,22 @@ fn main() {
                     }
                     res8 = Some(res);
                 },
+                21 => { // F_WRITE - Write next record
+                    cpm_file.save_buffer(&mut machine);
+                    let mut fcb = Fcb::new(arg16, &mut machine);
+                    if call_trace {
+                        print!("[Write record {:x} from {:04x}]",
+                            fcb.get_sequential_record_number(), cpm_file.get_dma());
+                    }
+                    let res = cpm_file.write(&mut fcb);
+                    res8 = Some(res);
+                }
                 22 => { // F_MAKE - Create file
-                    let fcb = Fcb::new(arg16, &mut machine);
+                    let mut fcb = Fcb::new(arg16, &mut machine);
                     if call_trace {
                         print!("[[Create file {}]]", fcb.get_name());
                     }
-                    // TODO
-                    res8 = Some(0);
+                    res8 = Some(cpm_file.make(&mut fcb));
                 }
                 24 => { // DRV_LOGINVEC - Return Log-in Vector
                     res16 = Some(cpm_drive.get_log_in_vector());
@@ -307,14 +316,14 @@ fn main() {
             if let Some(a) = res8 {
                 cpu.registers().set8(Reg8::A, a);
                 cpu.registers().set8(Reg8::L, a);
-                if call_trace && !(call_trace_skip_console && command <= 12) {
+                if bdos_trace {
                     print!("[[=>{:02x}]]", a);
                 }
             } else if let Some(hl) = res16 {
                 cpu.registers().set16(Reg16::HL, hl);
                 cpu.registers().set8(Reg8::A, hl as u8);
                 cpu.registers().set8(Reg8::B, (hl>>8) as u8);
-                if call_trace && !(call_trace_skip_console && command <= 12) {
+                if bdos_trace {
                     print!("[[=>{:02x}]]", hl);
                 }
             }

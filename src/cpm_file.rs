@@ -3,6 +3,7 @@ use std::fs;
 use std::io;
 use std::io::Read;
 use std::io::Seek;
+use std::io::Write;
 
 use iz80::Machine;
 
@@ -91,17 +92,37 @@ impl CpmFile {
         sequentially from the first record. 
         */
 
-        //TODO
-        let path = self.find_host_file(fcb.get_name());
-        match path {
-            Err(_) => 0xff, // Error or File not found
-            Ok(path) => {
-                let file = fs::File::open(path).unwrap();
-                self.file = Some(file);
-                fcb.init();
-                0
-            }
+        let search = self.find_host_file(fcb.get_name(), false);
+        if let Ok(paths) = search  {
+            let file = fs::File::open(&paths[0]).unwrap();
+            self.file = Some(file);
+            fcb.init();
+            return 0;
         }
+        0xff // Error or file not found
+    }
+
+    pub fn make(&mut self, fcb: &mut Fcb) -> u8 {
+        /*
+        The Make File operation is similar to the Open File operation except
+        that the FCB must name a file that does not exist in the currently
+        referenced disk directory (that is, the one named explicitly by a
+        nonzero dr code or the default disk if dr is zero). The FDOS creates
+        the file and initializes both the directory and main memory value to
+        an empty file. The programmer must ensure that no duplicate filenames
+        occur, and a preceding delete operation is sufficient if there is any
+        possibility of duplication. Upon return, register A = 0, 1, 2, or 3 if
+        the operation was successful and 0FFH (255 decimal) if no more directory
+        space is available. The Make function has the side effect of activating
+        the FCB and thus a subsequent open is not necessary.
+        */
+        let file = fs::File::create(fcb.get_name_host());
+        if let Ok(file) = file  {
+            self.file = Some(file);
+            fcb.init();
+            return 0;
+        }
+        0xff // Error or file not found
     }
 
     pub fn close(&mut self, _fcb: &Fcb) -> u8 {
@@ -128,6 +149,26 @@ impl CpmFile {
         }
     }
 
+    pub fn delete(&self, fcb: &Fcb) -> u8 {
+        /*
+        The Delete File function removes files that match the FCB addressed
+        by DE. The filename and type may contain ambiguous references (that
+        is, question marks in various positions), but the drive select code
+        cannot be ambiguous, as in the Search and Search Next functions.
+
+        Function 19 returns a decimal 255 if the referenced file or files
+        cannot be found; otherwise, a value in the range 0 to 3 returned.
+        */
+        let search = self.find_host_file(fcb.get_name(), false);
+        if let Ok(paths) = search  {
+            for name in paths {
+                fs::remove_file(name).unwrap();
+            }
+            return 0;
+        }
+        0xff // Error or file not found
+    }
+
     pub fn read(&mut self, fcb: &mut Fcb) -> u8 {
         /*
         Given that the FCB addressed by DE has been activated through an
@@ -145,6 +186,26 @@ impl CpmFile {
         let record = fcb.get_sequential_record_number();
         fcb.inc_current_record();
         self.read_record_in_buffer(record as u16)
+    }
+
+    pub fn write(&mut self, fcb: &mut Fcb) -> u8 {
+        /*
+        Given that the FCB addressed by DE has been activated through an
+        Open or Make function, the Write Sequential function writes the
+        128-byte data record at the current DMA address to the file named
+        by the FCB. The record is placed at position cr of the file, and
+        the cr field is automatically incremented to the next record
+        position. If the cr field overflows, the next logical extent
+        is automatically opened and the cr field is reset to zero in
+        preparation for the next write operation. Write operations can take
+        place into an existing file, in which case newly written records
+        overlay those that already exist in the file. Register A = 00H upon
+        return from a successful write operation, while a nonzero value
+        indicates an unsuccessful write caused by a full disk.
+        */
+        let record = fcb.get_sequential_record_number();
+        fcb.inc_current_record();
+        self.write_record_from_buffer(record as u16)
     }
 
     pub fn read_rand(&mut self, fcb: &Fcb) -> u8 {
@@ -221,7 +282,17 @@ impl CpmFile {
         match &mut self.file {
             None => 4, //04 file is not opened
             Some(os_file) => {
+                let metadata = os_file.metadata();
+                let size = match metadata {
+                    Err(_) => return 1, // O1 Error
+                    Ok(m) => m.len()
+                };
+
                 let file_offset = record as u64 * RECORD_SIZE as u64;
+                if file_offset >= size {
+                    return 6; //06 resd Past Physical end of disk
+                }
+
                 let res = os_file.seek(io::SeekFrom::Start(file_offset));
                 if let Err(_) = res {
                     return 6; //06	seek Past Physical end of disk
@@ -242,27 +313,62 @@ impl CpmFile {
         }
     }
 
+    fn write_record_from_buffer(&mut self, record: u16) -> u8 {
+        match &mut self.file {
+            None => 4, //04 file is not opened
+            Some(os_file) => {
+                let file_offset = record as u64 * RECORD_SIZE as u64;
+                let res = os_file.seek(io::SeekFrom::Start(file_offset));
+                if let Err(_) = res {
+                    return 6; //06	seek Past Physical end of disk
+                }
+
+                let res = os_file.write(&mut self.buffer);
+                let size = match res {
+                    Ok(n) => n,
+                    _ => return 1 // 01 reading unwritten data
+                };
+
+                if size != RECORD_SIZE {
+                    return 1 // 01 reading unwritten data
+                }
+                0
+            }
+        }
+    }
+
     pub fn load_buffer(&self, machine: &mut CpmMachine) {
         for i in 0..RECORD_SIZE {
             machine.poke(self.dma + i as u16, self.buffer[i]);
         }
     }
 
-    fn find_host_file(&self, name: String) -> io::Result<OsString> {
+    pub fn save_buffer(&mut self, machine: &mut CpmMachine) {
+        for i in 0..RECORD_SIZE {
+            self.buffer[i] = machine.peek(self.dma + i as u16);
+        }
+    }
+
+    fn find_host_file(&self, name: String, wildcard: bool) -> io::Result<Vec<OsString>> {
         let dir = fs::read_dir("./")?;
+        let mut files = Vec::new();
         for entry in dir {
             let entry = entry?;
             if entry.file_type()?.is_file() {
                 let cpm_name = name_to_8_3(&entry.file_name().to_string_lossy());
-                if let Some(s) = cpm_name {
-                    if s == name {
+                if let Some(cpm_name) = cpm_name {
+                    if cpm_name == name || (wildcard && name_match(&cpm_name, &name)) {
                         // File found
-                        return Ok(entry.path().into_os_string())
+                        files.push(entry.path().into_os_string());
                     }
                 }
             }
         }
-        Err(io::Error::new(io::ErrorKind::NotFound, ""))
+        if files.len() == 0 {
+            Err(io::Error::new(io::ErrorKind::NotFound, ""))
+        } else {
+            Ok(files)
+        }
     }
 
     pub fn get_set_user_number(&mut self, user: u8) -> u8 {
@@ -332,4 +438,28 @@ fn name_to_8_3(os_name: &str) -> Option<String> {
 
     // Pad with spaces and compose
     Some(format!("{:8}.{:3}", name, extension))
+}
+
+/*
+An ambiguous file reference is used for directory search and pattern matching.
+The form of an ambiguous file reference is similar to an unambiguous reference,
+except the symbol ? can be interspersed throughout the primary and secondary
+names. In various commands throughout CP/M, the ? symbol matches any character
+of a filename in the ? position. Thus, the ambiguous reference "X?Z.C?M" matches
+the following unambiguous filenames "XYZ.COM" and "X3Z.CAM".
+The wildcard character can also be used in an ambiguous file reference. The *
+character replaces all or part of a filename or filetype. Note that "*.*" equals
+the ambiguous file reference "????????.???" while "filename.*" and "*.typ" are
+abbreviations for "filename.???" and "????????.typ" respectively.
+*/
+const WILDCARD: u8 = '?' as u8;
+fn name_match(name: &str, pattern: &str) -> bool {
+    let n = name.as_bytes();
+    let p = pattern.as_bytes();
+    for i in 0..(8+1+3) {
+        if (n[i] != p[i]) || (p[i] != WILDCARD) {
+            return false;
+        }
+    }
+    true
 }
