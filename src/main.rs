@@ -20,10 +20,12 @@ const FCB1_ADDRESS:          u16 = 0x005c;
 const FCB2_ADDRESS:          u16 = 0x006c;
 const SYSTEM_PARAMS_ADDRESS: u16 = 0x0080; // Also default DMA buffer
 const TPA_BASE_ADDRESS:      u16 = 0x0100;
-//const CCP_BASE_ADDRESS:      u16 = 0xf000;
+const CCP_BASE_ADDRESS:      u16 = 0xf000; // The CPP binary has to be rebuilt if this changes
 const TPA_STACK_ADDRESS:     u16 = 0xf080; // 16 bytes for an 8 level stack
+const BDOS_BASE_ADDRESS:     u16 = 0xf800;
 const BIOS_BASE_ADDRESS:     u16 = 0xff00;
-const BDOS_BASE_ADDRESS:     u16 = 0xfe80;
+
+static CCP_BINARY: &'static [u8] = include_bytes!("../cpm22/OS2CCP.BIN");
 
 const BIOS_COMMAND_NAMES: [&'static str; 16] = [
     "BOOT", "WBOOT", "CONST", "CONIN", "CONOUT",
@@ -43,12 +45,13 @@ const BDOS_COMMAND_NAMES: [&'static str; 38] = [
 
 
 
+
 fn main() {
     // Parse arguments
     let matches = App::new("Z80 CP/M 2.2 emulator")
         .arg(Arg::with_name("CMD")
             .help("The z80 image to run")
-            .required(true)
+            .required(false)
             .index(1))
             .arg(Arg::with_name("ARGS")
             .help("Parameters for the given command")
@@ -63,7 +66,7 @@ fn main() {
             .long("cpu-trace")
             .help("Trace BDOS and BIOS calls"))
         .get_matches();
-    let filename = matches.value_of("CMD").unwrap();
+    let filename = matches.value_of("CMD");
     let params = matches.value_of("ARGS");
     let call_trace = matches.is_present("call_trace");
     let cpu_trace = matches.is_present("cpu_trace");
@@ -78,18 +81,34 @@ fn main() {
     let mut cpm_drive= CpmDrive::new();
     let mut cpm_file = CpmFile::new();
 
-    // Load program
-    /*
-    If the file is found, it is assumed to be a memory image of a program that
-    executes in the TPA and thus implicity originates at TBASE in memory. The
-    CCP loads the COM file from the disk into memory starting at TBASE and can
-    extend up to CBASE. 
-    */
-    let mut file = File::open(filename).unwrap();
+    // Load CCP or program
+    let binary: &[u8];
+    let binary_address: u16;
+    let binary_size: usize;
     let mut buf = [0u8;65536 - (TPA_BASE_ADDRESS as usize)];
-    let size = file.read(&mut buf).unwrap();
-    for i in 0..size {
-        machine.poke(TPA_BASE_ADDRESS + i as u16, buf[i]);
+    match filename {
+        None => {
+            // Load TPA
+            binary = CCP_BINARY;
+            binary_address = CCP_BASE_ADDRESS;
+            binary_size = CCP_BINARY.len();
+        },
+        Some(name) => {
+            /*
+            If the file is found, it is assumed to be a memory image of a
+            program that executes in the TPA and thus implicity originates
+            at TBASE in memory.
+            */
+            let mut file = File::open(name).unwrap();            
+            binary_size = file.read(&mut buf).unwrap();
+            binary = &buf;
+            binary_address = TPA_BASE_ADDRESS;
+        }
+    }
+
+    // Load the code in Z80 memory
+    for i in 0..binary_size {
+        machine.poke(binary_address + i as u16, binary[i]);
     }
 
     // Copy parameters
@@ -122,13 +141,14 @@ fn main() {
             context, mean that the logical disk letter is converted to its FCB
             representation, and the file name and type, converted to uppercase,
             are placed in the FCB in the correct bytes.
-In addition, any use of "*" in the file name is expanded to one or more question
-marks. For example, a file name of "abc*.*" will be converted to a name of
-"ABC!!???" and type of "???".
-Notice that FCB2 starts only 16 bytes above FCBI, yet a normal FCB is at least
-33 bytes long (36 bytes if you want to use random access). In many cases, programs
-only require a single file name. Therefore, you can proceed to use FCBI straight
-away, not caring that FCB2 will be overwritten.
+            In addition, any use of "*" in the file name is expanded to one or
+            more question marks. For example, a file name of "abc*.*" will be
+            converted to a name of "ABC!!???" and type of "???".
+            Notice that FCB2 starts only 16 bytes above FCBI, yet a normal FCB
+            is at least 33 bytes long (36 bytes if you want to use random access).
+            In many cases, programs only require a single file name. Therefore,
+            you can proceed to use FCBI straight away, not caring that FCB2 will
+            be overwritten.
             */
             let mut parts = p.split_ascii_whitespace();
             if let Some(arg1) = parts.next() {
@@ -144,19 +164,20 @@ away, not caring that FCB2 will be overwritten.
         }
     }
 
-    // Prepare Stack
     /*
     Upon entry to a transient program, the CCP leaves the stack pointer set to
     an eight-level stack area with the CCP return address pushed onto the stack,
     leaving seven levels before overflow occurs. 
     */
-    let mut sp = TPA_STACK_ADDRESS;
-    // Push 0x0000
-    machine.poke(sp, (0x0000 >> 8) as u8);
-    sp -= 1;
-    machine.poke(sp, 0x0000 as u8);
-    sp -= 1;
-    cpu.registers().set16(Reg16::SP, sp);
+    if binary_address == TPA_BASE_ADDRESS {
+        let mut sp = TPA_STACK_ADDRESS;
+        // Push 0x0000
+        machine.poke(sp, (0x0000 >> 8) as u8);
+        sp -= 1;
+        machine.poke(sp, 0x0000 as u8);
+        sp -= 1;
+        cpu.registers().set16(Reg16::SP, sp);
+    }
 
     /*
     Setup BIOS location and entry points
@@ -180,7 +201,7 @@ away, not caring that FCB2 will be overwritten.
     // We put ret on that address
     machine.poke(BDOS_BASE_ADDRESS, 0xc9 /*ret*/);
 
-    cpu.registers().set_pc(0x100);
+    cpu.registers().set_pc(binary_address);
     cpu.set_trace(cpu_trace);
     loop {
         cpu.execute_instruction(&mut machine);

@@ -1,5 +1,5 @@
 # iz-cpm
-Work in process
+Work in progress
 
 CP/M Emulation. Emulation of the CP/M services on top of the host OS. Z80 CP/M binaries work directly with the host operating system file system.
 
@@ -16,6 +16,11 @@ cargo run ASM.COM FILE.ASM
 Run Tiny Basic:
 ```
 cargo run diskA/TINYBAS.COM
+```
+
+Run the command prompt CPP:
+```
+cargo run
 ```
 
 Run Zork 1, Zork 2 or Zork 3:

@@ -10,16 +10,10 @@
 ;
 false	equ	0000h
 true	equ	not false
-testing	equ	false	;true if debugging
 ;
 ;
-	if	testing
-	org	3400h
+	org	0f000h
 bdosl	equ	$+800h		;bdos location
-	else
-	org	000h
-bdosl	equ	$+800h		;bdos location
-	endif
 tran	equ	100h
 tranm	equ	$
 ccploc	equ	$

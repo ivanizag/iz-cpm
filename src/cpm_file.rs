@@ -287,7 +287,7 @@ impl CpmFile {
 
         // Fill with zeros
         for i in size..RECORD_SIZE {
-            self.buffer[i] = 26; // CTRL-Z
+            self.buffer[i] = 26; // (CTRL-Z) 
         } 
         Ok(0)
     }

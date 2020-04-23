@@ -12,19 +12,13 @@ N               	title	'console command processor (CCP), ver 2.0'
                 ;
  0000 =         false	equ	0000h
  FFFF =         true	equ	not false
- 0000 =         testing	equ	false	;true if debugging
                 ;
                 ;
-                	if	testing
-                	org	3400h
-                bdosl	equ	$+800h		;bdos location
-                	else
-                	org	000h
-                bdosl	equ	$+800h		;bdos location
-                	endif
+ F000           	org	0f000h
+ F800 =         bdosl	equ	$+800h		;bdos location
  0100 =         tran	equ	100h
- 0000 =         tranm	equ	$
- 0000 =         ccploc	equ	$
+ F000 =         tranm	equ	$
+ F000 =         ccploc	equ	$
                 ;
                 ;	********************************************************
                 ;	*	Base of CCP contains the following code/data   *
@@ -46,19 +40,19 @@ N               	title	'console command processor (CCP), ver 2.0'
                 ;	* ables the automatic command execution.               *
                 ;	********************************************************
                 ;
- 0000 C35C03    	jmp	ccpstart	;start ccp with possible initial command
- 0003 C35803    	jmp	ccpclear	;clear the command buffer
- 0006 7F        maxlen:	db	127	;max buffer length
- 0007 00        comlen:	db	0	;command length (filled in by dos)
+ F000 C35CF3    	jmp	ccpstart	;start ccp with possible initial command
+ F003 C358F3    	jmp	ccpclear	;clear the command buffer
+ F006 7F        maxlen:	db	127	;max buffer length
+ F007 00        comlen:	db	0	;command length (filled in by dos)
                 ;	(command executed initially if comlen non zero)
                 combuf:
- 0008 2020202020	db	'        '	;8 character fill
- 0010 2020202020	db	'        '	;8 character fill
- 0018 434F505952	db	'COPYRIGHT (C) 1979, DIGITAL RESEARCH  '; 38
- 003E           	ds	128-($-combuf)
+ F008 2020202020	db	'        '	;8 character fill
+ F010 2020202020	db	'        '	;8 character fill
+ F018 434F505952	db	'COPYRIGHT (C) 1979, DIGITAL RESEARCH  '; 38
+ F03E           	ds	128-($-combuf)
                 ;	total buffer length is 128 characters
- 0088 0800      comaddr:dw	combuf	;address of next to char to scan
- 008A           staddr:	ds	2	;starting address of current fillfcb request
+ F088 08F0      comaddr:dw	combuf	;address of next to char to scan
+ F08A           staddr:	ds	2	;starting address of current fillfcb request
                 ;
  0004 =         diska	equ	0004h	;disk address for current disk
  0005 =         bdos	equ	0005h	;primary bdos entry point
@@ -99,737 +93,737 @@ N               	title	'console command processor (CCP), ver 2.0'
                 ;
                 ;	utility procedures
                 printchar:
- 008C 5F0E02C305	mov e,a! mvi c,pcharf! jmp bdos
+ F08C 5F0E02C305	mov e,a! mvi c,pcharf! jmp bdos
                 ;
                 printbc:
                 	;print character, but save b,c registers
- 0092 C5CD8C00C1	push b! call printchar! pop b! ret
+ F092 C5CD8CF0C1	push b! call printchar! pop b! ret
                 ;
                 crlf:
- 0098 3E0DCD9200	mvi a,cr! call printbc
- 009D 3E0AC39200	mvi a,lf! jmp  printbc
+ F098 3E0DCD92F0	mvi a,cr! call printbc
+ F09D 3E0AC392F0	mvi a,lf! jmp  printbc
                 ;
                 blank:
- 00A2 3E20C39200	mvi a,' '! jmp printbc
+ F0A2 3E20C392F0	mvi a,' '! jmp printbc
                 ;
                 print:	;print string starting at b,c until next 00 entry
- 00A7 C5CD9800E1	push b! call crlf! pop h ;now print the string
- 00AC 7EB7C8    prin0:	mov a,m! ora a! rz ;stop on 00
- 00AF 23E5      		inx h! push h ;ready for next
- 00B1 CD8C00E1  		call printchar! pop h ;character printed
- 00B5 C3AC00    		jmp prin0 ;for another character
+ F0A7 C5CD98F0E1	push b! call crlf! pop h ;now print the string
+ F0AC 7EB7C8    prin0:	mov a,m! ora a! rz ;stop on 00
+ F0AF 23E5      		inx h! push h ;ready for next
+ F0B1 CD8CF0E1  		call printchar! pop h ;character printed
+ F0B5 C3ACF0    		jmp prin0 ;for another character
                 ;
                 initialize:
- 00B8 0E0DC30500	mvi c,initf! jmp bdos
+ F0B8 0E0DC30500	mvi c,initf! jmp bdos
                 ;
                 select:
- 00BD 5F0E0EC305	mov e,a! mvi c,self! jmp bdos
+ F0BD 5F0E0EC305	mov e,a! mvi c,self! jmp bdos
                 ;
                 bdos$inr:
- 00C3 CD050032EE	call bdos! sta dcnt! inr a! ret
+ F0C3 CD050032EE	call bdos! sta dcnt! inr a! ret
                 ;
                 open:	;open the file given by d,e
- 00CB 0E0FC3C300	mvi c,openf! jmp bdos$inr
+ F0CB 0E0FC3C3F0	mvi c,openf! jmp bdos$inr
                 ;
                 openc:	;open comfcb
- 00D0 AF32ED07  	xra a! sta comrec ;clear next record to read
- 00D4 11CD07C3CB	lxi d,comfcb! jmp open
+ F0D0 AF32EDF7  	xra a! sta comrec ;clear next record to read
+ F0D4 11CDF7C3CB	lxi d,comfcb! jmp open
                 ;
                 close:	;close the file given by d,e
- 00DA 0E10C3C300	mvi c,closef! jmp bdos$inr
+ F0DA 0E10C3C3F0	mvi c,closef! jmp bdos$inr
                 ;
                 search:	;search for the file given by d,e
- 00DF 0E11C3C300	mvi c,searf! jmp bdos$inr
+ F0DF 0E11C3C3F0	mvi c,searf! jmp bdos$inr
                 ;
                 searchn:
                 	;search for the next occurrence of the file given by d,e
- 00E4 0E12C3C300	mvi c,searnf! jmp bdos$inr
+ F0E4 0E12C3C3F0	mvi c,searnf! jmp bdos$inr
                 ;
                 searchcom:
                 	;search for comfcb file
- 00E9 11CD07C3DF	lxi d,comfcb! jmp search
+ F0E9 11CDF7C3DF	lxi d,comfcb! jmp search
                 ;
                 delete:	;delete the file given by d,e
- 00EF 0E13C30500	mvi c,delf! jmp bdos
+ F0EF 0E13C30500	mvi c,delf! jmp bdos
                 ;
                 bdos$cond:
- 00F4 CD0500B7C9	call bdos! ora a! ret
+ F0F4 CD0500B7C9	call bdos! ora a! ret
                 ;
                 diskread:
                 	;read the next record from the file given by d,e
- 00F9 0E14C3F400	mvi c,dreadf! jmp bdos$cond
+ F0F9 0E14C3F4F0	mvi c,dreadf! jmp bdos$cond
                 ;
                 diskreadc:
                 	;read the comfcb file
- 00FE 11CD07C3F9	lxi d,comfcb! jmp diskread
+ F0FE 11CDF7C3F9	lxi d,comfcb! jmp diskread
                 ;
                 diskwrite:
                 	;write the next record to the file given by d,e
- 0104 0E15C3F400	mvi c,dwritf! jmp bdos$cond
+ F104 0E15C3F4F0	mvi c,dwritf! jmp bdos$cond
                 ;
                 make:	;create the file given by d,e
- 0109 0E16C3C300	mvi c,makef! jmp bdos$inr
+ F109 0E16C3C3F0	mvi c,makef! jmp bdos$inr
                 ;
                 renam:	;rename the file given by d,e
- 010E 0E17C30500	mvi c,renf! jmp bdos
+ F10E 0E17C30500	mvi c,renf! jmp bdos
                 ;
                 getuser:
                 	;return current user code in a
- 0113 1EFF      	mvi e,0ffh ;drop through to setuser
+ F113 1EFF      	mvi e,0ffh ;drop through to setuser
                 ;
                 setuser:
- 0115 0E20C30500        mvi c,userf! jmp bdos ;sets user number
+ F115 0E20C30500        mvi c,userf! jmp bdos ;sets user number
                 ;
                 saveuser:
                 	;save user#/disk# before possible ^c or transient
- 011A CD1301    	call getuser ;code to a
- 011D 87878787  	add a! add a! add a! add a ;rot left
- 0121 21EF07B6  	lxi h,cdisk! ora m ;4b=user, 4b=disk
- 0125 320400    	sta diska ;stored away in memory for later
- 0128 C9        	ret
+ F11A CD13F1    	call getuser ;code to a
+ F11D 87878787  	add a! add a! add a! add a ;rot left
+ F121 21EFF7B6  	lxi h,cdisk! ora m ;4b=user, 4b=disk
+ F125 320400    	sta diska ;stored away in memory for later
+ F128 C9        	ret
                 ;
                 setdiska:
- 0129 3AEF073204	lda cdisk! sta diska ;user/disk
- 012F C9        	ret
+ F129 3AEFF73204	lda cdisk! sta diska ;user/disk
+ F12F C9        	ret
                 ;
                 translate:
                 	;translate character in register A to upper case
- 0130 FE61D8    	cpi 61h! rc ;return if below lower case a
- 0133 FE7BD0    	cpi 7bh! rnc ;return if above lower case z
- 0136 E65FC9    	ani 5fh! ret ;translated to upper case
+ F130 FE61D8    	cpi 61h! rc ;return if below lower case a
+ F133 FE7BD0    	cpi 7bh! rnc ;return if above lower case z
+ F136 E65FC9    	ani 5fh! ret ;translated to upper case
                 ;
                 readcom:
                 	;read the next command into the command buffer
                 	;check for submit file
- 0139 3AAB07B7CA	lda submit! ora a! jz nosub
+ F139 3AABF7B7CA	lda submit! ora a! jz nosub
                 		;scanning a submit file
                 		;change drives to open and read the file
- 0140 3AEF07B73E		lda cdisk! ora a! mvi a,0! cnz select
+ F140 3AEFF7B73E		lda cdisk! ora a! mvi a,0! cnz select
                 		;have to open again in case xsub present
- 0149 11AC07CDCB                lxi d,subfcb! call open! jz nosub ;skip if no sub
- 0152 3ABB073D  		lda subrc! dcr a ;read last record(s) first
- 0156 32CC07    		sta subcr ;current record to read
- 0159 11AC07CDF9		lxi d,subfcb! call diskread ;end of file if last record
- 015F C29601    		jnz nosub
+ F149 11ACF7CDCB                lxi d,subfcb! call open! jz nosub ;skip if no sub
+ F152 3ABBF73D  		lda subrc! dcr a ;read last record(s) first
+ F156 32CCF7    		sta subcr ;current record to read
+ F159 11ACF7CDF9		lxi d,subfcb! call diskread ;end of file if last record
+ F15F C296F1    		jnz nosub
                 			;disk read is ok, transfer to combuf
- 0162 1107002180			lxi d,comlen! lxi h,buff! mvi b,128! call move0
+ F162 1107F02180			lxi d,comlen! lxi h,buff! mvi b,128! call move0
                 			;line is transferred, close the file with a
                 			;deleted record
- 016D 21BA073600			lxi h,submod! mvi m,0 ;clear fwflag
- 0172 2335      			inx h! dcr m ;one less record
- 0174 11AC07CDDA			lxi d,subfcb! call close! jz nosub
+ F16D 21BAF73600			lxi h,submod! mvi m,0 ;clear fwflag
+ F172 2335      			inx h! dcr m ;one less record
+ F174 11ACF7CDDA			lxi d,subfcb! call close! jz nosub
                 			;close went ok, return to original drive
- 017D 3AEF07B7C4			lda cdisk! ora a! cnz select
+ F17D 3AEFF7B7C4			lda cdisk! ora a! cnz select
                 			;print to the 00
- 0184 210800CDAC			lxi h,combuf! call prin0
- 018A CDC201CAA7			call break$key! jz noread
- 0190 CDDD01C382			call del$sub! jmp ccp ;break key depressed
+ F184 2108F0CDAC			lxi h,combuf! call prin0
+ F18A CDC2F1CAA7			call break$key! jz noread
+ F190 CDDDF1C382			call del$sub! jmp ccp ;break key depressed
                 			;
- 0196 CDDD01    	nosub:	;no submit file! call del$sub
+ F196 CDDDF1    	nosub:	;no submit file! call del$sub
                 	;translate to upper case, store zero at end
- 0199 CD1A01    	call saveuser ;user # save in case control c
- 019C 0E0A110600	mvi c,rbuff! lxi d,maxlen! call bdos
- 01A4 CD2901    	call setdiska ;no control c, so restore diska
+ F199 CD1AF1    	call saveuser ;user # save in case control c
+ F19C 0E0A1106F0	mvi c,rbuff! lxi d,maxlen! call bdos
+ F1A4 CD29F1    	call setdiska ;no control c, so restore diska
                 	noread:	;enter here from submit file
                 	;set the last character to zero for later scans
- 01A7 21070046  	lxi h,comlen! mov b,m ;length is in b
- 01AB 2378B7    	readcom0: inx h! mov a,b! ora a ;end of scan?
- 01AE CABA017E  		jz readcom1! mov a,m ;get character and translate
- 01B2 CD30017705		call translate! mov m,a! dcr b! jmp readcom0
+ F1A7 2107F046  	lxi h,comlen! mov b,m ;length is in b
+ F1AB 2378B7    	readcom0: inx h! mov a,b! ora a ;end of scan?
+ F1AE CABAF17E  		jz readcom1! mov a,m ;get character and translate
+ F1B2 CD30F17705		call translate! mov m,a! dcr b! jmp readcom0
                 		;
                 	readcom1: ;end of scan, h,l address end of command
- 01BA 77        		mov m,a ;store a zero
- 01BB 2108002288		lxi h,combuf! shld comaddr ;ready to scan to zero
- 01C1 C9        	ret
+ F1BA 77        		mov m,a ;store a zero
+ F1BB 2108F02288		lxi h,combuf! shld comaddr ;ready to scan to zero
+ F1C1 C9        	ret
                 ;
                 break$key:
                 	;check for a character ready at the console
- 01C2 0E0BCD0500	mvi c,breakf! call bdos
- 01C7 B7C8      	ora a! rz
- 01C9 0E01CD0500	mvi c,rcharf! call bdos ;character cleared
- 01CE B7C9      	ora a! ret
+ F1C2 0E0BCD0500	mvi c,breakf! call bdos
+ F1C7 B7C8      	ora a! rz
+ F1C9 0E01CD0500	mvi c,rcharf! call bdos ;character cleared
+ F1CE B7C9      	ora a! ret
                 ;
                 cselect:
                 	;get the currently selected drive number to reg-A
- 01D0 0E19C30500	mvi c,cself! jmp bdos
+ F1D0 0E19C30500	mvi c,cself! jmp bdos
                 ;
                 setdmabuff:
                 	;set default buffer dma address
- 01D5 118000    	lxi d,buff ;(drop through)
+ F1D5 118000    	lxi d,buff ;(drop through)
                 ;
                 setdma:
                 	;set dma address to d,e
- 01D8 0E1AC30500	mvi c,dmaf! jmp bdos
+ F1D8 0E1AC30500	mvi c,dmaf! jmp bdos
                 ;
                 del$sub:
                 	;delete the submit file, and set submit flag to false
- 01DD 21AB077EB7	lxi h,submit! mov a,m! ora a! rz ;return if no sub file
- 01E3 3600      	mvi m,0 ;submit flag is set to false
- 01E5 AFCDBD00  	xra a! call select ;on drive a to erase file
- 01E9 11AC07CDEF	lxi d,subfcb! call delete
- 01EF 3AEF07C3BD	lda cdisk! jmp select ;back to original drive
+ F1DD 21ABF77EB7	lxi h,submit! mov a,m! ora a! rz ;return if no sub file
+ F1E3 3600      	mvi m,0 ;submit flag is set to false
+ F1E5 AFCDBDF0  	xra a! call select ;on drive a to erase file
+ F1E9 11ACF7CDEF	lxi d,subfcb! call delete
+ F1EF 3AEFF7C3BD	lda cdisk! jmp select ;back to original drive
                 ;
                 serialize:
                 	;check serialization
-P01F5 1128032100	lxi d,serial! lxi h,bdosl! mvi b,6 ;check six bytes
- 01FD 1ABEC2CF03	ser0:	ldax d! cmp m! jnz badserial
- 0202 132305C2FD		inx d! inx h! dcr b! jnz ser0
- 0208 C9        		ret ;serial number is ok
+ F1F5 1128F32100	lxi d,serial! lxi h,bdosl! mvi b,6 ;check six bytes
+ F1FD 1ABEC2CFF3	ser0:	ldax d! cmp m! jnz badserial
+ F202 132305C2FD		inx d! inx h! dcr b! jnz ser0
+ F208 C9        		ret ;serial number is ok
                 ;
                 comerr:
                 	;error in command string starting at position
                 	;'staddr' and ending with first delimiter
- 0209 CD9800    	call crlf ;space to next line
- 020C 2A8A00    	lhld staddr ;h,l address first to print
+ F209 CD98F0    	call crlf ;space to next line
+ F20C 2A8AF0    	lhld staddr ;h,l address first to print
                 	comerr0: ;print characters until blank or zero
- 020F 7EFE20CA22		mov a,m! cpi ' '! jz comerr1; not blank
- 0215 B7CA2202  		ora a! jz comerr1; not zero, so print it
- 0219 E5CD8C00E1		push h! call printchar! pop h! inx h
- 021F C30F02    		jmp comerr0; for another character
+ F20F 7EFE20CA22		mov a,m! cpi ' '! jz comerr1; not blank
+ F215 B7CA22F2  		ora a! jz comerr1; not zero, so print it
+ F219 E5CD8CF0E1		push h! call printchar! pop h! inx h
+ F21F C30FF2    		jmp comerr0; for another character
                 	comerr1: ;print question mark,and delete sub file
- 0222 3E3FCD8C00		mvi a,'?'! call printchar
- 0227 CD9800CDDD		call crlf! call del$sub
- 022D C38203    		jmp ccp ;restart with next command
+ F222 3E3FCD8CF0		mvi a,'?'! call printchar
+ F227 CD98F0CDDD		call crlf! call del$sub
+ F22D C382F3    		jmp ccp ;restart with next command
                 ;
                 ; fcb scan and fill subroutine (entry is at fillfcb below)
                 	;fill the comfcb, indexed by A (0 or 16)
                 	;subroutines
                 	delim:	;look for a delimiter
- 0230 1AB7C8    		ldax d! ora a! rz ;not the last element
- 0233 FE20DA0902		cpi ' '! jc comerr ;non graphic
- 0238 C8        		rz ;treat blank as delimiter
- 0239 FE3DC8    		cpi '='! rz
- 023C FE5FC8    		cpi la!  rz ;left arrow
- 023F FE2EC8    		cpi '.'! rz
- 0242 FE3AC8    		cpi ':'! rz
- 0245 FE3BC8    		cpi ';'! rz
- 0248 FE3CC8    		cpi '<'! rz
- 024B FE3EC8    		cpi '>'! rz
- 024E C9        		ret	;delimiter not found
+ F230 1AB7C8    		ldax d! ora a! rz ;not the last element
+ F233 FE20DA09F2		cpi ' '! jc comerr ;non graphic
+ F238 C8        		rz ;treat blank as delimiter
+ F239 FE3DC8    		cpi '='! rz
+ F23C FE5FC8    		cpi la!  rz ;left arrow
+ F23F FE2EC8    		cpi '.'! rz
+ F242 FE3AC8    		cpi ':'! rz
+ F245 FE3BC8    		cpi ';'! rz
+ F248 FE3CC8    		cpi '<'! rz
+ F24B FE3EC8    		cpi '>'! rz
+ F24E C9        		ret	;delimiter not found
                 ;
                 	deblank: ;deblank the input line
- 024F 1AB7C8    		ldax d! ora a! rz ;treat end of line as blank
- 0252 FE20C013C3		cpi ' '! rnz! inx d! jmp deblank
+ F24F 1AB7C8    		ldax d! ora a! rz ;treat end of line as blank
+ F252 FE20C013C3		cpi ' '! rnz! inx d! jmp deblank
                 ;
                 	addh: ;add a to h,l
- 0259 856FD0    		add l! mov l,a! rnc
- 025C 24C9      		inr h! ret
+ F259 856FD0    		add l! mov l,a! rnc
+ F25C 24C9      		inr h! ret
                 		;
                 fillfcb0:
                 	;equivalent to fillfcb(0)
- 025E 3E00      	mvi a,0
+ F25E 3E00      	mvi a,0
                 ;
                 fillfcb:
- 0260 21CD07CD59	lxi h,comfcb! call addh! push h! push h ;fcb rescanned at end
- 0268 AF32F007  	xra a! sta sdisk ;clear selected disk (in case A:...)
- 026C 2A8800EB  	lhld comaddr! xchg ;command address in d,e
- 0270 CD4F02    	call deblank ;to first non-blank character
- 0273 EB228A00  	xchg! shld staddr ;in case of errors
- 0277 EBE1      	xchg! pop h ;d,e has command, h,l has fcb address
+ F260 21CDF7CD59	lxi h,comfcb! call addh! push h! push h ;fcb rescanned at end
+ F268 AF32F0F7  	xra a! sta sdisk ;clear selected disk (in case A:...)
+ F26C 2A88F0EB  	lhld comaddr! xchg ;command address in d,e
+ F270 CD4FF2    	call deblank ;to first non-blank character
+ F273 EB228AF0  	xchg! shld staddr ;in case of errors
+ F277 EBE1      	xchg! pop h ;d,e has command, h,l has fcb address
                 	;look for preceding file name A: B: ...
- 0279 1AB7CA8902	ldax d! ora a! jz setcur0 ;use current disk if empty command
- 027E DE4047    	sbi 'A'-1! mov b,a ;disk name held in b if : follows
- 0281 131AFE3ACA	inx d! ldax d! cpi ':'! jz setdsk ;set disk name if :
+ F279 1AB7CA89F2	ldax d! ora a! jz setcur0 ;use current disk if empty command
+ F27E DE4047    	sbi 'A'-1! mov b,a ;disk name held in b if : follows
+ F281 131AFE3ACA	inx d! ldax d! cpi ':'! jz setdsk ;set disk name if :
                 	;
                 	setcur: ;set current disk
- 0288 1B        		dcx d ;back to first character of command
+ F288 1B        		dcx d ;back to first character of command
                 	setcur0:
- 0289 3AEF0777C3		lda cdisk! mov m,a! jmp setname
+ F289 3AEFF777C3		lda cdisk! mov m,a! jmp setname
                 	;
                 	setdsk: ;set disk to name in register b
- 0290 7832F007  		mov a,b! sta sdisk ;mark as disk selected
- 0294 7013      		mov m,b! inx d ;past the :
+ F290 7832F0F7  		mov a,b! sta sdisk ;mark as disk selected
+ F294 7013      		mov m,b! inx d ;past the :
                 	;
                 	setname: ;set the file name field
- 0296 0608      		mvi b,8 ;file name length (max)
- 0298 CD3002CAB9		setnam0: call delim! jz padname ;not a delimiter
- 029E 23FE2AC2A9			inx h! cpi '*'! jnz setnam1 ;must be ?'s
- 02A4 363FC3AB02			mvi m,'?'! jmp setnam2 ;to dec count
+ F296 0608      		mvi b,8 ;file name length (max)
+ F298 CD30F2CAB9		setnam0: call delim! jz padname ;not a delimiter
+ F29E 23FE2AC2A9			inx h! cpi '*'! jnz setnam1 ;must be ?'s
+ F2A4 363FC3ABF2			mvi m,'?'! jmp setnam2 ;to dec count
                 		;
- 02A9 7713      		setnam1: mov m,a ;store character to fcb! inx d
- 02AB 05C29802  		setnam2: dcr b ;count down length! jnz setnam0
+ F2A9 7713      		setnam1: mov m,a ;store character to fcb! inx d
+ F2AB 05C298F2  		setnam2: dcr b ;count down length! jnz setnam0
                 		;
                 	;end of name, truncate remainder
- 02AF CD3002CAC0	trname: call delim! jz setty ;set type field if delimiter
- 02B5 13C3AF02  		inx d! jmp trname
+ F2AF CD30F2CAC0	trname: call delim! jz setty ;set type field if delimiter
+ F2B5 13C3AFF2  		inx d! jmp trname
                 		;
- 02B9 23362005C2	padname: inx h! mvi m,' '! dcr b! jnz padname
+ F2B9 23362005C2	padname: inx h! mvi m,' '! dcr b! jnz padname
                 		;
                 	setty: ;set the type field
- 02C0 0603FE2EC2		mvi b,3! cpi '.'! jnz padty ;skip the type field if no .
- 02C7 13        		inx d ;past the ., to the file type field
+ F2C0 0603FE2EC2		mvi b,3! cpi '.'! jnz padty ;skip the type field if no .
+ F2C7 13        		inx d ;past the ., to the file type field
                 		setty0: ;set the field from the command buffer
- 02C8 CD3002CAE9			call delim! jz padty! inx h! cpi '*'! jnz setty1
- 02D4 363FC3DB02			mvi m,'?' ;since * specified! jmp setty2
+ F2C8 CD30F2CAE9			call delim! jz padty! inx h! cpi '*'! jnz setty1
+ F2D4 363FC3DBF2			mvi m,'?' ;since * specified! jmp setty2
                 			;
                 		setty1: ;not a *, so copy to type field
- 02D9 7713      			mov m,a! inx d
+ F2D9 7713      			mov m,a! inx d
                 		setty2: ;decrement count and go again
- 02DB 05C2C802  			dcr b! jnz setty0
+ F2DB 05C2C8F2  			dcr b! jnz setty0
                 			;
                 		;end of type field, truncate
                 	trtyp: ;truncate type field
- 02DF CD3002CAF0		call delim! jz efill! inx d! jmp trtyp
+ F2DF CD30F2CAF0		call delim! jz efill! inx d! jmp trtyp
                 		;
                 		padty:	;pad the type field with blanks
- 02E9 23362005C2			inx h! mvi m,' '! dcr b! jnz padty
+ F2E9 23362005C2			inx h! mvi m,' '! dcr b! jnz padty
                 		;
                 	efill: ;end of the filename/filetype fill, save command address
                 		;fill the remaining fields for the fcb
- 02F0 0603      		mvi b,3
- 02F2 23360005C2		efill0: inx h! mvi m,0! dcr b! jnz efill0
- 02F9 EB228800  		xchg! shld comaddr ;set new starting point
+ F2F0 0603      		mvi b,3
+ F2F2 23360005C2		efill0: inx h! mvi m,0! dcr b! jnz efill0
+ F2F9 EB2288F0  		xchg! shld comaddr ;set new starting point
                 		;
                 		;recover the start address of the fcb and count ?'s
- 02FD E1010B00  		pop h! lxi b,11 ;b=0, c=8+3
- 0301 237EFE3FC2		scnq: inx h! mov a,m! cpi '?'! jnz scnq0
- 0308 04        		;? found, count it in b! inr b
- 0309 0DC20103  		scnq0: dcr c! jnz scnq
+ F2FD E1010B00  		pop h! lxi b,11 ;b=0, c=8+3
+ F301 237EFE3FC2		scnq: inx h! mov a,m! cpi '?'! jnz scnq0
+ F308 04        		;? found, count it in b! inr b
+ F309 0DC201F3  		scnq0: dcr c! jnz scnq
                 		;
                 		;number of ?'s in c, move to a and return with flags set
- 030D 78B7C9    		mov a,b! ora a! ret
+ F30D 78B7C9    		mov a,b! ora a! ret
                 ;
                 intvec:
                 	;intrinsic function names (all are four characters)
- 0310 44495220  	db	'DIR '
- 0314 45524120  	db	'ERA '
- 0318 54595045  	db	'TYPE'
- 031C 53415645  	db	'SAVE'
- 0320 52454E20  	db	'REN '
- 0324 55534552          db      'USER'
+ F310 44495220  	db	'DIR '
+ F314 45524120  	db	'ERA '
+ F318 54595045  	db	'TYPE'
+ F31C 53415645  	db	'SAVE'
+ F320 52454E20  	db	'REN '
+ F324 55534552          db      'USER'
  0006 =         	intlen equ ($-intvec)/4 ;intrinsic function length
- 0328 0000000000	serial: db 0,0,0,0,0,0
+ F328 0000000000	serial: db 0,0,0,0,0,0
                 ;
                 ;
                 intrinsic:
                 	;look for intrinsic functions (comfcb has been filled)
- 032E 2110030E00	lxi h,intvec! mvi c,0 ;c counts intrinsics as scanned
- 0333 79FE06D0  	intrin0: mov a,c! cpi intlen ;done with scan?! rnc
+ F32E 2110F30E00	lxi h,intvec! mvi c,0 ;c counts intrinsics as scanned
+ F333 79FE06D0  	intrin0: mov a,c! cpi intlen ;done with scan?! rnc
                 		;no, more to scan
- 0337 11CE07    		lxi d,comfcb+1 ;beginning of name
- 033A 0604      		mvi b,4 ;length of match is in b
- 033C 1ABE      		intrin1: ldax d! cmp m ;match?
- 033E C24F03    			jnz intrin2 ;skip if no match
- 0341 132305    			inx d! inx h! dcr b
- 0344 C23C03    			jnz intrin1 ;loop while matching
+ F337 11CEF7    		lxi d,comfcb+1 ;beginning of name
+ F33A 0604      		mvi b,4 ;length of match is in b
+ F33C 1ABE      		intrin1: ldax d! cmp m ;match?
+ F33E C24FF3    			jnz intrin2 ;skip if no match
+ F341 132305    			inx d! inx h! dcr b
+ F344 C23CF3    			jnz intrin1 ;loop while matching
                 		;
                 		;complete match on name, check for blank in fcb
- 0347 1AFE20C254		ldax d! cpi ' '! jnz intrin3 ;otherwise matched
- 034D 79C9      		mov a,c! ret ;with intrinsic number in a
+ F347 1AFE20C254		ldax d! cpi ' '! jnz intrin3 ;otherwise matched
+ F34D 79C9      		mov a,c! ret ;with intrinsic number in a
                 		;
                 		intrin2: ;mismatch, move to end of intrinsic
- 034F 2305C24F03			inx h! dcr b! jnz intrin2
+ F34F 2305C24FF3			inx h! dcr b! jnz intrin2
                 		;
                 		intrin3: ;try next intrinsic
- 0354 0C        			inr c ;to next intrinsic number
- 0355 C33303    			jmp intrin0 ;for another round
+ F354 0C        			inr c ;to next intrinsic number
+ F355 C333F3    			jmp intrin0 ;for another round
                 ;
                 ccpclear:
                 	;clear the command buffer
- 0358 AF        	xra	a
- 0359 320700    	sta	comlen
+ F358 AF        	xra	a
+ F359 3207F0    	sta	comlen
                 	;drop through to start ccp
                 ccpstart:
                 	;enter here from boot loader
- 035C 31AB07C5  	lxi sp,stack! push b ;save initial disk number
+ F35C 31ABF7C5  	lxi sp,stack! push b ;save initial disk number
                         ;(high order 4bits=user code, low 4bits=disk#)
- 0360 791F1F1F1F	mov a,c! rar! rar! rar! rar! ani 0fh ;user code
- 0367 5FCD1501  	mov e,a! call setuser ;user code selected
+ F360 791F1F1F1F	mov a,c! rar! rar! rar! rar! ani 0fh ;user code
+ F367 5FCD15F1  	mov e,a! call setuser ;user code selected
                 	;initialize for this user, get $ flag
- 036B CDB800            call initialize ;0ffh in accum if $ file present
- 036E 32AB07            sta submit ;submit flag set if $ file present
- 0371 C1                pop b ;recall user code and disk number
- 0372 79E60F    	mov a,c! ani 0fh ;disk number in accumulator
- 0375 32EF07            sta cdisk ;clears user code nibble
- 0378 CDBD00    	call select ;proper disk is selected, now check sub files
+ F36B CDB8F0            call initialize ;0ffh in accum if $ file present
+ F36E 32ABF7            sta submit ;submit flag set if $ file present
+ F371 C1                pop b ;recall user code and disk number
+ F372 79E60F    	mov a,c! ani 0fh ;disk number in accumulator
+ F375 32EFF7            sta cdisk ;clears user code nibble
+ F378 CDBDF0    	call select ;proper disk is selected, now check sub files
                 	;check for initial command
- 037B 3A0700B7C2	lda comlen! ora a! jnz ccp0	;assume typed already
+ F37B 3A07F0B7C2	lda comlen! ora a! jnz ccp0	;assume typed already
                 ;
                 ccp:
                 	;enter here on each command or error condition
- 0382 31AB07    	lxi sp,stack
- 0385 CD9800    	call crlf ;print d> prompt, where d is disk name
- 0388 CDD001    	call cselect ;get current disk number
- 038B C641CD8C00	adi 'A'! call printchar
- 0390 3E3ECD8C00	mvi a,'>'! call printchar
- 0395 CD3901    	call readcom ;command buffer filled
+ F382 31ABF7    	lxi sp,stack
+ F385 CD98F0    	call crlf ;print d> prompt, where d is disk name
+ F388 CDD0F1    	call cselect ;get current disk number
+ F38B C641CD8CF0	adi 'A'! call printchar
+ F390 3E3ECD8CF0	mvi a,'>'! call printchar
+ F395 CD39F1    	call readcom ;command buffer filled
                 ccp0:	;(enter here from initialization with command full)
- 0398 118000CDD8	lxi d,buff! call setdma ;default dma address at buff
- 039E CDD00132EF	call cselect! sta cdisk ;current disk number saved
- 03A4 CD5E02    	call fillfcb0 ;command fcb filled
- 03A7 C40902    	cnz comerr ;the name cannot be an ambiguous reference
- 03AA 3AF007B7C2	lda sdisk! ora a! jnz userfunc
+ F398 118000CDD8	lxi d,buff! call setdma ;default dma address at buff
+ F39E CDD0F132EF	call cselect! sta cdisk ;current disk number saved
+ F3A4 CD5EF2    	call fillfcb0 ;command fcb filled
+ F3A7 C409F2    	cnz comerr ;the name cannot be an ambiguous reference
+ F3AA 3AF0F7B7C2	lda sdisk! ora a! jnz userfunc
                 		;check for an intrinsic function
- 03B1 CD2E03    		call intrinsic
- 03B4 21C103    		lxi h,jmptab ;index is in the accumulator
- 03B7 5F16001919		mov e,a! mvi d,0! dad d! dad d ;index in d,e
- 03BC 7E23666FE9		mov a,m! inx h! mov h,m! mov l,a! pchl
+ F3B1 CD2EF3    		call intrinsic
+ F3B4 21C1F3    		lxi h,jmptab ;index is in the accumulator
+ F3B7 5F16001919		mov e,a! mvi d,0! dad d! dad d ;index in d,e
+ F3BC 7E23666FE9		mov a,m! inx h! mov h,m! mov l,a! pchl
                 		;pc changes to the proper intrinsic or user function
                 		jmptab:
- 03C1 7704      			dw	direct	;directory search
- 03C3 1F05      			dw	erase	;file erase
- 03C5 5D05      			dw	type	;type file
- 03C7 AD05      			dw	save	;save memory image
- 03C9 1006      			dw	rename	;file rename
- 03CB 8E06      			dw	user	;user number
- 03CD A506      			dw	userfunc;user-defined function
+ F3C1 77F4      			dw	direct	;directory search
+ F3C3 1FF5      			dw	erase	;file erase
+ F3C5 5DF5      			dw	type	;type file
+ F3C7 ADF5      			dw	save	;save memory image
+ F3C9 10F6      			dw	rename	;file rename
+ F3CB 8EF6      			dw	user	;user number
+ F3CD A5F6      			dw	userfunc;user-defined function
                 		badserial:
- 03CF 21F376    			LXI	H,76F3H	;'DI HLT' instructions.	
+ F3CF 21F376    			LXI	H,76F3H	;'DI HLT' instructions.	
                 			;typo "lxi h,di or (hlt shl 8)" here originally,
                 			;corrected by comparing to disassembly of Clark Calkins.
- 03D2 2200002100			shld ccploc! lxi h,ccploc! pchl
+ F3D2 2200F02100			shld ccploc! lxi h,ccploc! pchl
                 			;
                 ;
                 	;utility subroutines for intrinsic handlers
                 	readerr:
                 		;print the read error message
- 03D9 01DF03C3A7		lxi b,rdmsg! jmp print
- 03DF 5245414420		rdmsg: db 'READ ERROR',0
+ F3D9 01DFF3C3A7		lxi b,rdmsg! jmp print
+ F3DF 5245414420		rdmsg: db 'READ ERROR',0
                 	;
                 	nofile:
                 		;print no file message
- 03EA 01F003C3A7		lxi b,nofmsg! jmp print
- 03F0 4E4F204649		nofmsg: db 'NO FILE',0
+ F3EA 01F0F3C3A7		lxi b,nofmsg! jmp print
+ F3F0 4E4F204649		nofmsg: db 'NO FILE',0
                 	;
                 	getnumber: ;read a number from the command line
- 03F8 CD5E02    		call fillfcb0 ;should be number
- 03FB 3AF007B7C2		lda sdisk! ora a! jnz comerr ;cannot be prefixed
+ F3F8 CD5EF2    		call fillfcb0 ;should be number
+ F3FB 3AF0F7B7C2		lda sdisk! ora a! jnz comerr ;cannot be prefixed
                 		;convert the byte value in comfcb to binary
- 0402 21CE07010B		lxi h,comfcb+1! lxi b,11 ;(b=0, c=11)
+ F402 21CEF7010B		lxi h,comfcb+1! lxi b,11 ;(b=0, c=11)
                 		;value accumulated in b, c counts name length to zero
- 0408 7EFE20CA33		conv0:	mov a,m! cpi ' '! jz conv1
+ F408 7EFE20CA33		conv0:	mov a,m! cpi ' '! jz conv1
                 			;more to scan, convert char to binary and add
- 040E 23D630FE0A			inx h! sui '0'! cpi 10! jnc comerr ;valid?
- 0416 5778      			mov d,a ;save value! mov a,b ;mult by 10
- 0418 E6E0C20902			ani 1110$0000b! jnz comerr
- 041D 78        			mov a,b ;recover value
- 041E 070707    			rlc! rlc! rlc ;*8
- 0421 80DA0902  			add b! jc comerr
- 0425 80DA0902  			add b! jc comerr ;*8+*2 = *10
- 0429 82DA0902  			add d! jc comerr ;+digit
- 042D 470DC20804			mov b,a! dcr c! jnz conv0 ;for another digit
- 0432 C9        			ret
+ F40E 23D630FE0A			inx h! sui '0'! cpi 10! jnc comerr ;valid?
+ F416 5778      			mov d,a ;save value! mov a,b ;mult by 10
+ F418 E6E0C209F2			ani 1110$0000b! jnz comerr
+ F41D 78        			mov a,b ;recover value
+ F41E 070707    			rlc! rlc! rlc ;*8
+ F421 80DA09F2  			add b! jc comerr
+ F425 80DA09F2  			add b! jc comerr ;*8+*2 = *10
+ F429 82DA09F2  			add d! jc comerr ;+digit
+ F42D 470DC208F4			mov b,a! dcr c! jnz conv0 ;for another digit
+ F432 C9        			ret
                 		conv1:	;end of digits, check for all blanks
- 0433 7EFE20C209			mov a,m! cpi ' '! jnz comerr ;blanks?
- 0439 230DC23304			inx h! dcr c! jnz conv1
- 043E 78C9      			mov a,b ;recover value! ret
+ F433 7EFE20C209			mov a,m! cpi ' '! jnz comerr ;blanks?
+ F439 230DC233F4			inx h! dcr c! jnz conv1
+ F43E 78C9      			mov a,b ;recover value! ret
                 		;
                 	movename:
                 		;move 3 characters from h,l to d,e addresses
- 0440 0603      		mvi b,3
- 0442 7E122313  		move0: mov a,m! stax d! inx h! inx d
- 0446 05C24204  			dcr b! jnz move0
- 044A C9        		ret
+ F440 0603      		mvi b,3
+ F442 7E122313  		move0: mov a,m! stax d! inx h! inx d
+ F446 05C242F4  			dcr b! jnz move0
+ F44A C9        		ret
                 	;
                 	addhcf:	;buff + a + c to h,l followed by fetch
- 044B 21800081CD		lxi h,buff! add c! call addh! mov a,m! ret
+ F44B 21800081CD		lxi h,buff! add c! call addh! mov a,m! ret
                 	;
                 	setdisk:
                 		;change disks for this command, if requested
- 0454 AF32CD07  		xra a! sta comfcb ;clear disk name from fcb
- 0458 3AF007B7C8		lda sdisk! ora a! rz ;no action if not specified
- 045D 3D21EF07BE		dcr a! lxi h,cdisk! cmp m! rz ;already selected
- 0463 C3BD00    		jmp select
+ F454 AF32CDF7  		xra a! sta comfcb ;clear disk name from fcb
+ F458 3AF0F7B7C8		lda sdisk! ora a! rz ;no action if not specified
+ F45D 3D21EFF7BE		dcr a! lxi h,cdisk! cmp m! rz ;already selected
+ F463 C3BDF0    		jmp select
                 	;
                 	resetdisk:
                 		;return to original disk after command
- 0466 3AF007B7C8		lda sdisk! ora a! rz ;no action if not selected
- 046B 3D21EF07BE		dcr a! lxi h,cdisk! cmp m! rz ;same disk
- 0471 3AEF07C3BD		lda cdisk! jmp select
+ F466 3AF0F7B7C8		lda sdisk! ora a! rz ;no action if not selected
+ F46B 3D21EFF7BE		dcr a! lxi h,cdisk! cmp m! rz ;same disk
+ F471 3AEFF7C3BD		lda cdisk! jmp select
                 ;
                 	;individual intrinsics follow
                 direct:
                 	;directory search
- 0477 CD5E02    	call fillfcb0 ;comfcb gets file name
- 047A CD5404    	call setdisk ;change disk drives if requested
- 047D 21CE077E  	lxi h,comfcb+1! mov a,m ;may be empty request
- 0481 FE20C28F04	cpi ' '! jnz dir1 ;skip fill of ??? if not blank
+ F477 CD5EF2    	call fillfcb0 ;comfcb gets file name
+ F47A CD54F4    	call setdisk ;change disk drives if requested
+ F47D 21CEF77E  	lxi h,comfcb+1! mov a,m ;may be empty request
+ F481 FE20C28FF4	cpi ' '! jnz dir1 ;skip fill of ??? if not blank
                 		;set comfcb to all ??? for current disk
- 0486 060B      		mvi b,11 ;length of fill ????????.???
- 0488 363F2305C2		dir0: mvi m,'?'! inx h! dcr b! jnz dir0
+ F486 060B      		mvi b,11 ;length of fill ????????.???
+ F488 363F2305C2		dir0: mvi m,'?'! inx h! dcr b! jnz dir0
                 	;not a blank request, must be in comfcb
- 048F 1E00D5    	dir1:	mvi e,0! push d ;E counts directory entries
- 0492 CDE900    		call searchcom ;first one has been found
- 0495 CCEA03    		cz nofile ;not found message
- 0498 CA1B05    	dir2:	jz endir
+ F48F 1E00D5    	dir1:	mvi e,0! push d ;E counts directory entries
+ F492 CDE9F0    		call searchcom ;first one has been found
+ F495 CCEAF3    		cz nofile ;not found message
+ F498 CA1BF5    	dir2:	jz endir
                 		;found, but may be system file
- 049B 3AEE07    		lda dcnt ;get the location of the element
- 049E 0F0F0FE660		rrc! rrc! rrc! ani 110$0000b! mov c,a
+ F49B 3AEEF7    		lda dcnt ;get the location of the element
+ F49E 0F0F0FE660		rrc! rrc! rrc! ani 110$0000b! mov c,a
                 		;c contains base index into buff for dir entry
- 04A4 3E0ACD4B04		mvi a,sysfile! call addhcf ;value to A
- 04A9 17DA0F05  		ral! jc dir6 ;skip if system file
+ F4A4 3E0ACD4BF4		mvi a,sysfile! call addhcf ;value to A
+ F4A9 17DA0FF5  		ral! jc dir6 ;skip if system file
                 		;c holds index into buffer
                 		;another fcb found, new line?
- 04AD D17B1CD5  		pop d! mov a,e! inr e! push d
+ F4AD D17B1CD5  		pop d! mov a,e! inr e! push d
                 		;e=0,1,2,3,...new line if mod 4 = 0
- 04B1 E603F5    		ani 11b! push psw ;and save the test
- 04B4 C2CC04    			jnz dirhdr0 ;header on current line
- 04B7 CD9800    			call crlf
- 04BA C5CDD001C1			push b! call cselect! pop b
+ F4B1 E603F5    		ani 11b! push psw ;and save the test
+ F4B4 C2CCF4    			jnz dirhdr0 ;header on current line
+ F4B7 CD98F0    			call crlf
+ F4BA C5CDD0F1C1			push b! call cselect! pop b
                 			;current disk in A
- 04BF C641CD9200			adi 'A'! call printbc
- 04C4 3E3ACD9200			mvi a,':'! call printbc
- 04C9 C3D404    			jmp dirhdr1 ;skip current line hdr
- 04CC CDA200    		dirhdr0:call blank ;after last one
- 04CF 3E3ACD9200			mvi a,':'! call printbc
+ F4BF C641CD92F0			adi 'A'! call printbc
+ F4C4 3E3ACD92F0			mvi a,':'! call printbc
+ F4C9 C3D4F4    			jmp dirhdr1 ;skip current line hdr
+ F4CC CDA2F0    		dirhdr0:call blank ;after last one
+ F4CF 3E3ACD92F0			mvi a,':'! call printbc
                 		dirhdr1:
- 04D4 CDA200    			call blank
+ F4D4 CDA2F0    			call blank
                 		;compute position of name in buffer
- 04D7 0601      		mvi b,1 ;start with first character of name
- 04D9 78CD4B04  		dir3:	mov a,b! call addhcf ;buff+a+c fetched
- 04DD E67F      			ani 7fh ;mask flags
+ F4D7 0601      		mvi b,1 ;start with first character of name
+ F4D9 78CD4BF4  		dir3:	mov a,b! call addhcf ;buff+a+c fetched
+ F4DD E67F      			ani 7fh ;mask flags
                 			;may delete trailing blanks
- 04DF FE20C2F904			cpi ' '! jnz dir4 ;check for blank type
- 04E4 F1F5      			pop psw! push psw ;may be 3rd item
- 04E6 FE03C2F704			cpi 3! jnz dirb ;place blank at end if not
- 04EB 3E09CD4B04			mvi a,9! call addhcf ;first char of type
- 04F0 E67FFE20CA			ani 7fh! cpi ' '! jz dir5
+ F4DF FE20C2F9F4			cpi ' '! jnz dir4 ;check for blank type
+ F4E4 F1F5      			pop psw! push psw ;may be 3rd item
+ F4E6 FE03C2F7F4			cpi 3! jnz dirb ;place blank at end if not
+ F4EB 3E09CD4BF4			mvi a,9! call addhcf ;first char of type
+ F4F0 E67FFE20CA			ani 7fh! cpi ' '! jz dir5
                 			;not a blank in the file type field
- 04F7 3E20      		dirb:	mvi a,' ' ;restore trailing filename chr
+ F4F7 3E20      		dirb:	mvi a,' ' ;restore trailing filename chr
                 		dir4:
- 04F9 CD9200    			call printbc ;char printed
- 04FC 0478FE0CD2			inr b! mov a,b! cpi 12! jnc dir5
+ F4F9 CD92F0    			call printbc ;char printed
+ F4FC 0478FE0CD2			inr b! mov a,b! cpi 12! jnc dir5
                 			;check for break between names
- 0503 FE09C2D904			cpi 9! jnz dir3 ;for another char
+ F503 FE09C2D9F4			cpi 9! jnz dir3 ;for another char
                 			;print a blank between names
- 0508 CDA200C3D9			call blank! jmp dir3
+ F508 CDA2F0C3D9			call blank! jmp dir3
                 		;
                 	dir5:	;end of current entry
- 050E F1        		pop psw ;discard the directory counter (mod 4)
- 050F CDC201    	dir6:	call break$key ;check for interrupt at keyboard
- 0512 C21B05    		jnz endir ;abort directory search
- 0515 CDE400C398		call searchn! jmp dir2 ;for another entry
+ F50E F1        		pop psw ;discard the directory counter (mod 4)
+ F50F CDC2F1    	dir6:	call break$key ;check for interrupt at keyboard
+ F512 C21BF5    		jnz endir ;abort directory search
+ F515 CDE4F0C398		call searchn! jmp dir2 ;for another entry
                 	endir:	;end of directory scan
- 051B D1        		pop d ;discard directory counter
- 051C C38607    		jmp retcom
+ F51B D1        		pop d ;discard directory counter
+ F51C C386F7    		jmp retcom
                 ;
                 ;
                 erase:
- 051F CD5E02    	call fillfcb0 ;cannot be all ???'s
- 0522 FE0B      	cpi 11
- 0524 C24205    	jnz erasefile
+ F51F CD5EF2    	call fillfcb0 ;cannot be all ???'s
+ F522 FE0B      	cpi 11
+ F524 C242F5    	jnz erasefile
                 		;erasing all of the disk
- 0527 015205CDA7		lxi b,ermsg! call print!
- 052D CD3901    		call readcom
- 0530 21070035C2		lxi h,comlen! dcr m! jnz ccp ;bad input
- 0537 237EFE59C2		inx h! mov a,m! cpi 'Y'! jnz ccp
+ F527 0152F5CDA7		lxi b,ermsg! call print!
+ F52D CD39F1    		call readcom
+ F530 2107F035C2		lxi h,comlen! dcr m! jnz ccp ;bad input
+ F537 237EFE59C2		inx h! mov a,m! cpi 'Y'! jnz ccp
                 		;ok, erase the entire diskette
- 053E 23228800  		inx h! shld comaddr ;otherwise error at retcom
+ F53E 232288F0  		inx h! shld comaddr ;otherwise error at retcom
                 	erasefile:
- 0542 CD5404    		call setdisk
- 0545 11CD07CDEF		lxi d,comfcb! call delete
- 054B 3C        		inr a ;255 returned if not found
- 054C CCEA03    		cz nofile ;no file message if so
- 054F C38607    		jmp retcom
+ F542 CD54F4    		call setdisk
+ F545 11CDF7CDEF		lxi d,comfcb! call delete
+ F54B 3C        		inr a ;255 returned if not found
+ F54C CCEAF3    		cz nofile ;no file message if so
+ F54F C386F7    		jmp retcom
                 ;
- 0552 414C4C2028	ermsg:	db	'ALL (Y/N)?',0
+ F552 414C4C2028	ermsg:	db	'ALL (Y/N)?',0
                 ;
                 type:
- 055D CD5E02C209	call fillfcb0! jnz comerr ;don't allow ?'s in file name
- 0563 CD5404CDD0	call setdisk! call openc ;open the file
- 0569 CAA705    	jz typerr ;zero flag indicates not found
+ F55D CD5EF2C209	call fillfcb0! jnz comerr ;don't allow ?'s in file name
+ F563 CD54F4CDD0	call setdisk! call openc ;open the file
+ F569 CAA7F5    	jz typerr ;zero flag indicates not found
                 		;file opened, read 'til eof
- 056C CD980021F1		call crlf! lxi h,bptr! mvi m,255 ;read first buffer
+ F56C CD98F021F1		call crlf! lxi h,bptr! mvi m,255 ;read first buffer
                 		type0:	;loop on bptr
- 0574 21F1077EFE			lxi h,bptr! mov a,m! cpi 128 ;end buffer
- 057A DA8705E5  			jc type1! push h ;carry if 0,1,...,127
+ F574 21F1F77EFE			lxi h,bptr! mov a,m! cpi 128 ;end buffer
+ F57A DA87F5E5  			jc type1! push h ;carry if 0,1,...,127
                 			;read another buffer full
- 057E CDFE00E1  			call diskreadc! pop h ;recover address of bptr
- 0582 C2A005    			jnz typeof ;hard end of file
- 0585 AF77      			xra a! mov m,a ;bptr = 0
+ F57E CDFEF0E1  			call diskreadc! pop h ;recover address of bptr
+ F582 C2A0F5    			jnz typeof ;hard end of file
+ F585 AF77      			xra a! mov m,a ;bptr = 0
                 		type1:	;read character at bptr and print
- 0587 34        			inr m ;bptr = bptr + 1
- 0588 218000CD59			lxi h,buff! call addh ;h,l addresses char
- 058E 7EFE1ACA86			mov a,m! cpi eofile! jz retcom
- 0594 CD8C00    			call printchar
- 0597 CDC201C286			call break$key! jnz retcom ;abort if break
- 059D C37405    			jmp type0 ;for another character
+ F587 34        			inr m ;bptr = bptr + 1
+ F588 218000CD59			lxi h,buff! call addh ;h,l addresses char
+ F58E 7EFE1ACA86			mov a,m! cpi eofile! jz retcom
+ F594 CD8CF0    			call printchar
+ F597 CDC2F1C286			call break$key! jnz retcom ;abort if break
+ F59D C374F5    			jmp type0 ;for another character
                 		;
                 		typeof:	;end of file, check for errors
- 05A0 3DCA8607  			dcr a! jz retcom
- 05A4 CDD903    			call readerr
- 05A7 CD6604C309		typerr:	call resetdisk! jmp comerr
+ F5A0 3DCA86F7  			dcr a! jz retcom
+ F5A4 CDD9F3    			call readerr
+ F5A7 CD66F4C309		typerr:	call resetdisk! jmp comerr
                 ;
                 save:
- 05AD CDF803    		call getnumber; value to register a
- 05B0 F5        		push psw ;save it for later
+ F5AD CDF8F3    		call getnumber; value to register a
+ F5B0 F5        		push psw ;save it for later
                 		;
                 		;should be followed by a file to save the memory image
- 05B1 CD5E02    		call fillfcb0
- 05B4 C20902    		jnz comerr ;cannot be ambiguous
- 05B7 CD5404    		call setdisk ;may be a disk change
- 05BA 11CD07D5CD		lxi d,comfcb! push d! call delete ;existing file removed
- 05C1 D1CD0901  		pop d! call make ;create a new file on disk
- 05C5 CAFB05    		jz saverr ;no directory space
- 05C8 AF32ED07  		xra a! sta comrec; clear next record field
- 05CC F1        		pop psw ;#pages to write is in a, change to #sectors
- 05CD 6F260029  		mov l,a! mvi h,0! dad h! 
- 05D1 110001    		lxi d,tran ;h,l is sector count, d,e is load address
+ F5B1 CD5EF2    		call fillfcb0
+ F5B4 C209F2    		jnz comerr ;cannot be ambiguous
+ F5B7 CD54F4    		call setdisk ;may be a disk change
+ F5BA 11CDF7D5CD		lxi d,comfcb! push d! call delete ;existing file removed
+ F5C1 D1CD09F1  		pop d! call make ;create a new file on disk
+ F5C5 CAFBF5    		jz saverr ;no directory space
+ F5C8 AF32EDF7  		xra a! sta comrec; clear next record field
+ F5CC F1        		pop psw ;#pages to write is in a, change to #sectors
+ F5CD 6F260029  		mov l,a! mvi h,0! dad h! 
+ F5D1 110001    		lxi d,tran ;h,l is sector count, d,e is load address
                 	save0:	;check for sector count zero
- 05D4 7CB5CAF105		mov a,h! ora l! jz save1 ;may be completed
- 05D9 2B        		dcx h ;sector count = sector count - 1
- 05DA E5        		push h ;save it for next time around
- 05DB 21800019E5		lxi h,128! dad d! push h ;next dma address saved
- 05E0 CDD801    		call setdma ;current dma address set
- 05E3 11CD07CD04		lxi d,comfcb! call diskwrite
- 05E9 D1E1      		pop d! pop h ;dma address, sector count
- 05EB C2FB05    		jnz saverr ;may be disk full case
- 05EE C3D405    		jmp save0 ;for another sector
+ F5D4 7CB5CAF1F5		mov a,h! ora l! jz save1 ;may be completed
+ F5D9 2B        		dcx h ;sector count = sector count - 1
+ F5DA E5        		push h ;save it for next time around
+ F5DB 21800019E5		lxi h,128! dad d! push h ;next dma address saved
+ F5E0 CDD8F1    		call setdma ;current dma address set
+ F5E3 11CDF7CD04		lxi d,comfcb! call diskwrite
+ F5E9 D1E1      		pop d! pop h ;dma address, sector count
+ F5EB C2FBF5    		jnz saverr ;may be disk full case
+ F5EE C3D4F5    		jmp save0 ;for another sector
                 		;
                 	save1:	;end of dump, close the file
- 05F1 11CD07CDDA		lxi d,comfcb! call close
- 05F7 3C        		inr a; 255 becomes 00 if error
- 05F8 C20106    		jnz retsave ;for another command
+ F5F1 11CDF7CDDA		lxi d,comfcb! call close
+ F5F7 3C        		inr a; 255 becomes 00 if error
+ F5F8 C201F6    		jnz retsave ;for another command
                 	saverr:	;must be full or read only disk
- 05FB 010706CDA7		lxi b,fullmsg! call print
+ F5FB 0107F6CDA7		lxi b,fullmsg! call print
                 	retsave:
                 		;reset dma buffer
- 0601 CDD501    		call setdmabuff
- 0604 C38607    		jmp retcom
- 0607 4E4F205350		fullmsg: db 'NO SPACE',0
+ F601 CDD5F1    		call setdmabuff
+ F604 C386F7    		jmp retcom
+ F607 4E4F205350		fullmsg: db 'NO SPACE',0
                 		;
                 ;
                 rename:
                 	;rename a file on a specific disk
- 0610 CD5E02C209	call fillfcb0! jnz comerr ;must be unambiguous
- 0616 3AF007F5  	lda sdisk! push psw ;save for later compare
- 061A CD5404    	call setdisk ;disk selected
- 061D CDE900    	call searchcom ;is new name already there?
- 0620 C27906    	jnz renerr3
+ F610 CD5EF2C209	call fillfcb0! jnz comerr ;must be unambiguous
+ F616 3AF0F7F5  	lda sdisk! push psw ;save for later compare
+ F61A CD54F4    	call setdisk ;disk selected
+ F61D CDE9F0    	call searchcom ;is new name already there?
+ F620 C279F6    	jnz renerr3
                 		;file doesn't exist, move to second half of fcb
- 0623 21CD0711DD		lxi h,comfcb! lxi d,comfcb+16! mvi b,16! call move0
+ F623 21CDF711DD		lxi h,comfcb! lxi d,comfcb+16! mvi b,16! call move0
                 		;check for = or left arrow
- 062E 2A8800EBCD		lhld comaddr! xchg! call deblank
- 0635 FE3DCA3F06		cpi '='! jz ren1 ;ok if =
- 063A FE5FC27306		cpi la! jnz renerr2
- 063F EB23228800	ren1:	xchg! inx h! shld comaddr ;past delimiter
+ F62E 2A88F0EBCD		lhld comaddr! xchg! call deblank
+ F635 FE3DCA3FF6		cpi '='! jz ren1 ;ok if =
+ F63A FE5FC273F6		cpi la! jnz renerr2
+ F63F EB232288F0	ren1:	xchg! inx h! shld comaddr ;past delimiter
                 		;proper delimiter found
- 0644 CD5E02C273		call fillfcb0! jnz renerr2
+ F644 CD5EF2C273		call fillfcb0! jnz renerr2
                 		;check for drive conflict
- 064A F147      			pop psw! mov b,a ;previous drive number
- 064C 21F0077EB7			lxi h,sdisk! mov a,m! ora a! jz ren2
+ F64A F147      			pop psw! mov b,a ;previous drive number
+ F64C 21F0F77EB7			lxi h,sdisk! mov a,m! ora a! jz ren2
                 			;drive name was specified.  same one?
- 0654 B870C27306			cmp b! mov m,b! jnz renerr2
- 0659 70        	ren2:	mov m,b ;store the name in case drives switched
- 065A AF32CD07CD		xra a! sta comfcb! call searchcom ;is old file there?
- 0661 CA6D06    		jz renerr1
+ F654 B870C273F6			cmp b! mov m,b! jnz renerr2
+ F659 70        	ren2:	mov m,b ;store the name in case drives switched
+ F65A AF32CDF7CD		xra a! sta comfcb! call searchcom ;is old file there?
+ F661 CA6DF6    		jz renerr1
                 		;
                 		;everything is ok, rename the file
- 0664 11CD07CD0E		lxi d,comfcb! call renam
- 066A C38607    		jmp retcom
+ F664 11CDF7CD0E		lxi d,comfcb! call renam
+ F66A C386F7    		jmp retcom
                 		;
                 	renerr1:; no file on disk
- 066D CDEA03C386		call nofile! jmp retcom
+ F66D CDEAF3C386		call nofile! jmp retcom
                 	renerr2:; ambigous reference/name conflict
- 0673 CD6604C309		call resetdisk! jmp comerr
+ F673 CD66F4C309		call resetdisk! jmp comerr
                 	renerr3:; file already exists
- 0679 018206CDA7		lxi b,renmsg! call print! jmp retcom
- 0682 46494C4520		renmsg: db 'FILE EXISTS',0
+ F679 0182F6CDA7		lxi b,renmsg! call print! jmp retcom
+ F682 46494C4520		renmsg: db 'FILE EXISTS',0
                 ;
                 user:
                 	;set user number
- 068E CDF803    	call getnumber; leaves the value in the accumulator
- 0691 FE10D20902	cpi 16! jnc comerr; must be between 0 and 15
- 0696 5F        	mov e,a ;save for setuser call
- 0697 3ACE07FE20	lda comfcb+1! cpi ' '! jz comerr
- 069F CD1501    	call setuser ;new user number set
- 06A2 C38907    	jmp endcom
+ F68E CDF8F3    	call getnumber; leaves the value in the accumulator
+ F691 FE10D209F2	cpi 16! jnc comerr; must be between 0 and 15
+ F696 5F        	mov e,a ;save for setuser call
+ F697 3ACEF7FE20	lda comfcb+1! cpi ' '! jz comerr
+ F69F CD15F1    	call setuser ;new user number set
+ F6A2 C389F7    	jmp endcom
                 ;
                 userfunc:
- 06A5 CDF501    	call serialize ;check serialization
+ F6A5 CDF5F1    	call serialize ;check serialization
                 	;load user function and set up for execution
- 06A8 3ACE07FE20	lda comfcb+1! cpi ' '! jnz user0
+ F6A8 3ACEF7FE20	lda comfcb+1! cpi ' '! jnz user0
                 		;no file name, but may be disk switch
- 06B0 3AF007B7CA		lda sdisk! ora a! jz endcom ;no disk name if 0
- 06B7 3D32EF07CD		dcr a! sta cdisk! call setdiska ;set user/disk
- 06BE CDBD00C389		call select! jmp endcom
+ F6B0 3AF0F7B7CA		lda sdisk! ora a! jz endcom ;no disk name if 0
+ F6B7 3D32EFF7CD		dcr a! sta cdisk! call setdiska ;set user/disk
+ F6BE CDBDF0C389		call select! jmp endcom
                 	user0:	;file name is present
- 06C4 11D6071AFE		lxi d,comfcb+9! ldax d! cpi ' '! jnz comerr ;type ' '
- 06CD D5CD5404D1		push d! call setdisk! pop d! lxi h,comtype ;.com
- 06D5 CD4004    		call movename ;file type is set to .com
- 06D8 CDD000CA6B		call openc! jz userer
+ F6C4 11D6F71AFE		lxi d,comfcb+9! ldax d! cpi ' '! jnz comerr ;type ' '
+ F6CD D5CD54F4D1		push d! call setdisk! pop d! lxi h,comtype ;.com
+ F6D5 CD40F4    		call movename ;file type is set to .com
+ F6D8 CDD0F0CA6B		call openc! jz userer
                 		;file opened properly, read it into memory
- 06DE 210001    		lxi h,tran ;transient program base
- 06E1 E5        		load0:	push h ;save dma address
- 06E2 EBCDD801  			xchg! call setdma
- 06E6 11CD07CDF9			lxi d,comfcb! call diskread! jnz load1
+ F6DE 210001    		lxi h,tran ;transient program base
+ F6E1 E5        		load0:	push h ;save dma address
+ F6E2 EBCDD8F1  			xchg! call setdma
+ F6E6 11CDF7CDF9			lxi d,comfcb! call diskread! jnz load1
                 			;sector loaded, set new dma address and compare
- 06EF E111800019			pop h! lxi d,128! dad d
- 06F4 110000    			lxi d,tranm ;has the load overflowed?
- 06F7 7D937C9AD2			mov a,l! sub e! mov a,h! sbb d! jnc loaderr
- 06FE C3E106    			jmp load0 ;for another sector
+ F6EF E111800019			pop h! lxi d,128! dad d
+ F6F4 1100F0    			lxi d,tranm ;has the load overflowed?
+ F6F7 7D937C9AD2			mov a,l! sub e! mov a,h! sbb d! jnc loaderr
+ F6FE C3E1F6    			jmp load0 ;for another sector
                 			;
- 0701 E13DC27107		load1:	pop h! dcr a! jnz loaderr ;end file is 1
- 0706 CD6604    			call resetdisk ;back to original disk
- 0709 CD5E0221F0			call fillfcb0! lxi h,sdisk! push h
- 0710 7E32CD07  			mov a,m! sta comfcb ;drive number set
- 0714 3E10CD6002			mvi a,16! call fillfcb ;move entire fcb to memory
- 0719 E17E32DD07			pop h! mov a,m! sta comfcb+16
- 071E AF32ED07  			xra a! sta comrec ;record number set to zero
- 0722 115C0021CD			lxi d,fcb! lxi h,comfcb! mvi b,33! call move0
+ F701 E13DC271F7		load1:	pop h! dcr a! jnz loaderr ;end file is 1
+ F706 CD66F4    			call resetdisk ;back to original disk
+ F709 CD5EF221F0			call fillfcb0! lxi h,sdisk! push h
+ F710 7E32CDF7  			mov a,m! sta comfcb ;drive number set
+ F714 3E10CD60F2			mvi a,16! call fillfcb ;move entire fcb to memory
+ F719 E17E32DDF7			pop h! mov a,m! sta comfcb+16
+ F71E AF32EDF7  			xra a! sta comrec ;record number set to zero
+ F722 115C0021CD			lxi d,fcb! lxi h,comfcb! mvi b,33! call move0
                 			;move command line to buff
- 072D 210800    			lxi h,combuf
- 0730 7EB7CA3E07		bmove0:	mov a,m! ora a! jz bmove1! cpi ' '! jz bmove1
- 073A 23C33007  			inx h! jmp bmove0 ;for another scan
+ F72D 2108F0    			lxi h,combuf
+ F730 7EB7CA3EF7		bmove0:	mov a,m! ora a! jz bmove1! cpi ' '! jz bmove1
+ F73A 23C330F7  			inx h! jmp bmove0 ;for another scan
                 			;first blank position found
- 073E 0600118100		bmove1:	mvi b,0! lxi d,buff+1! ;ready for the move
- 0743 7E12B7CA4F		bmove2:	mov a,m! stax d! ora a! jz bmove3
+ F73E 0600118100		bmove1:	mvi b,0! lxi d,buff+1! ;ready for the move
+ F743 7E12B7CA4F		bmove2:	mov a,m! stax d! ora a! jz bmove3
                 			;more to move
- 0749 042313C343			inr b! inx h! inx d! jmp bmove2
+ F749 042313C343			inr b! inx h! inx d! jmp bmove2
                 		bmove3:	;b has character count
- 074F 78328000  			mov a,b! sta buff
- 0753 CD9800    			call crlf
+ F74F 78328000  			mov a,b! sta buff
+ F753 CD98F0    			call crlf
                 			;now go to the loaded program
- 0756 CDD501    			call setdmabuff ;default dma
- 0759 CD1A01    			call saveuser ;user code saved
+ F756 CDD5F1    			call setdmabuff ;default dma
+ F759 CD1AF1    			call saveuser ;user code saved
                 			;low memory diska contains user code
- 075C CD0001    			call tran ;gone to the loaded program
- 075F 31AB07    			lxi sp,stack ;may come back here
- 0762 CD2901CDBD			call setdiska! call select
- 0768 C38203    			jmp ccp
+ F75C CD0001    			call tran ;gone to the loaded program
+ F75F 31ABF7    			lxi sp,stack ;may come back here
+ F762 CD29F1CDBD			call setdiska! call select
+ F768 C382F3    			jmp ccp
                 		;
                 		userer:	;arrive here on command error
- 076B CD6604C309			call resetdisk! jmp comerr
+ F76B CD66F4C309			call resetdisk! jmp comerr
                 			;
                 		loaderr:;cannot load the program
- 0771 017A07CDA7			lxi b,loadmsg! call print
- 0777 C38607    			jmp retcom
- 077A 424144204C			loadmsg: db 'BAD LOAD',0
- 0783 434F4D    		comtype:	db 'COM' ;for com files
+ F771 017AF7CDA7			lxi b,loadmsg! call print
+ F777 C386F7    			jmp retcom
+ F77A 424144204C			loadmsg: db 'BAD LOAD',0
+ F783 434F4D    		comtype:	db 'COM' ;for com files
                 ;
                 ;
                 retcom:	;reset disk before end of command check
- 0786 CD6604    	call resetdisk
+ F786 CD66F4    	call resetdisk
                 ;
                 endcom:	;end of intrinsic command
- 0789 CD5E02    	call fillfcb0 ;to check for garbage at end of line
- 078C 3ACE07D620	lda comfcb+1! sui ' '! lxi h,sdisk! ora m
+ F789 CD5EF2    	call fillfcb0 ;to check for garbage at end of line
+ F78C 3ACEF7D620	lda comfcb+1! sui ' '! lxi h,sdisk! ora m
                 	;0 in accumulator if no disk selected, and blank fcb
- 0795 C20902    	jnz comerr
- 0798 C38203    	jmp ccp
+ F795 C209F2    	jnz comerr
+ F798 C382F3    	jmp ccp
                 ;
                 ;
                 ;
                 ;	data areas
- 079B           	ds	16	;8 level stack
+ F79B           	ds	16	;8 level stack
                 stack:
                 ;
                 ;	'submit' file control block
- 07AB 00        submit:	db	0	;00 if no submit file, ff if submitting
- 07AC 0024242420subfcb:	db	0,'$$$     '	;file name is $$$
- 07B5 5355420000	db	'SUB',0,0	;file type is sub
- 07BA 00        submod:	db	0	;module number
- 07BB           subrc:	ds	1	;record count filed
- 07BC           	ds	16	;disk map
- 07CC           subcr:	ds	1	;current record to read
+ F7AB 00        submit:	db	0	;00 if no submit file, ff if submitting
+ F7AC 0024242420subfcb:	db	0,'$$$     '	;file name is $$$
+ F7B5 5355420000	db	'SUB',0,0	;file type is sub
+ F7BA 00        submod:	db	0	;module number
+ F7BB           subrc:	ds	1	;record count filed
+ F7BC           	ds	16	;disk map
+ F7CC           subcr:	ds	1	;current record to read
                 ;
                 ;	command file control block
- 07CD           comfcb:	ds	32	;fields filled in later
- 07ED           comrec:	ds	1	;current record to read/write
- 07EE           dcnt:	ds	1	;disk directory count (used for error codes)
- 07EF           cdisk:	ds	1	;current disk
- 07F0           sdisk:	ds	1	;selected disk for current operation
+ F7CD           comfcb:	ds	32	;fields filled in later
+ F7ED           comrec:	ds	1	;current record to read/write
+ F7EE           dcnt:	ds	1	;disk directory count (used for error codes)
+ F7EF           cdisk:	ds	1	;current disk
+ F7F0           sdisk:	ds	1	;selected disk for current operation
                 			;none=0, a=1, b=2 ...
- 07F1           bptr:	ds	1	;buffer pointer
- 07F2           	end	ccploc
-
+ F7F1           bptr:	ds	1	;buffer pointer
+ F7F2           	end	ccploc
+
