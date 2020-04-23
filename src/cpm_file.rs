@@ -279,7 +279,7 @@ impl CpmFile {
 
     fn read_record_in_buffer(&mut self, fcb: &Fcb, record: u16) -> io::Result<u8> {
         let paths = find_host_files(fcb.get_name(), false)?;
-        let mut os_file = fs::OpenOptions::new().open(&paths[0])?;
+        let mut os_file = fs::File::open(&paths[0])?;
 
         let file_offset = record as u64 * RECORD_SIZE as u64;
         os_file.seek(io::SeekFrom::Start(file_offset))?;
