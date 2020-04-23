@@ -16,7 +16,9 @@ use self::cpm_file::*;
 use self::cpm_machine::*;
 use self::fcb::*;
 
-const SYSTEM_PARAMS_ADDRESS: u16 = 0x0080;
+const FCB1_ADDRESS:          u16 = 0x005c;
+const FCB2_ADDRESS:          u16 = 0x006c;
+const SYSTEM_PARAMS_ADDRESS: u16 = 0x0080; // Also default DMA buffer
 const TPA_BASE_ADDRESS:      u16 = 0x0100;
 //const CCP_BASE_ADDRESS:      u16 = 0xf000;
 const TPA_STACK_ADDRESS:     u16 = 0xf080; // 16 bytes for an 8 level stack
@@ -67,10 +69,6 @@ fn main() {
     let cpu_trace = matches.is_present("cpu_trace");
     let call_trace_skip_console = true;
 
-    if let Some(p) = params {
-        println!("Paramenters: <{}>", p);
-    }
-    
     // Init device
     let mut machine = CpmMachine::new();
     let mut cpu = Cpu::new();
@@ -116,8 +114,37 @@ fn main() {
             for i in 0..len {
                 machine.poke(SYSTEM_PARAMS_ADDRESS + (i as u16) + 2, p_bytes[i]);
             }
+
+            /*
+            As a convenience, the CCP takes the first two parameters that appear
+            in the command tail, attempts to parse them as though they were file
+            names, and places the results in FCBI and FCB2. The results, in this
+            context, mean that the logical disk letter is converted to its FCB
+            representation, and the file name and type, converted to uppercase,
+            are placed in the FCB in the correct bytes.
+In addition, any use of "*" in the file name is expanded to one or more question
+marks. For example, a file name of "abc*.*" will be converted to a name of
+"ABC!!???" and type of "???".
+Notice that FCB2 starts only 16 bytes above FCBI, yet a normal FCB is at least
+33 bytes long (36 bytes if you want to use random access). In many cases, programs
+only require a single file name. Therefore, you can proceed to use FCBI straight
+away, not caring that FCB2 will be overwritten.
+            */
+            let mut parts = p.split_ascii_whitespace();
+            if let Some(arg1) = parts.next() {
+                if let Some(file1) = name_to_8_3(arg1) {
+                    Fcb::new(FCB1_ADDRESS, &mut machine).set_name(file1);
+                }
+            }
+            if let Some(arg2) = parts.next() {
+                if let Some(file2) = name_to_8_3(arg2) {
+                    Fcb::new(FCB2_ADDRESS, &mut machine).set_name(file2);
+                }
+            }
         }
     }
+
+    // Prepare Stack
     /*
     Upon entry to a transient program, the CCP leaves the stack pointer set to
     an eight-level stack area with the CCP return address pushed onto the stack,

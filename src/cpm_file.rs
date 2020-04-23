@@ -17,7 +17,6 @@ pub struct CpmFile {
     user: u8,
     dma: u16,
     buffer: [u8; RECORD_SIZE],
-    file: Option<fs::File> // TODO: support more that one file opened
 }
 
 impl CpmFile {
@@ -26,7 +25,6 @@ impl CpmFile {
             user: 0,
             dma: DEFAULT_DMA,
             buffer: [0; RECORD_SIZE],
-            file: None
         }
     }
 
@@ -92,14 +90,16 @@ impl CpmFile {
         sequentially from the first record. 
         */
 
-        let search = self.find_host_file(fcb.get_name(), false);
-        if let Ok(paths) = search  {
-            let file = fs::File::open(&paths[0]).unwrap();
-            self.file = Some(file);
-            fcb.init();
-            return 0;
+        match find_host_files(fcb.get_name(), false) {
+            Err(_) => 0xff, // Error or file not found
+            Ok(paths) => match fs::File::open(&paths[0]) {
+                Err(_) => 0xff,
+                Ok(_) => {
+                    fcb.init(); // TODO: should we put the found name in the FCB?
+                    0
+                }
+            }
         }
-        0xff // Error or file not found
     }
 
     pub fn make(&mut self, fcb: &mut Fcb) -> u8 {
@@ -116,16 +116,16 @@ impl CpmFile {
         space is available. The Make function has the side effect of activating
         the FCB and thus a subsequent open is not necessary.
         */
-        let file = fs::File::create(fcb.get_name_host());
-        if let Ok(file) = file  {
-            self.file = Some(file);
-            fcb.init();
-            return 0;
+        match fs::File::create(fcb.get_name_host()) {
+            Err(_) => 0xff, // Error or file not found
+            Ok(_) => {
+                fcb.init();
+                0
+            }
         }
-        0xff // Error or file not found
     }
 
-    pub fn close(&mut self, _fcb: &Fcb) -> u8 {
+    pub fn close(&mut self, fcb: &Fcb) -> u8 {
         /*
         The Close File function performs the inverse of the Open File
         function. Given that the FCB addressed by DE has been previously
@@ -140,12 +140,9 @@ impl CpmFile {
         is necessary to record the new directory information permanently. 
         */
         
-        match &self.file {
-            None => 0xff,
-            Some(_) => {
-                self.file = None; 
-                0
-            }
+        match find_host_files(fcb.get_name(), false){
+            Err(_) => 0xff, // Error or file not found
+            Ok(_) => 0
         }
     }
 
@@ -159,14 +156,15 @@ impl CpmFile {
         Function 19 returns a decimal 255 if the referenced file or files
         cannot be found; otherwise, a value in the range 0 to 3 returned.
         */
-        let search = self.find_host_file(fcb.get_name(), false);
-        if let Ok(paths) = search  {
-            for name in paths {
-                fs::remove_file(name).unwrap();
+        match find_host_files(fcb.get_name(), true) {
+            Err(_) => 0xff, // Error or file not found
+            Ok(paths) => {
+                for name in paths {
+                    fs::remove_file(name).unwrap();
+                }
+                0
             }
-            return 0;
         }
-        0xff // Error or file not found
     }
 
     pub fn read(&mut self, fcb: &mut Fcb) -> u8 {
@@ -183,9 +181,10 @@ impl CpmFile {
         nonzero value is returned if no data exist at the next record
         position (for example, end-of-file occurs). 
         */
+
         let record = fcb.get_sequential_record_number();
         fcb.inc_current_record();
-        self.read_record_in_buffer(record as u16)
+        self.read_record_in_buffer(&fcb, record as u16).unwrap_or(1)
     }
 
     pub fn write(&mut self, fcb: &mut Fcb) -> u8 {
@@ -205,7 +204,7 @@ impl CpmFile {
         */
         let record = fcb.get_sequential_record_number();
         fcb.inc_current_record();
-        self.write_record_from_buffer(record as u16)
+        self.write_record_from_buffer(&fcb, record as u16).unwrap_or(1)
     }
 
     pub fn read_rand(&mut self, fcb: &Fcb) -> u8 {
@@ -275,66 +274,36 @@ impl CpmFile {
             return 6; //06	seek Past Physical end of disk
         }
 
-        self.read_record_in_buffer(record as u16)
+        self.read_record_in_buffer(&fcb, record as u16).unwrap_or(1)
     }
 
-    fn read_record_in_buffer(&mut self, record: u16) -> u8 {
-        match &mut self.file {
-            None => 4, //04 file is not opened
-            Some(os_file) => {
-                let metadata = os_file.metadata();
-                let size = match metadata {
-                    Err(_) => return 1, // O1 Error
-                    Ok(m) => m.len()
-                };
+    fn read_record_in_buffer(&mut self, fcb: &Fcb, record: u16) -> io::Result<u8> {
+        let paths = find_host_files(fcb.get_name(), false)?;
+        let mut os_file = fs::OpenOptions::new().open(&paths[0])?;
 
-                let file_offset = record as u64 * RECORD_SIZE as u64;
-                if file_offset >= size {
-                    return 6; //06 resd Past Physical end of disk
-                }
+        let file_offset = record as u64 * RECORD_SIZE as u64;
+        os_file.seek(io::SeekFrom::Start(file_offset))?;
+        let size = os_file.read(&mut self.buffer)?;
 
-                let res = os_file.seek(io::SeekFrom::Start(file_offset));
-                if let Err(_) = res {
-                    return 6; //06	seek Past Physical end of disk
-                }
-
-                let res = os_file.read(&mut self.buffer);
-                let size = match res {
-                    Ok(n) => n,
-                    _ => return 1 // 01 reading unwritten data
-                };
-
-                // Fill with zeros
-                for i in size..RECORD_SIZE {
-                    self.buffer[i] = 0;
-                }
-                0
-            }
-        }
+        // Fill with zeros
+        for i in size..RECORD_SIZE {
+            self.buffer[i] = 26; // CTRL-Z
+        } 
+        Ok(0)
     }
 
-    fn write_record_from_buffer(&mut self, record: u16) -> u8 {
-        match &mut self.file {
-            None => 4, //04 file is not opened
-            Some(os_file) => {
-                let file_offset = record as u64 * RECORD_SIZE as u64;
-                let res = os_file.seek(io::SeekFrom::Start(file_offset));
-                if let Err(_) = res {
-                    return 6; //06	seek Past Physical end of disk
-                }
+    fn write_record_from_buffer(&mut self, fcb: &Fcb, record: u16) -> io::Result<u8> {
+        let paths = find_host_files(fcb.get_name(), false)?;
+        let mut os_file = fs::OpenOptions::new().write(true).open(&paths[0])?;
 
-                let res = os_file.write(&mut self.buffer);
-                let size = match res {
-                    Ok(n) => n,
-                    _ => return 1 // 01 reading unwritten data
-                };
+        let file_offset = record as u64 * RECORD_SIZE as u64;
+        os_file.seek(io::SeekFrom::Start(file_offset))?;
+        let size = os_file.write(&mut self.buffer)?;
 
-                if size != RECORD_SIZE {
-                    return 1 // 01 reading unwritten data
-                }
-                0
-            }
-        }
+        if size != RECORD_SIZE {
+            return Err(io::Error::new(io::ErrorKind::Other, "Record not fully written"));
+        }    
+        Ok(0)
     }
 
     pub fn load_buffer(&self, machine: &mut CpmMachine) {
@@ -346,28 +315,6 @@ impl CpmFile {
     pub fn save_buffer(&mut self, machine: &mut CpmMachine) {
         for i in 0..RECORD_SIZE {
             self.buffer[i] = machine.peek(self.dma + i as u16);
-        }
-    }
-
-    fn find_host_file(&self, name: String, wildcard: bool) -> io::Result<Vec<OsString>> {
-        let dir = fs::read_dir("./")?;
-        let mut files = Vec::new();
-        for entry in dir {
-            let entry = entry?;
-            if entry.file_type()?.is_file() {
-                let cpm_name = name_to_8_3(&entry.file_name().to_string_lossy());
-                if let Some(cpm_name) = cpm_name {
-                    if cpm_name == name || (wildcard && name_match(&cpm_name, &name)) {
-                        // File found
-                        files.push(entry.path().into_os_string());
-                    }
-                }
-            }
-        }
-        if files.len() == 0 {
-            Err(io::Error::new(io::ErrorKind::NotFound, ""))
-        } else {
-            Ok(files)
         }
     }
 
@@ -387,79 +334,24 @@ impl CpmFile {
     }
 }
 
-/*
-The characters used inspecifying an unambiguous file reference cannot contain
-any of the following special characters:
-    < > . , ; : = ? * [ ] % | ( ) / \
-while all alphanumerics and remaining special characters are allowed.
-
-CCP parses the command line to extract the name of the program to run, and one
-or two additional filenames. To the CCP, the following characters are not valid
-for use in filenames:
-    space = _ . : ; < >
-
-The CPM CPP module converts commands into upper case before they are executed
-which leads many to believe that the CPM file system is not case sensitive, when
-in fact the CPM file system is case sensitive. If you use a CPM program such
-as Microsoft Basic you can create file names which contain lower case characters.
-The problem is files which contain lower case characters can not be specified as
-parameters at the CPP command prompt, as the characters will be converted to upper
-case by the CPP before the command is executed.
-*/
-fn name_to_8_3(os_name: &str) -> Option<String> {
-    let mut name = String::new();
-    let mut extension = String::new();
-    let mut in_extension = false;
-    for ch in os_name.chars() {
-        if !ch.is_ascii() {
-            return None; // Only ascii chars allowed.
-        }
-        // Note: let's not change to upper case. We may need to review this.
-        //ch = ch.to_ascii_uppercase();
-        if !in_extension {
-            if ch == '.' {
-                in_extension = true;
-            } else {
-                name.push(ch);
-            }
-        } else {
-            if ch == '.' {
-                return None; // Only one dot allowed.
-            } else {
-                extension.push(ch);
+fn find_host_files(name: String, wildcard: bool) -> io::Result<Vec<OsString>> {
+    let dir = fs::read_dir("./")?;
+    let mut files = Vec::new();
+    for entry in dir {
+        let entry = entry?;
+        if entry.file_type()?.is_file() {
+            let cpm_name = name_to_8_3(&entry.file_name().to_string_lossy());
+            if let Some(cpm_name) = cpm_name {
+                if cpm_name == name || (wildcard && name_match(&cpm_name, &name)) {
+                    // File found
+                    files.push(entry.path().into_os_string());
+                }
             }
         }
     }
-
-    // Verify it fits in 8 + 3
-    if name.len() > 8 || extension.len() > 3 {
-        return None;
+    if files.len() == 0 {
+        Err(io::Error::new(io::ErrorKind::NotFound, ""))
+    } else {
+        Ok(files)
     }
-
-    // Pad with spaces and compose
-    Some(format!("{:8}.{:3}", name, extension))
-}
-
-/*
-An ambiguous file reference is used for directory search and pattern matching.
-The form of an ambiguous file reference is similar to an unambiguous reference,
-except the symbol ? can be interspersed throughout the primary and secondary
-names. In various commands throughout CP/M, the ? symbol matches any character
-of a filename in the ? position. Thus, the ambiguous reference "X?Z.C?M" matches
-the following unambiguous filenames "XYZ.COM" and "X3Z.CAM".
-The wildcard character can also be used in an ambiguous file reference. The *
-character replaces all or part of a filename or filetype. Note that "*.*" equals
-the ambiguous file reference "????????.???" while "filename.*" and "*.typ" are
-abbreviations for "filename.???" and "????????.typ" respectively.
-*/
-const WILDCARD: u8 = '?' as u8;
-fn name_match(name: &str, pattern: &str) -> bool {
-    let n = name.as_bytes();
-    let p = pattern.as_bytes();
-    for i in 0..(8+1+3) {
-        if (n[i] != p[i]) || (p[i] != WILDCARD) {
-            return false;
-        }
-    }
-    true
 }
