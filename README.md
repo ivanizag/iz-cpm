@@ -18,7 +18,7 @@ Run Tiny Basic:
 cargo run diskA/TINYBAS.COM
 ```
 
-Run the command prompt CPP:
+Run the command prompt CCP:
 ```
 cargo run
 ```

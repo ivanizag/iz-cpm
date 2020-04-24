@@ -182,13 +182,13 @@ or two additional filenames. To the CCP, the following characters are not valid
 for use in filenames:
     space = _ . : ; < >
 
-The CPM CPP module converts commands into upper case before they are executed
+The CPM CCP module converts commands into upper case before they are executed
 which leads many to believe that the CPM file system is not case sensitive, when
 in fact the CPM file system is case sensitive. If you use a CPM program such
 as Microsoft Basic you can create file names which contain lower case characters.
 The problem is files which contain lower case characters can not be specified as
-parameters at the CPP command prompt, as the characters will be converted to upper
-case by the CPP before the command is executed.
+parameters at the CCP command prompt, as the characters will be converted to upper
+case by the CCP before the command is executed.
 */
 pub fn name_to_8_3(os_name: &str) -> Option<String> {
     let mut name = String::new();

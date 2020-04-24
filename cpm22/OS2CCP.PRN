@@ -392,7 +392,7 @@ N               	title	'console command processor (CCP), ver 2.0'
  F320 52454E20  	db	'REN '
  F324 55534552          db      'USER'
  0006 =         	intlen equ ($-intvec)/4 ;intrinsic function length
- F328 0000000000	serial: db 0,0,0,0,0,0
+ F328 C900000000	serial: db 0c9h,0,0,0,0,0
                 ;
                 ;
                 intrinsic:
@@ -826,4 +826,4 @@ N               	title	'console command processor (CCP), ver 2.0'
                 			;none=0, a=1, b=2 ...
  F7F1           bptr:	ds	1	;buffer pointer
  F7F2           	end	ccploc
-
+

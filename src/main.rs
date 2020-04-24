@@ -20,7 +20,7 @@ const FCB1_ADDRESS:          u16 = 0x005c;
 const FCB2_ADDRESS:          u16 = 0x006c;
 const SYSTEM_PARAMS_ADDRESS: u16 = 0x0080; // Also default DMA buffer
 const TPA_BASE_ADDRESS:      u16 = 0x0100;
-const CCP_BASE_ADDRESS:      u16 = 0xf000; // The CPP binary has to be rebuilt if this changes
+const CCP_BASE_ADDRESS:      u16 = 0xf000; // The CCP binary has to be rebuilt if this changes
 const TPA_STACK_ADDRESS:     u16 = 0xf080; // 16 bytes for an 8 level stack
 const BDOS_BASE_ADDRESS:     u16 = 0xf800;
 const BIOS_BASE_ADDRESS:     u16 = 0xff00;
@@ -200,6 +200,10 @@ fn main() {
     machine.poke16(6, BDOS_BASE_ADDRESS);
     // We put ret on that address
     machine.poke(BDOS_BASE_ADDRESS, 0xc9 /*ret*/);
+    /*
+    Note: if the first 6 bytes of BDOS change the serial number in the CCP
+    source code needs to be updated.
+    */
 
     cpu.registers().set_pc(binary_address);
     cpu.set_trace(cpu_trace);
@@ -207,6 +211,10 @@ fn main() {
         cpu.execute_instruction(&mut machine);
 
         let pc = cpu.registers().pc();
+
+        if cpu.is_halted() {
+            panic!("HALT instruction")
+        }
         // We fo the BIOS actions outside the emulation.
         if pc >= BIOS_BASE_ADDRESS {
             let offset = pc - BIOS_BASE_ADDRESS;
@@ -222,7 +230,7 @@ fn main() {
                     } else {
                         "unknown"
                     };
-                    print!("\n[[BIOS command {}: {}]]", command, name);
+                    println!("[[BIOS command {}: {}]]", command, name);
                 }
                 /*
                 See: http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch6.htm#Table_6-5
@@ -308,7 +316,7 @@ fn main() {
                 } else {
                     "unknown"
                 };
-                print!("\n[[BDOS command {}: {}({:04x})]]", command, name, arg16);
+                print!("[[BDOS command {}: {}({:04x})]]", command, name, arg16);
             }
 
             let mut res8: Option<u8> = None;
@@ -433,14 +441,14 @@ fn main() {
                 cpu.registers().set8(Reg8::A, a);
                 cpu.registers().set8(Reg8::L, a);
                 if bdos_trace {
-                    print!("[[=>{:02x}]]", a);
+                    println!("[[=>{:02x}]]", a);
                 }
             } else if let Some(hl) = res16 {
                 cpu.registers().set16(Reg16::HL, hl);
                 cpu.registers().set8(Reg8::A, hl as u8);
                 cpu.registers().set8(Reg8::B, (hl>>8) as u8);
                 if bdos_trace {
-                    print!("[[=>{:02x}]]", hl);
+                    println!("[[=>{:02x}]]", hl);
                 }
             }
         }

@@ -147,7 +147,7 @@ impl CpmConsole {
             Some(_) => 0xff,
             None => {
                 // Avoid 100% CPU usage waiting for input.
-                thread::sleep(Duration::from_millis(1)); 
+                thread::sleep(Duration::from_nanos(100)); 
                 0
             }
         }

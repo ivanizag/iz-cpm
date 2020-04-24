@@ -390,7 +390,7 @@ intvec:
 	db	'REN '
         db      'USER'
 	intlen equ ($-intvec)/4 ;intrinsic function length
-	serial: db 0,0,0,0,0,0
+	serial: db 0c9h,0,0,0,0,0
 ;
 ;
 intrinsic:
