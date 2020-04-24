@@ -362,14 +362,39 @@ fn main() {
                 },
                 16 => { // F_CLOSE - Close file
                     let fcb = Fcb::new(arg16, &mut machine);
+                    if call_trace {
+                        print!("[[Close file {}]]", fcb.get_name());
+                    }
                     res8 = Some(cpm_file.close(&fcb));
                 },
-                19 => { // F_DELETE - Delete file
+                17 => { // F_SFIRST - Search for first
                     let fcb = Fcb::new(arg16, &mut machine);
+                    if call_trace {
+                        print!("[[DIR start {}]]", fcb.get_name());
+                    }
+                    let res = cpm_file.search_first(&fcb);
+                    if res == 0 {
+                        cpm_file.load_buffer(&mut machine);
+                    }
+                    res8 = Some(res);
+
+                }
+                18 => { // F_SNEXT - Search for first
+                    if call_trace {
+                        print!("[[DIR next]]");
+                    }
+                    let res = cpm_file.search_next();
+                    if res == 0 {
+                        cpm_file.load_buffer(&mut machine);
+                    }
+                    res8 = Some(res);
+                }
+                19 => { // F_DELETE - Delete file
+                    let mut fcb = Fcb::new(arg16, &mut machine);
                     if call_trace {
                         print!("[[Delete file {}]]", fcb.get_name());
                     }
-                    res8 = Some(cpm_file.delete(&fcb));
+                    res8 = Some(cpm_file.delete(&mut fcb));
                 }
                 20 => { // F_READ - Read next record
                     let mut fcb = Fcb::new(arg16, &mut machine);

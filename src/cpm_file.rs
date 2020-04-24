@@ -13,10 +13,28 @@ use super::cpm_machine::*;
 const DEFAULT_DMA: u16 = 0x0080;
 const RECORD_SIZE: usize = 128;
 
+/*
+Many file processing functions return a value in register A that is either OFFH,
+indicating that the file named in the FCB could not be found, or equal to a
+value of 0, 1, 2, or 3. In the latter case, the BDOS is returning what is called
+a "directory code." The number is the directory entry number that the BDOS
+matched to the filename in your FCB. At any given moment, the BDOS has a
+128-byte sector from the directory in memory. Each filed irectory entry is
+32 bytes, so four of them (numbered 0, 1,2, and 3) can be processed at a time.
+The directory code indicates which one has been matched to your FCB.alloc
+
+Here we will have always the files in directory code 0.
+*/
+const DIRECTORY_CODE: u8 = 0;
+const FILE_NOT_FOUND: u8 = 0xff;
+
 pub struct CpmFile {
     user: u8,
     dma: u16,
     buffer: [u8; RECORD_SIZE],
+    // Current DIR
+    dir_pattern: String,
+    dir_pos: u16, // We will hold a global position in a DIR.
 }
 
 impl CpmFile {
@@ -24,6 +42,8 @@ impl CpmFile {
         CpmFile {
             user: 0,
             dma: DEFAULT_DMA,
+            dir_pattern: "????????.???".to_string(),
+            dir_pos: 0,
             buffer: [0; RECORD_SIZE],
         }
     }
@@ -93,10 +113,10 @@ impl CpmFile {
         match find_host_files(fcb.get_name(), false) {
             Err(_) => 0xff, // Error or file not found
             Ok(paths) => match fs::File::open(&paths[0]) {
-                Err(_) => 0xff,
+                Err(_) => FILE_NOT_FOUND,
                 Ok(_) => {
                     fcb.init(); // TODO: should we put the found name in the FCB?
-                    0
+                    DIRECTORY_CODE
                 }
             }
         }
@@ -117,10 +137,10 @@ impl CpmFile {
         the FCB and thus a subsequent open is not necessary.
         */
         match fs::File::create(fcb.get_name_host()) {
-            Err(_) => 0xff, // Error or file not found
+            Err(_) => FILE_NOT_FOUND, // Error or file not found
             Ok(_) => {
                 fcb.init();
-                0
+                DIRECTORY_CODE
             }
         }
     }
@@ -141,8 +161,8 @@ impl CpmFile {
         */
         
         match find_host_files(fcb.get_name(), false){
-            Err(_) => 0xff, // Error or file not found
-            Ok(_) => 0
+            Err(_) => FILE_NOT_FOUND, // Error or file not found
+            Ok(_) => DIRECTORY_CODE
         }
     }
 
@@ -157,12 +177,86 @@ impl CpmFile {
         cannot be found; otherwise, a value in the range 0 to 3 returned.
         */
         match find_host_files(fcb.get_name(), true) {
-            Err(_) => 0xff, // Error or file not found
+            Err(_) => FILE_NOT_FOUND, // Error or file not found
             Ok(paths) => {
                 for name in paths {
                     fs::remove_file(name).unwrap();
                 }
-                0
+                DIRECTORY_CODE
+            }
+        }
+    }
+
+    pub fn search_first(&mut self, fcb: &Fcb) -> u8 {
+        /*
+        Search First scans the directory for a match with the file given by
+        the FCB addressed by DE. The value 255 (hexadecimal FF) is returned if
+        the file is not found; otherwise, 0, 1, 2, or 3 is returned indicating
+        the file is present. When the file is found, the current DMA address
+        is filled with the record containing the directory entry, and the
+        relative starting position is A * 32 (that is, rotate the A register
+        left 5 bits, or ADD A five times). Although not normally required for
+        application programs, the directory information can be extracted from
+        the buffer at this position.
+
+        An ASCII question mark (63 decimal, 3F hexadecimal) in any position
+        from f1 through ex matches the corresponding field of any directory
+        entry on the default or auto-selected disk drive. If the dr field
+        contains an ASCII question mark, the auto disk select function is
+        disabled and the default disk is searched, with the search function
+        returning any matched entry, allocated or free, belonging to any user
+        number. This latter function is not normally used by application
+        programs, but it allows complete flexibility to scan all current
+        directory values. If the dr field is not a question mark, the s2 byte
+        is automatically zeroed. 
+        */
+        self.dir_pattern = fcb.get_name();
+        self.dir_pos = 0;
+        self.search_nth()
+    }
+
+    pub fn search_next(&mut self) -> u8 {
+        /*
+        The Search Next function is similar to the Search First function,
+        except that the directory scan continues from the last matched entry.
+        Similar to Function 17, Function 18 returns the decimal value 255 in A
+        when no more directory items match. 
+        */
+        self.search_nth()
+    }
+
+    pub fn search_nth(&mut self) -> u8 {
+        /*
+        For search_first and search_next, I will store a global index
+        for the position. I don't know if BDOS was storing the state on
+        the FCB or globally.
+        */
+        let mut i = 0 as u16;
+        match fs::read_dir("./") {
+            Err(_) => FILE_NOT_FOUND, // Error
+            Ok(dir) => {
+                for entry in dir {
+                    if let Ok(file) = entry {
+                        if let Ok(file_type) = file.file_type() {
+                            if file_type.is_file() {
+                                let os_name = file.file_name();
+                                if let Some(cpm_name) = name_to_8_3(&os_name.to_string_lossy()) {
+                                    if name_match(&cpm_name, &self.dir_pattern) {
+                                        // Fits the pattern
+                                        if i == self.dir_pos {
+                                            // This is the one to show
+                                            self.build_directory_entry(cpm_name);
+                                            self.dir_pos += 1;
+                                            return DIRECTORY_CODE;
+                                        }
+                                        i += 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                FILE_NOT_FOUND // No more items
             }
         }
     }
@@ -282,6 +376,10 @@ impl CpmFile {
         let mut os_file = fs::File::open(&paths[0])?;
 
         let file_offset = record as u64 * RECORD_SIZE as u64;
+        if file_offset >= os_file.metadata()?.len() {
+            return Ok(1); // End of file
+        }
+
         os_file.seek(io::SeekFrom::Start(file_offset))?;
         let size = os_file.read(&mut self.buffer)?;
 
@@ -316,6 +414,37 @@ impl CpmFile {
         for i in 0..RECORD_SIZE {
             self.buffer[i] = machine.peek(self.dma + i as u16);
         }
+    }
+
+    fn build_directory_entry(&mut self, cpm_name: String) {
+        /*
+        Some commands return a directory record. It can hold 4 directoy entries,
+        but we only use the first one.
+        */
+
+        // Zero the buffer
+        for i in 0..RECORD_SIZE {
+            self.buffer[i] = 0;
+        }
+
+        // Store name in the first entry
+        let bytes = cpm_name.as_bytes();
+        for i in 0..8 {
+            self.buffer[1+i] = 0x7F & bytes[i as usize];
+        }
+        for i in 0..3 {
+            self.buffer[9+i] = 0x7F & bytes[9 + i as usize];
+        }
+
+        // Mark the rest of the entries as deleted
+        /*
+        This user-number byte serves a second purpose. If this byte is set to a
+        value of 0E5H, CP/M considers that the file directory entry has been
+        deleted and completely ignores the remaining 31 bytes of data.
+        */
+        self.buffer[32] = 0xe5;
+        self.buffer[64] = 0xe5;
+        self.buffer[96] = 0xe5;
     }
 
     pub fn get_set_user_number(&mut self, user: u8) -> u8 {
@@ -354,4 +483,28 @@ fn find_host_files(name: String, wildcard: bool) -> io::Result<Vec<OsString>> {
     } else {
         Ok(files)
     }
+}
+
+/*
+An ambiguous file reference is used for directory search and pattern matching.
+The form of an ambiguous file reference is similar to an unambiguous reference,
+except the symbol ? can be interspersed throughout the primary and secondary
+names. In various commands throughout CP/M, the ? symbol matches any character
+of a filename in the ? position. Thus, the ambiguous reference "X?Z.C?M" matches
+the following unambiguous filenames "XYZ.COM" and "X3Z.CAM".
+The wildcard character can also be used in an ambiguous file reference. The *
+character replaces all or part of a filename or filetype. Note that "*.*" equals
+the ambiguous file reference "????????.???" while "filename.*" and "*.typ" are
+abbreviations for "filename.???" and "????????.typ" respectively.
+*/
+const WILDCARD: u8 = '?' as u8;
+pub fn name_match(name: &str, pattern: &str) -> bool {
+    let n = name.as_bytes();
+    let p = pattern.as_bytes();
+    for i in 0..(8+1+3) {
+        if (n[i] != p[i]) && (p[i] != WILDCARD) {
+            return false;
+        }
+    }
+    true
 }

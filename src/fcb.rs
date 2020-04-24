@@ -120,7 +120,7 @@ impl <'a> Fcb<'_> {
             self.set_byte(i + FCB_NAME_OFFSET, 0x7F & bytes[i as usize]);
         }
         for i in 0..3 {
-            self.set_byte(i + FCB_EXTENSION_OFFSET, 0x7F & bytes[4 + i as usize]);
+            self.set_byte(i + FCB_EXTENSION_OFFSET, 0x7F & bytes[9 + i as usize]);
         }
     }
 
@@ -222,28 +222,4 @@ pub fn name_to_8_3(os_name: &str) -> Option<String> {
 
     // Pad with spaces and compose
     Some(format!("{:8}.{:3}", name, extension))
-}
-
-/*
-An ambiguous file reference is used for directory search and pattern matching.
-The form of an ambiguous file reference is similar to an unambiguous reference,
-except the symbol ? can be interspersed throughout the primary and secondary
-names. In various commands throughout CP/M, the ? symbol matches any character
-of a filename in the ? position. Thus, the ambiguous reference "X?Z.C?M" matches
-the following unambiguous filenames "XYZ.COM" and "X3Z.CAM".
-The wildcard character can also be used in an ambiguous file reference. The *
-character replaces all or part of a filename or filetype. Note that "*.*" equals
-the ambiguous file reference "????????.???" while "filename.*" and "*.typ" are
-abbreviations for "filename.???" and "????????.typ" respectively.
-*/
-const WILDCARD: u8 = '?' as u8;
-pub fn name_match(name: &str, pattern: &str) -> bool {
-    let n = name.as_bytes();
-    let p = pattern.as_bytes();
-    for i in 0..(8+1+3) {
-        if (n[i] != p[i]) || (p[i] != WILDCARD) {
-            return false;
-        }
-    }
-    true
 }
