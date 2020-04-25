@@ -23,10 +23,10 @@ const BDOS_COMMAND_NAMES: [&'static str; 38] = [
     "F_OPEN", "F_CLOSE", "F_SFIRST", "F_SNEXT", "F_DELETE",
     // 20
     "F_READ", "F_WRITE", "F_MAKE", "F_RENAME", "DRV_LOGINVEC",
-    "DRV_GET", "F_DMAOFF", "DRV_ALLOCVEC", "DRV_SETRO", "DRV_ROVEC",
+    "DRV_GET", "F_DMAOFF", "*DRV_ALLOCVEC", "*DRV_SETRO", "*DRV_ROVEC",
     // 30
-    "F_ATTRIB", "DRV_DPB", "F_USERNUM", "F_READRAND", "F_WRITERAND",
-    "F_SIZE", "F_RANDREC", "DRV_RESET"]; 
+    "*F_ATTRIB", "*DRV_DPB", "F_USERNUM", "F_READRAND", "*F_WRITERAND",
+    "*F_SIZE", "*F_RANDREC", "*DRV_RESET"]; 
 
 impl Bdos {
     pub fn new() -> Bdos {
@@ -38,13 +38,9 @@ impl Bdos {
     }
 
     pub fn setup(&self, machine: &mut CpmMachine) {
-        /*
-        Setup BDOS location and entry point
-        .org $5
-            jp BDOS_BASE_ADDRESS
-        */
-        machine.poke(5, 0xc3 /* jp nnnn */);
-        machine.poke16(6, BDOS_BASE_ADDRESS);
+        machine.poke( BDOS_ENTRY_ADDRESS,    0xc3 /* jp BDOS_BASE_ADDRESS */);
+        machine.poke16(BDOS_ENTRY_ADDRESS+1, BDOS_BASE_ADDRESS);
+
         // We put ret on that address
         machine.poke(BDOS_BASE_ADDRESS, 0xc9 /*ret*/);
         /*
@@ -80,15 +76,51 @@ impl Bdos {
             match command {
                 // See https://www.seasip.info/Cpm/bdos.html
                 // See http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch5.htm
-                1=> { // C_READ - Console input
+                0 => { // P_TERM_CPM - System reset
+                    /*
+                    The System Reset function returns control to the CP/M
+                    operating system at the CCP level. The CCP reinitializes
+                    the disk subsystem by selecting and logging-in disk drive
+                    A. This function has exactly the same effect as a jump to
+                    location BOOT.
+                    */
+                    panic!("BOOT");
+                },
+                1 => { // C_READ - Console input
                     res8 = Some(self.console.read(bios))
-                }
+                },
                 2 => { // C_WRITE - Console output
+                    self.console.write(bios,arg8);
+                },
+                3 => { // A_READ - Reader input
+                    // Use the console as the reader
+                    res8 = Some(self.console.read(bios))
+                },
+                4 => { // A_WRITE - Punch output
+                    // Use the console as the punch
+                    self.console.write(bios,arg8);
+                },
+                5 => { // L_WRITE - List output
+                    // Use the console as the list
                     self.console.write(bios,arg8);
                 },
                 6 => { // C_RAWIO - Direct console I/O
                     res8 = Some(self.console.raw_io(bios, arg8))
-                }
+                },
+                7 => { // A_STATIN - Get I/O Byte
+                    /*
+                    The Get I/O Byte function returns the current value of
+                    IOBYTE in register A.
+                    */
+                    res8 = Some(machine.peek(IOBYTE_ADDRESS));
+                },
+                8 => { // A_STATOUT - Set I/O Byte
+                    /*
+                    The SET I/O Byte function changes the IOBYTE value to that
+                    given in register E.
+                    */
+                    machine.poke(IOBYTE_ADDRESS, arg8);
+                },
                 9 => { // C_WRITESTR - Output string
                     self.console.write_string(bios, &machine, arg16);
                 },

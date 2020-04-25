@@ -157,6 +157,7 @@ fn main() {
         cpu.registers().set16(Reg16::SP, sp);
     }
 
+    // Run the emulation
     cpu.registers().set_pc(binary_address);
     cpu.set_trace(cpu_trace);
     loop {
@@ -174,6 +175,11 @@ fn main() {
         }
 
         bdos.execute(&mut bios, &mut machine, cpu.registers(), call_trace, call_trace_skip_console);
+
+        if pc == RESTART_ADDRESS {
+            println!("Terminated by JMP 0000h");
+            break;
+        }
 
         if pc == BDOS_BASE_ADDRESS - 1 {
             // Guard to detect code reaching BDOS (usually NOPs)
