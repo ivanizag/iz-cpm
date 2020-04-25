@@ -3,12 +3,12 @@ use iz80::Machine;
 use super::bios::Bios;
 use super::cpm_machine::*;
 
-pub struct CpmConsole {
+pub struct BdosConsole {
 }
 
-impl CpmConsole {
-    pub fn new() -> CpmConsole {
-        CpmConsole {
+impl BdosConsole {
+    pub fn new() -> BdosConsole {
+        BdosConsole {
         }
     }
 

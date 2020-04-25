@@ -28,7 +28,7 @@ Here we will have always the files in directory code 0.
 const DIRECTORY_CODE: u8 = 0;
 const FILE_NOT_FOUND: u8 = 0xff;
 
-pub struct CpmFile {
+pub struct BdosFile {
     user: u8,
     dma: u16,
     buffer: [u8; RECORD_SIZE],
@@ -37,9 +37,9 @@ pub struct CpmFile {
     dir_pos: u16, // We will hold a global position in a DIR.
 }
 
-impl CpmFile {
-    pub fn new() -> CpmFile {
-        CpmFile {
+impl BdosFile {
+    pub fn new() -> BdosFile {
+        BdosFile {
             user: 0,
             dma: DEFAULT_DMA,
             dir_pattern: "????????.???".to_string(),

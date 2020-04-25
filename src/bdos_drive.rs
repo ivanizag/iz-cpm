@@ -1,11 +1,11 @@
-pub struct CpmDrive {
+pub struct BdosDrive {
     current: u8,
     selected_bitmap: u16
 }
 
-impl CpmDrive {
-    pub fn new() -> CpmDrive {
-        CpmDrive {
+impl BdosDrive {
+    pub fn new() -> BdosDrive {
+        BdosDrive {
             current: 0,
             selected_bitmap: 1<<0
         }

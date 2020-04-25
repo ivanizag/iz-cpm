@@ -111,7 +111,6 @@ impl Bios {
     }
 
     pub fn execute(&mut self, reg: &mut Registers, call_trace: bool) -> bool {
-        // We fo the BIOS actions outside the emulation.
         let pc = reg.pc();
         if pc >= BIOS_RET_TRAP_START {
             let command = pc - BIOS_RET_TRAP_START;
