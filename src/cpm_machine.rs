@@ -3,10 +3,8 @@ use iz80::Machine;
 pub struct CpmMachine {
     mem: [u8; 65536],
     in_values: [u8; 256],
-    in_called: bool,
-    in_port: u8,
-    out_called: bool,
-    out_port: u8,
+    in_port: Option<u8>,
+    out_port: Option<u8>,
     out_value: u8
 }
 
@@ -15,11 +13,9 @@ impl CpmMachine {
         CpmMachine {
             mem: [0; 65536],
             in_values: [0; 256],
-            out_called: false,
-            out_port: 0,
+            in_port: None,
+            out_port: None,
             out_value: 0,
-            in_called: false,
-            in_port: 0
         }
     }
 }
@@ -37,15 +33,13 @@ impl Machine for CpmMachine {
 
     fn port_in(&mut self, address: u16) -> u8 {
         let value = self.in_values[address as u8 as usize];
-        self.in_port = address as u8;
-        self.in_called = true;
+        self.in_port = Some(address as u8);
         value
     }
 
     fn port_out(&mut self, address: u16, value: u8) {
-        self.out_port = address as u8;
+        self.out_port = Some(address as u8);
         self.out_value = value;
-        self.out_called = true;
     }
 }
 

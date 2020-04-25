@@ -1,46 +1,18 @@
-use std::io::*;
-use std::sync::mpsc;
-use std::sync::mpsc::Receiver;
-use std::sync::mpsc::TryRecvError;
-use std::thread;
-use std::time::Duration;
-
 use iz80::Machine;
+
+use super::bios::Bios;
 use super::cpm_machine::*;
 
 pub struct CpmConsole {
-    stdin_channel: Receiver<u8>,
-    next_char: Option<u8>
 }
 
 impl CpmConsole {
     pub fn new() -> CpmConsole {
-        let (tx, rx) = mpsc::channel::<u8>();
-        thread::spawn(move || loop {
-            let mut buffer = String::new();
-            stdin().read_line(&mut buffer).unwrap();
-            for mut c in buffer.bytes() {
-                if c == 10 {c = 13};
-                tx.send(c).unwrap();
-            }
-        });
         CpmConsole {
-            stdin_channel: rx,
-            next_char: None
         }
     }
 
-    pub fn pool_keyboard(&mut self) {
-        if self.next_char == None {
-            self.next_char = match self.stdin_channel.try_recv() {
-                Ok(key) => Some(key),
-                Err(TryRecvError::Empty) => None,
-                Err(TryRecvError::Disconnected) => panic!("Stdin disconnected")
-            }
-        }
-    }
-
-    pub fn read(&mut self) -> u8 {
+    pub fn read(&mut self, bios: &mut Bios ) -> u8 {
         /*
         The Console Input function reads the next console character to
         register A. Graphic characters, along with carriage return,
@@ -51,31 +23,19 @@ impl CpmConsole {
         program until a character has been typed, thus suspending
         execution if a character is not ready. 
         */
-
-        match self.next_char {
-            Some(ch) => {
-                self.next_char = None;
-                ch
-            },
-            None => {
-                // Blocks waiting for char
-                self.stdin_channel.recv().unwrap()
-            }
-        }
+        bios.read()
     }
 
-    pub fn write(&self, ch: u8) {
+    pub fn write(&self, bios: &mut Bios, ch: u8) {
         /*
         The ASCII character from register E is sent to the console
         device. As in Function 1, tabs are expanded and checks are made
         for start/stop scroll and printer echo. 
         */
-
-        print!("{}", ch as char);
-        stdout().flush().unwrap();
+        bios.write(ch);
     }
 
-    pub fn write_string(&self, address: u16, machine: &CpmMachine) {
+    pub fn write_string(&self, bios: &mut Bios, machine: &CpmMachine, address: u16) {
         /*
         The Print String function sends the character string stored in
         memory at the location given by DE to the console device, until
@@ -85,21 +45,18 @@ impl CpmConsole {
         */
 
         let mut index = address;
-        let mut msg = String::new();
         loop {
-            let ch = machine.peek(index) as char;
+            let ch = machine.peek(index);
             index += 1;
     
-            if ch == '$'{
+            if ch as char == '$'{
                 break;
             }
-            msg.push(ch);
+            bios.write(ch);
         }
-        print!("{}", msg);
-        stdout().flush().unwrap();
     }
 
-    pub fn read_string(&mut self, address: u16, machine: &mut CpmMachine) -> u8 {
+    pub fn read_string(&mut self, bios: &mut Bios, machine: &mut CpmMachine, address: u16) -> u8 {
         /*
         The Read Buffer function reads a line of edited console input
         into a buffer addressed by registers DE. Console input is
@@ -119,7 +76,7 @@ impl CpmConsole {
         let mut size = 0;
         let mut pos = address + 2;
         loop {
-            let ch = self.read();
+            let ch = bios.read();
             if ch == 10 || ch == 13 { // CR of LF
                 break;
             }
@@ -136,24 +93,16 @@ impl CpmConsole {
         size
     }
 
-    pub fn status(&self) -> u8 {
+    pub fn status(&self, bios: &mut Bios) -> u8 {
         /*
         The Console Status function checks to see if a character has
         been typed at the console. If a character is ready, the value
         0FFH is returned in register A. Otherwise a 00H value is returned. 
         */
-
-        match self.next_char {
-            Some(_) => 0xff,
-            None => {
-                // Avoid 100% CPU usage waiting for input.
-                thread::sleep(Duration::from_nanos(100)); 
-                0
-            }
-        }
+        bios.status()
     }
 
-    pub fn raw_io(&mut self, data: u8) -> u8 {
+    pub fn raw_io(&mut self, bios: &mut Bios, data: u8) -> u8 {
         /*
         Direct Console I/O is supported under CP/M for those specialized
         applications where basic console input and output are required. Use
@@ -175,23 +124,16 @@ impl CpmConsole {
         Function 6 must not be used in conjunction with other console I/O
         functions. 
         */
-
         if data == 0xff {
             // Input
-            match self.next_char {
-                Some(ch) => {
-                    self.next_char = None;
-                    ch
-                },
-                None => {
-                    // Avoid 100% CPU usage waiting for input.
-                    thread::sleep(Duration::from_millis(1)); 
-                    0
-                }
+            if bios.status() == 0 {
+                0 // No char ready
+            }  else {
+                bios.read()
             }
         } else {
             // Output
-            self.write(data);
+            bios.write(data);
             0 // Should this be 0 or data?
         }
     }

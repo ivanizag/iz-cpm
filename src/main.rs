@@ -4,34 +4,24 @@ use clap::{Arg, App};
 
 use iz80::*;
 
+mod bios;
+mod constants;
 mod cpm_console;
 mod cpm_drive;
 mod cpm_file;
 mod cpm_machine;
 mod fcb;
 
+use self::bios::Bios;
+use self::constants::*;
 use self::cpm_console::*;
 use self::cpm_drive::*;
 use self::cpm_file::*;
 use self::cpm_machine::*;
 use self::fcb::*;
 
-const FCB1_ADDRESS:          u16 = 0x005c;
-const FCB2_ADDRESS:          u16 = 0x006c;
-const SYSTEM_PARAMS_ADDRESS: u16 = 0x0080; // Also default DMA buffer
-const TPA_BASE_ADDRESS:      u16 = 0x0100;
-const CCP_BASE_ADDRESS:      u16 = 0xf000; // The CCP binary has to be rebuilt if this changes
-const TPA_STACK_ADDRESS:     u16 = 0xf080; // 16 bytes for an 8 level stack
-const BDOS_BASE_ADDRESS:     u16 = 0xf800;
-const BIOS_BASE_ADDRESS:     u16 = 0xff00;
 
 static CCP_BINARY: &'static [u8] = include_bytes!("../cpm22/OS2CCP.BIN");
-
-const BIOS_COMMAND_NAMES: [&'static str; 16] = [
-    "BOOT", "WBOOT", "CONST", "CONIN", "CONOUT",
-    "LIST", "PUNCH", "READER", "SELDSK", "SETTRK",
-    "SETSEC", "SETDMA", "READ", "WRITE", "LISTST",
-    "SECTRAN"];
 
 const BDOS_COMMAND_NAMES: [&'static str; 38] = [
     "P_TERMCPM", "C_READ", "C_WRITE", "A_READ", "A_WRITE",
@@ -42,8 +32,6 @@ const BDOS_COMMAND_NAMES: [&'static str; 38] = [
     "DRV_GET", "F_DMAOFF", "DRV_ALLOCVEC", "DRV_SETRO", "DRV_ROVEC",
     "F_ATTRIB", "DRV_DPB", "F_USERNUM", "F_READRAND", "F_WRITERAND",
     "F_SIZE", "F_RANDREC", "DRV_RESET"]; 
-
-
 
 
 fn main() {
@@ -77,9 +65,13 @@ fn main() {
     let mut cpu = Cpu::new();
 
     // Init cpm
+    let mut bios = Bios::new();
     let mut cpm_console = CpmConsole::new();
     let mut cpm_drive= CpmDrive::new();
     let mut cpm_file = CpmFile::new();
+
+    bios.setup(&mut machine);
+
 
     // Load CCP or program
     let binary: &[u8];
@@ -179,20 +171,6 @@ fn main() {
         cpu.registers().set16(Reg16::SP, sp);
     }
 
-    /*
-    Setup BIOS location and entry points
-    .org $0
-        jp BIOS_BASE_ADDRESS + 3
-    */
-    machine.poke(0, 0xc3 /* jp nnnn */);
-    machine.poke16(1, BIOS_BASE_ADDRESS + 3); // Warm start is the second entrypoin in BIOS
-    // We put ret on all the addresses
-    for i in 0..0x80 { // 0x34 should be enough to cover the 17 entry points.
-        machine.poke(BIOS_BASE_ADDRESS + i, 0xc9 /*ret*/);
-    }
-    // MBASIC assumes this are all JMP xxxx. It copies the destination address
-    // and gos there. That's why it calls c9c9
-
 
 
     /*
@@ -219,86 +197,8 @@ fn main() {
         if cpu.is_halted() {
             panic!("HALT instruction")
         }
-        // We fo the BIOS actions outside the emulation.
-        if pc >= BIOS_BASE_ADDRESS {
-            let offset = pc - BIOS_BASE_ADDRESS;
-            if offset < 0x80 && (offset % 3) == 0 {
-                /*
-                We are on the first byte of the tree reserved for each
-                vector. We execute the action and the let the RET run.
-                */
-                let command = offset / 3;
-                if call_trace {
-                    let name = if command < BIOS_COMMAND_NAMES.len() as u16 {
-                        BIOS_COMMAND_NAMES[command as usize]
-                    } else {
-                        "unknown"
-                    };
-                    println!("[[BIOS command {}: {}]]", command, name);
-                }
-                /*
-                See: http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch6.htm#Table_6-5
 
-                0  BOOT: Cold start routine
-                1  WBOOT: Warm boot - reload command processor
-                2  CONST: Console status
-                3  CONIN: Console input
-                4  CONOUT: Console output
-                5  LIST: Printer output
-                6  PUNCH: Paper tape punch output
-                7  READER: Paper tape reader input
-                8  SELDSK: Select disc drive
-                9  SETTRK: Set track number
-                10 SETSEC: Set sector number
-                11 SETDMA: Set DMA address
-                12 READ: Read a sector
-                13 WRITE: Write a sector
-                14 LISTST: Status of list device
-                15 SECTRAN: Sector translation for skewing
-                */
-                match command {
-                    0 => { // BOOT: Cold Start Routine
-                        println!("Terminated. cold restart");
-                        break;
-                    }
-                    1 => { // WBOOT: Warm boot.
-                        // Reload command processor. We will go back to the host.
-                        println!("Terminated, warm restart");
-                        break;
-                    }
-                    2 => { // CONST: Check for console ready
-                        /*
-                        You should sample the status of the currently assigned
-                        console device and return 0FFH in register A if a
-                        character is ready to read and 00H in register A if no
-                        console characters are ready. 
-                        */
-                        let res8 = cpm_console.status();
-                        cpu.registers().set_a(res8);
-                    }
-                    3 => { // CONIN: Console Input
-                        /*
-                        The next console character is read into register A, and
-                        the parity bit is set, high-order bit, to zero. If no
-                        console character is ready, wait until a character is
-                        typed before returning. 
-                        */
-                        let res8 = cpm_console.read();
-                        cpu.registers().set_a(res8);
-                    }
-                    10 => { // SETSEC: Set sector number
-                        let sector = cpu.registers().get8(Reg8::C);
-                        if call_trace {
-                            println!("Set sector: {}", sector);
-                        }
-                    }
-                    _ => {
-                        print!("BIOS command {} not implemented.\n", command);
-                        panic!("BIOS command not implemented");
-                    }    
-                }
-            }
-        }
+        bios.execute(cpu.registers(), call_trace);
 
         if pc == BDOS_BASE_ADDRESS - 1 {
             // Guard to detect code reaching BDOS (usually NOPs)
@@ -307,7 +207,6 @@ fn main() {
         }
 
         if pc == BDOS_BASE_ADDRESS {
-            cpm_console.pool_keyboard();
 
             let arg8 = cpu.registers().get8(Reg8::E);
             let arg16 = cpu.registers().get16(Reg16::DE);
@@ -330,22 +229,22 @@ fn main() {
                 // See https://www.seasip.info/Cpm/bdos.html
                 // See http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch5.htm
                 1=> { // C_READ - Console input
-                    res8 = Some(cpm_console.read())
+                    res8 = Some(cpm_console.read(&mut bios))
                 }
                 2 => { // C_WRITE - Console output
-                    cpm_console.write(arg8);
+                    cpm_console.write(&mut bios,arg8);
                 },
                 6 => { // C_RAWIO - Direct console I/O
-                    res8 = Some(cpm_console.raw_io(arg8))
+                    res8 = Some(cpm_console.raw_io(&mut bios, arg8))
                 }
                 9 => { // C_WRITESTR - Output string
-                    cpm_console.write_string(arg16, &machine);
+                    cpm_console.write_string(&mut bios, &machine, arg16);
                 },
                 10 => { // C_READSTR
-                    cpm_console.read_string(arg16, &mut machine);
+                    cpm_console.read_string(&mut bios, &mut machine, arg16);
                 },
                 11 => { // C_STAT - Console status
-                    res8 = Some(cpm_console.status());
+                    res8 = Some(cpm_console.status(&mut bios));
                 },
                 12 => { // S_BDOSVER - Return version number
                     res16 = Some(get_version());
