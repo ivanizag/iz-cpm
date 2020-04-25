@@ -190,6 +190,10 @@ fn main() {
     for i in 0..0x80 { // 0x34 should be enough to cover the 17 entry points.
         machine.poke(BIOS_BASE_ADDRESS + i, 0xc9 /*ret*/);
     }
+    // MBASIC assumes this are all JMP xxxx. It copies the destination address
+    // and gos there. That's why it calls c9c9
+
+
 
     /*
     Setup BDOS location and entry point
