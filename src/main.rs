@@ -183,7 +183,7 @@ fn main() {
     // We put ret on that address
     machine.poke(BDOS_BASE_ADDRESS, 0xc9 /*ret*/);
     /*
-    Note: if the first 6 bytes of BDOS change the serial number in the CCP
+    Note: if the first 6 bytes of BDOS change, the serial number in the CCP
     source code needs to be updated.
     */
 
@@ -198,7 +198,10 @@ fn main() {
             panic!("HALT instruction")
         }
 
-        bios.execute(cpu.registers(), call_trace);
+        if bios.execute(cpu.registers(), call_trace) {
+            println!("Terminated");
+            break;
+        }
 
         if pc == BDOS_BASE_ADDRESS - 1 {
             // Guard to detect code reaching BDOS (usually NOPs)
