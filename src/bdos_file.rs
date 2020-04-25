@@ -180,7 +180,34 @@ impl BdosFile {
             Err(_) => FILE_NOT_FOUND, // Error or file not found
             Ok(paths) => {
                 for name in paths {
-                    fs::remove_file(name).unwrap();
+                    if fs::remove_file(name).is_err() {
+                        return FILE_NOT_FOUND;
+                    }
+                }
+                DIRECTORY_CODE
+            }
+        }
+    }
+
+    pub fn rename(&self, fcb: &Fcb) -> u8 {
+        /*
+        The Rename function uses the FCB addressed by DE to change all
+        occurrences of the file named in the first 16 bytes to the file named
+        in the second 16 bytes. The drive code dr at postion 0 is used to
+        select the drive, while the drive code for the new filename at
+        position 16 of the FCB is assumed to be zero. Upon return, register A
+        is set to a value between 0 and 3 if the rename was successful and 0FFH
+        (255 decimal) if the first filename could not be found in the directory
+        scan. 
+        */
+        match find_host_files(fcb.get_name(), false) {
+            Err(_) => FILE_NOT_FOUND, // Error or file not found
+            Ok(paths) => {
+                for name in paths {
+                    let new_name = name_from_8_3(&fcb.get_name_secondary());
+                    if fs::rename(name, new_name).is_err() {
+                        return FILE_NOT_FOUND;
+                    }
                 }
                 DIRECTORY_CODE
             }

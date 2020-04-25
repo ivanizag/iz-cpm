@@ -15,12 +15,16 @@ pub struct Bdos {
 }
 
 const BDOS_COMMAND_NAMES: [&'static str; 38] = [
+    // 0
     "P_TERMCPM", "C_READ", "C_WRITE", "A_READ", "A_WRITE",
     "L_WRITE", "C_RAWIO", "A_STATIN", "A_STATOUT", "C_WRITESTR",
+    // 10
     "C_READSTR", "C_STAT", "S_BDOSVER", "DRV_ALLRESET", "DRV_SET",
     "F_OPEN", "F_CLOSE", "F_SFIRST", "F_SNEXT", "F_DELETE",
+    // 20
     "F_READ", "F_WRITE", "F_MAKE", "F_RENAME", "DRV_LOGINVEC",
     "DRV_GET", "F_DMAOFF", "DRV_ALLOCVEC", "DRV_SETRO", "DRV_ROVEC",
+    // 30
     "F_ATTRIB", "DRV_DPB", "F_USERNUM", "F_READRAND", "F_WRITERAND",
     "F_SIZE", "F_RANDREC", "DRV_RESET"]; 
 
@@ -175,6 +179,13 @@ impl Bdos {
                         print!("[[Create file {}]]", fcb.get_name());
                     }
                     res8 = Some(self.file.make(&mut fcb));
+                }
+                23 => { // F_RENAME - Rename file
+                    let mut fcb = Fcb::new(arg16, machine);
+                    if call_trace {
+                        print!("[[Rename file {} to {}]]", fcb.get_name(), fcb.get_name_secondary());
+                    }
+                    res8 = Some(self.file.rename(&mut fcb));
                 }
                 24 => { // DRV_LOGINVEC - Return Log-in Vector
                     res16 = Some(self.drive.get_log_in_vector());

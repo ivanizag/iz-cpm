@@ -36,7 +36,7 @@ const FCB_RECORD_COUNT_OFFSET: u16 = 15;
 /*
     rc: record count for extent ex; takes on values from 0-127
 */
-//const FCB_INTERNAL_OFFSET: u16 = 16;
+const FCB_INTERNAL_OFFSET: u16 = 16;
 /*
     d0...d15: filled in by CP/M; reserved for system use
 */
@@ -98,7 +98,6 @@ impl <'a> Fcb<'_> {
         name
     }
 
-    /*
     pub fn get_name_secondary(&self) -> String {
         let mut name = String::new();
         for i in 0..8 {
@@ -112,7 +111,6 @@ impl <'a> Fcb<'_> {
         }
         name
     }
-    */
 
     pub fn set_name(&mut self, name: String) {
         let bytes = name.as_bytes();
@@ -223,3 +221,14 @@ pub fn name_to_8_3(os_name: &str) -> Option<String> {
     // Pad with spaces and compose
     Some(format!("{:8}.{:3}", name, extension))
 }
+
+pub fn name_from_8_3(cpm_name: &str) -> String {
+    let name = cpm_name[0..8].trim_end();
+    let extension = cpm_name[9..12].trim_end();
+    if extension.len() == 0 {
+        name.to_string()
+    } else {
+        format!("{}.{}", name, extension)
+    }
+}
+
