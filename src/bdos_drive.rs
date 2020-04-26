@@ -38,6 +38,15 @@ pub fn get_log_in_vector(env: &BdosEnvironment) -> u16 {
     env.state.selected_bitmap
 }
 
+pub fn set_disk_read_only(env: &mut BdosEnvironment) {
+    // The Write Protect Disk function provides temporary write protection for
+    // the currently selected disk. Any attempt to write to the disk before the
+    // next cold or warm start operation produces the message:
+    //      BDOS ERR on d: R/O
+    let drive = env.drive();
+    env.state.read_only_bitmap |= 1 << drive;
+}
+
 pub fn get_read_only_vector(env: &BdosEnvironment) -> u16 {
     // Function 29 returns a bit vector in register pair HL, which indicates
     // drives that have the temporary Read-Only bit set. As in Function 24, the

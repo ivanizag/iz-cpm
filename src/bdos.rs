@@ -17,7 +17,7 @@ const BDOS_COMMAND_NAMES: [&'static str; 38] = [
     "F_OPEN", "F_CLOSE", "F_SFIRST", "F_SNEXT", "F_DELETE",
     // 20
     "F_READ", "F_WRITE", "F_MAKE", "F_RENAME", "DRV_LOGINVEC",
-    "DRV_GET", "F_DMAOFF", "DRV_ALLOCVEC", "*DRV_SETRO", "DRV_ROVEC",
+    "DRV_GET", "F_DMAOFF", "DRV_ALLOCVEC", "DRV_SETRO", "DRV_ROVEC",
     // 30
     "*F_ATTRIB", "DRV_DPB", "F_USERNUM", "F_READRAND", "*F_WRITERAND",
     "*F_SIZE", "*F_RANDREC", "*DRV_RESET"]; 
@@ -42,7 +42,7 @@ impl Bdos {
         machine.poke(BDOS_BASE_ADDRESS, 0xc9 /*ret*/);
         // Note: if the first 6 bytes of BDOS change, the serial number in the
         // CCP source code needs to be updated.
-    
+
         // Disk parameter block 0
         // See "Programmer CP/M Handbook" by Andy Johnson-Laird, page 33
         machine.poke16(BDOS_DPB0_ADDRESS +  0,  26);        // 128 bytes sectors per track
@@ -184,7 +184,9 @@ impl Bdos {
                 27 => { // DRV_ALLOCVEC - Get disk allocation vector
                     res16 = Some(bdos_drive::get_disk_allocation_vector(env));
                 },
-                // "DRV_SETRO"
+                28 => { // DRV_SETRO - Write protect disk
+                    bdos_drive::set_disk_read_only(env);
+                }
                 29 => { // DRV_ROVEC - Get read-only vector
                     res16 = Some(bdos_drive::get_read_only_vector(env));
                 }
