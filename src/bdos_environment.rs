@@ -10,6 +10,7 @@ pub const DEFAULT_DMA: u16 = 0x0080;
 pub struct BdosState {
     // Drive
     pub selected_bitmap: u16,
+    pub read_only_bitmap: u16,
     // File
     pub dma: u16,
     pub buffer: [u8; RECORD_SIZE],
@@ -23,6 +24,7 @@ impl BdosState {
     pub fn new() -> BdosState {
         BdosState {
             selected_bitmap: 1<<0,
+            read_only_bitmap: 0,
             dma: DEFAULT_DMA,
             dir_pattern: "????????.???".to_string(),
             dir_pos: 0,
@@ -32,6 +34,7 @@ impl BdosState {
 
     pub fn reset(&mut self) {
         self.selected_bitmap = 1<<0;
+        self.read_only_bitmap = 0;
         self.dma =  DEFAULT_DMA;
         self.dir_pattern = "????????.???".to_string();
         self.dir_pos = 0;

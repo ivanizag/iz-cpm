@@ -1,4 +1,5 @@
 use super::bdos_environment::*;
+use super::constants::*;
 
 pub fn select(env: &mut BdosEnvironment, selected: u8) {
     // The Select Disk function designates the disk drive named in register E as
@@ -14,17 +15,17 @@ pub fn select(env: &mut BdosEnvironment, selected: u8) {
     // directly reference drives A through P.
     let drive = selected & 0x0f;
     env.set_drive(drive);
-    env.state.selected_bitmap &= 1 << drive;
+    env.state.selected_bitmap |= 1 << drive;
 }
 
-pub fn get_current(env: &mut BdosEnvironment) -> u8 {
+pub fn get_current(env: &BdosEnvironment) -> u8 {
     // Function 25 returns the currently selected default disk number in
     // register A. The disk numbers range from 0 through 15 corresponding to
     // drives A through P.
     env.drive()
 }
 
-pub fn get_log_in_vector(env: &mut BdosEnvironment) -> u16 {
+pub fn get_log_in_vector(env: &BdosEnvironment) -> u16 {
     // The log-in vector value returned by CP/M is a 16-bit value in HL, where
     // the least significant bit of L corresponds to the first drive A and the
     // high-order bit of H corresponds to the sixteenth drive, labeled P. A 0
@@ -35,4 +36,38 @@ pub fn get_log_in_vector(env: &mut BdosEnvironment) -> u16 {
     // with earlier releases, because registers A and L contain the same values
     // upon return. 
     env.state.selected_bitmap
+}
+
+pub fn get_read_only_vector(env: &BdosEnvironment) -> u16 {
+    // Function 29 returns a bit vector in register pair HL, which indicates
+    // drives that have the temporary Read-Only bit set. As in Function 24, the
+    // least significant bit corresponds to drive A, while the most significant
+    // bit corresponds to drive P. The R/O bit is set either by an explicit call
+    // to Function 28 or by the automatic software mechanisms within CP/M that
+    // detect changed disks. 
+    env.state.read_only_bitmap
+}
+
+pub fn get_disk_allocation_vector(_env: &BdosEnvironment) -> u16 {
+    // An allocation vector is maintained in main memory for each on-line disk
+    // drive. Various system programs use the information provided by the
+    // allocation vector to determine the amount of remaining storage (see the
+    // STAT program). Function 27 returns the base address of the allocation
+    // vector for the currently selected disk drive. However, the allocation
+    // information might be invalid if the selected disk has been marked
+    // Read-Only. Although this function is not normally used by application
+    // programs, additional details of the allocation vector are found in
+    // Section 6. 
+    BDOS_ALVEC0_ADDRESS
+}
+
+pub fn get_disk_parameter_block(_env: &BdosEnvironment) -> u16 {
+    // The address of the BIOS resident disk parameter block is returned in HL
+    // as a result of this function call. This address can be used for either of
+    // two purposes. First, the disk parameter values can be extracted for
+    // display and space computation purposes, or transient programs can
+    // dynamically change the values of current disk parameters when the disk
+    // environment changes, if required. Normally, application programs will not
+    // require this facility.
+    BDOS_DPB0_ADDRESS
 }

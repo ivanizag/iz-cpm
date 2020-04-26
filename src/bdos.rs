@@ -17,9 +17,9 @@ const BDOS_COMMAND_NAMES: [&'static str; 38] = [
     "F_OPEN", "F_CLOSE", "F_SFIRST", "F_SNEXT", "F_DELETE",
     // 20
     "F_READ", "F_WRITE", "F_MAKE", "F_RENAME", "DRV_LOGINVEC",
-    "DRV_GET", "F_DMAOFF", "*DRV_ALLOCVEC", "*DRV_SETRO", "*DRV_ROVEC",
+    "DRV_GET", "F_DMAOFF", "DRV_ALLOCVEC", "*DRV_SETRO", "DRV_ROVEC",
     // 30
-    "*F_ATTRIB", "*DRV_DPB", "F_USERNUM", "F_READRAND", "*F_WRITERAND",
+    "*F_ATTRIB", "DRV_DPB", "F_USERNUM", "F_READRAND", "*F_WRITERAND",
     "*F_SIZE", "*F_RANDREC", "*DRV_RESET"]; 
 
 pub struct Bdos {
@@ -40,10 +40,26 @@ impl Bdos {
 
         // We put ret on that address
         machine.poke(BDOS_BASE_ADDRESS, 0xc9 /*ret*/);
-        /*
-        Note: if the first 6 bytes of BDOS change, the serial number in the CCP
-        source code needs to be updated.
-        */
+        // Note: if the first 6 bytes of BDOS change, the serial number in the
+        // CCP source code needs to be updated.
+    
+        // Disk parameter block 0
+        // See "Programmer CP/M Handbook" by Andy Johnson-Laird, page 33
+        machine.poke16(BDOS_DPB0_ADDRESS +  0,  26);        // 128 bytes sectors per track
+        machine.poke  (BDOS_DPB0_ADDRESS +  2,   3);        // Block shift for 1024 bytes block
+        machine.poke  (BDOS_DPB0_ADDRESS +  3,   7);        // Block mask for 1024 bytes block
+        machine.poke  (BDOS_DPB0_ADDRESS +  4,   3);        // Extent mask for 1024 bytes block
+        machine.poke16(BDOS_DPB0_ADDRESS +  5, 242);        // Max allocation block number
+        machine.poke16(BDOS_DPB0_ADDRESS +  7,  63);        // Number of directory entries - 1
+        machine.poke  (BDOS_DPB0_ADDRESS +  9, 0b11000000); // Bitmap for allocation blocks
+        machine.poke  (BDOS_DPB0_ADDRESS + 10, 0b00000000); // Bitmap for allocation blocks
+        machine.poke16(BDOS_DPB0_ADDRESS + 11,  16);        // Max allocation block number
+        machine.poke16(BDOS_DPB0_ADDRESS + 13,   2);        // Number of tracks before directory
+
+        // Allocation vector 0, we need 30 bytes fot 242 blocks
+        for i in 0..30 {
+            machine.poke(BDOS_ALVEC0_ADDRESS + i, 0);
+        }
     }
 
     pub fn execute(&mut self, bios: &mut Bios,
@@ -137,25 +153,25 @@ impl Bdos {
                 },
                 17 => { // F_SFIRST - Search for first
                     res8 = Some(bdos_file::search_first(env, arg16));
-                }
+                },
                 18 => { // F_SNEXT - Search for first
                     res8 = Some(bdos_file::search_next(env));
-                }
+                },
                 19 => { // F_DELETE - Delete file
                     res8 = Some(bdos_file::delete(env, arg16));
-                }
+                },
                 20 => { // F_READ - Read next record
                     res8 = Some(bdos_file::read(env, arg16));
                 },
                 21 => { // F_WRITE - Write next record
                     res8 = Some(bdos_file::write(env, arg16));
-                }
+                },
                 22 => { // F_MAKE - Create file
                     res8 = Some(bdos_file::make(env, arg16));
-                }
+                },
                 23 => { // F_RENAME - Rename file
                     res8 = Some(bdos_file::rename(env, arg16));
-                }
+                },
                 24 => { // DRV_LOGINVEC - Return Log-in Vector
                     res16 = Some(bdos_drive::get_log_in_vector(env));
                 },
@@ -165,13 +181,27 @@ impl Bdos {
                 26 => { // F_DMAOFF - Set DMA address
                     bdos_file::set_dma(env, arg16);
                 },
+                27 => { // DRV_ALLOCVEC - Get disk allocation vector
+                    res16 = Some(bdos_drive::get_disk_allocation_vector(env));
+                },
+                // "DRV_SETRO"
+                29 => { // DRV_ROVEC - Get read-only vector
+                    res16 = Some(bdos_drive::get_read_only_vector(env));
+                }
+                // "F_ATTRIB"
+                31 => { // "DRV_DPB"
+                    res16 = Some(bdos_drive::get_disk_parameter_block(env));
+                },
                 32 => { // F_USERNUM - Get/set user number
                     res8 = Some(bdos_file::get_set_user_number(env, arg8));
-                }
+                },
                 33 => { // F_READRAND - Random access read record
                     res8 = Some(bdos_file::read_rand(env, arg16));
-                }
-
+                },
+                // "F_WRITERAND"
+                // "F_SIZE"
+                // "F_RANDREC",
+                // "DRV_RESET"
                 _ => {
                     print!("BDOS command {} not implemented.\n", command);
                     panic!("BDOS command not implemented");
@@ -195,7 +225,7 @@ impl Bdos {
                 reg.set8(Reg8::A, hl as u8);
                 reg.set8(Reg8::B, (hl>>8) as u8);
                 if bdos_trace {
-                    println!("[[=>{:02x}]]", hl);
+                    println!("[[=>{:04x}]]", hl);
                 }
             }
         }
