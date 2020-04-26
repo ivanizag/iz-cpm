@@ -1,18 +1,12 @@
 use iz80::*;
 
 use super::bios::Bios;
-use super::bdos_console::*;
-use super::bdos_drive::*;
-use super::bdos_file::*;
-use super::cpm_machine::*;
+use super::bdos_environment::*;
+use super::bdos_console;
+use super::bdos_drive;
+use super::bdos_file;
+use super::cpm_machine::CpmMachine;
 use super::constants::*;
-use super::fcb::Fcb;
-
-pub struct Bdos {
-    console: BdosConsole,
-    drive: BdosDrive,
-    file: BdosFile
-}
 
 const BDOS_COMMAND_NAMES: [&'static str; 38] = [
     // 0
@@ -28,12 +22,15 @@ const BDOS_COMMAND_NAMES: [&'static str; 38] = [
     "*F_ATTRIB", "*DRV_DPB", "F_USERNUM", "F_READRAND", "*F_WRITERAND",
     "*F_SIZE", "*F_RANDREC", "*DRV_RESET"]; 
 
+pub struct Bdos {
+    state: BdosState,
+}
+
 impl Bdos {
+
     pub fn new() -> Bdos {
         Bdos {
-            console: BdosConsole::new(),
-            drive: BdosDrive::new(),
-            file: BdosFile::new()
+            state: BdosState::new()
         }
     }
 
@@ -56,6 +53,7 @@ impl Bdos {
         // We do the BIOS actions outside the emulation.
         let pc = reg.pc();
         if pc == BDOS_BASE_ADDRESS {
+            let env = &mut BdosEnvironment::new(&mut self.state, bios, machine, call_trace);
             let arg8 = reg.get8(Reg8::E);
             let arg16 = reg.get16(Reg16::DE);
             let command = reg.get8(Reg8::C);
@@ -87,161 +85,91 @@ impl Bdos {
                     panic!("BOOT");
                 },
                 1 => { // C_READ - Console input
-                    res8 = Some(self.console.read(bios))
+                    res8 = Some(bdos_console::read(env));
                 },
                 2 => { // C_WRITE - Console output
-                    self.console.write(bios,arg8);
+                    bdos_console::write(env, arg8);
                 },
                 3 => { // A_READ - Reader input
                     // Use the console as the reader
-                    res8 = Some(self.console.read(bios))
+                    res8 = Some(bdos_console::read(env))
                 },
                 4 => { // A_WRITE - Punch output
                     // Use the console as the punch
-                    self.console.write(bios,arg8);
+                    bdos_console::write(env, arg8);
                 },
                 5 => { // L_WRITE - List output
                     // Use the console as the list
-                    self.console.write(bios,arg8);
+                    bdos_console::write(env, arg8);
                 },
                 6 => { // C_RAWIO - Direct console I/O
-                    res8 = Some(self.console.raw_io(bios, arg8))
+                    res8 = Some(bdos_console::raw_io(env, arg8))
                 },
                 7 => { // A_STATIN - Get I/O Byte
-                    /*
-                    The Get I/O Byte function returns the current value of
-                    IOBYTE in register A.
-                    */
-                    res8 = Some(machine.peek(IOBYTE_ADDRESS));
+                    res8 = Some(env.iobyte());
                 },
                 8 => { // A_STATOUT - Set I/O Byte
-                    /*
-                    The SET I/O Byte function changes the IOBYTE value to that
-                    given in register E.
-                    */
-                    machine.poke(IOBYTE_ADDRESS, arg8);
+                    env.set_iobyte(arg8);
                 },
                 9 => { // C_WRITESTR - Output string
-                    self.console.write_string(bios, &machine, arg16);
+                    bdos_console::write_string(env, arg16);
                 },
                 10 => { // C_READSTR
-                    self.console.read_string(bios, machine, arg16);
+                    bdos_console::read_string(env, arg16);
                 },
                 11 => { // C_STAT - Console status
-                    res8 = Some(self.console.status(bios));
+                    res8 = Some(bdos_console::status(env));
                 },
                 12 => { // S_BDOSVER - Return version number
                     res16 = Some(get_version());
                 },
                 13 => { // DRV_ALLRESET - Reset disk system
-                    self.drive.reset();
-                    self.file.reset();
+                    env.state.reset();
                 },
                 14 => { // DRV_SET - Select disk
-                    self.drive.select(arg8);
+                    bdos_drive::select(env, arg8);
                 },
                 15 => { // F_OPEN - Open file
-                    let mut fcb = Fcb::new(arg16, machine);
-                    if call_trace {
-                        print!("[[Open file {}]]", fcb.get_name());
-                    }
-                    res8 = Some(self.file.open(&mut fcb));
+                    res8 = Some(bdos_file::open(env, arg16));
                 },
                 16 => { // F_CLOSE - Close file
-                    let fcb = Fcb::new(arg16, machine);
-                    if call_trace {
-                        print!("[[Close file {}]]", fcb.get_name());
-                    }
-                    res8 = Some(self.file.close(&fcb));
+                    res8 = Some(bdos_file::close(env, arg16));
                 },
                 17 => { // F_SFIRST - Search for first
-                    let fcb = Fcb::new(arg16, machine);
-                    if call_trace {
-                        print!("[[DIR start {}]]", fcb.get_name());
-                    }
-                    let res = self.file.search_first(&fcb);
-                    if res == 0 {
-                        self.file.load_buffer(machine);
-                    }
-                    res8 = Some(res);
-
+                    res8 = Some(bdos_file::search_first(env, arg16));
                 }
                 18 => { // F_SNEXT - Search for first
-                    if call_trace {
-                        print!("[[DIR next]]");
-                    }
-                    let res = self.file.search_next();
-                    if res == 0 {
-                        self.file.load_buffer(machine);
-                    }
-                    res8 = Some(res);
+                    res8 = Some(bdos_file::search_next(env));
                 }
                 19 => { // F_DELETE - Delete file
-                    let mut fcb = Fcb::new(arg16, machine);
-                    if call_trace {
-                        print!("[[Delete file {}]]", fcb.get_name());
-                    }
-                    res8 = Some(self.file.delete(&mut fcb));
+                    res8 = Some(bdos_file::delete(env, arg16));
                 }
                 20 => { // F_READ - Read next record
-                    let mut fcb = Fcb::new(arg16, machine);
-                    if call_trace {
-                        print!("[Read record {:x} into {:04x}]",
-                            fcb.get_sequential_record_number(), self.file.get_dma());
-                    }
-                    let res = self.file.read(&mut fcb);
-                    if res == 0 {
-                        self.file.load_buffer(machine);
-                    }
-                    res8 = Some(res);
+                    res8 = Some(bdos_file::read(env, arg16));
                 },
                 21 => { // F_WRITE - Write next record
-                    self.file.save_buffer(machine);
-                    let mut fcb = Fcb::new(arg16, machine);
-                    if call_trace {
-                        print!("[Write record {:x} from {:04x}]",
-                            fcb.get_sequential_record_number(), self.file.get_dma());
-                    }
-                    let res = self.file.write(&mut fcb);
-                    res8 = Some(res);
+                    res8 = Some(bdos_file::write(env, arg16));
                 }
                 22 => { // F_MAKE - Create file
-                    let mut fcb = Fcb::new(arg16, machine);
-                    if call_trace {
-                        print!("[[Create file {}]]", fcb.get_name());
-                    }
-                    res8 = Some(self.file.make(&mut fcb));
+                    res8 = Some(bdos_file::make(env, arg16));
                 }
                 23 => { // F_RENAME - Rename file
-                    let mut fcb = Fcb::new(arg16, machine);
-                    if call_trace {
-                        print!("[[Rename file {} to {}]]", fcb.get_name(), fcb.get_name_secondary());
-                    }
-                    res8 = Some(self.file.rename(&mut fcb));
+                    res8 = Some(bdos_file::rename(env, arg16));
                 }
                 24 => { // DRV_LOGINVEC - Return Log-in Vector
-                    res16 = Some(self.drive.get_log_in_vector());
+                    res16 = Some(bdos_drive::get_log_in_vector(env));
                 },
                 25 => { // DRV_GET - Return current disk
-                    res8 = Some(self.drive.get_current());
+                    res8 = Some(bdos_drive::get_current(env));
                 },
                 26 => { // F_DMAOFF - Set DMA address
-                    self.file.set_dma(arg16);
+                    bdos_file::set_dma(env, arg16);
                 },
                 32 => { // F_USERNUM - Get/set user number
-                    res8 = Some(self.file.get_set_user_number(arg8));
+                    res8 = Some(bdos_file::get_set_user_number(env, arg8));
                 }
                 33 => { // F_READRAND - Random access read record
-                    let fcb = Fcb::new(arg16, machine);
-                    if call_trace {
-                        print!("[Read random record {:x} into {:04x}]",
-                            fcb.get_random_record_number(), self.file.get_dma());
-                    }
-                    let res = self.file.read_rand(&fcb);
-                    if res == 0 {
-                        self.file.load_buffer(machine);
-                    }
-                    res8 = Some(res);
+                    res8 = Some(bdos_file::read_rand(env, arg16));
                 }
 
                 _ => {

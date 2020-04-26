@@ -46,3 +46,11 @@ Run the ZEXALL test suite (very long, better compiling in release mode):
 cargo run --release diskA/zexall.com
 ```
 
+## TODO
+
+- Complete BIOS
+- Complete BDOS
+- IOBYTE
+- Manage disks as separate folders
+- BIOS input from host console should not be echoed by the host
+- Reset and boot after program execution

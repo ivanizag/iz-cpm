@@ -1,7 +1,7 @@
 // Zero page
 pub const RESTART_ADDRESS:       u16 = 0x0000;
 pub const IOBYTE_ADDRESS:        u16 = 0x0003;
-//pub const USER_DRIVE_ADDRESS:    u16 = 0x0004;
+pub const USER_DRIVE_ADDRESS:    u16 = 0x0004;
 pub const BDOS_ENTRY_ADDRESS:    u16 = 0x0005;
 pub const FCB1_ADDRESS:          u16 = 0x005c;
 pub const FCB2_ADDRESS:          u16 = 0x006c;

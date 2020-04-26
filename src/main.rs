@@ -9,6 +9,7 @@ mod bios;
 mod constants;
 mod bdos_console;
 mod bdos_drive;
+mod bdos_environment;
 mod bdos_file;
 mod cpm_machine;
 mod fcb;
