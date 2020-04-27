@@ -19,7 +19,7 @@ const BDOS_COMMAND_NAMES: [&'static str; 38] = [
     "F_READ", "F_WRITE", "F_MAKE", "F_RENAME", "DRV_LOGINVEC",
     "DRV_GET", "F_DMAOFF", "DRV_ALLOCVEC", "DRV_SETRO", "DRV_ROVEC",
     // 30
-    "*F_ATTRIB", "DRV_DPB", "F_USERNUM", "F_READRAND", "*F_WRITERAND",
+    "*F_ATTRIB", "DRV_DPB", "F_USERNUM", "F_READRAND", "F_WRITERAND",
     "*F_SIZE", "*F_RANDREC", "*DRV_RESET"]; 
 
 pub struct Bdos {
@@ -200,7 +200,9 @@ impl Bdos {
                 33 => { // F_READRAND - Random access read record
                     res8 = Some(bdos_file::read_rand(env, arg16));
                 },
-                // "F_WRITERAND"
+                34 => { // F_WRITERAND
+                    res8 = Some(bdos_file::write_rand(env, arg16));
+                },
                 // "F_SIZE"
                 // "F_RANDREC",
                 // "DRV_RESET"

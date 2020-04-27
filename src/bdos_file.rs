@@ -279,6 +279,38 @@ pub fn read_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     res
 }
 
+pub fn write_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
+    // The Write Random operation is initiated similarly to the Read Random
+    // call, except that data is written to the disk from the current DMA
+    // address. Further, if the disk extent or data block that is the target of
+    // the write has not yet been allocated, the allocation is performed before
+    // the write operation continues. As in the Read Random operation, the
+    // random record number is not changed as a result of the write. The logical
+    // extent number and current record positions of the FCB are set to
+    // correspond to the random record that is being written. Again, sequential
+    // read or write operations can begin following a random write, with the
+    // notation that the currently addressed record is either read or rewritten
+    // again as the sequential operation begins. You can also simply advance the
+    // random record position following each write to get the effect of a
+    // sequential write operation. Note that reading or writing the last record
+    // of an extent in random mode does not cause an automatic extent switch as
+    // it does in sequential mode.
+    // The error codes returned by a random write are identical to the random
+    // read operation with the addition of error code 05, which indicates that a
+    // new extent cannot be created as a result of directory overflow.
+    env.save_buffer();
+    let fcb = Fcb::new(fcb_address, env.machine);
+    let record = fcb.get_random_record_number();
+    if env.call_trace {
+        print!("[Read random record {:x} into {:04x}]", record, env.state.dma);
+    }
+    if record > 65535 {
+        return 6; //06	seek Past Physical end of disk
+    }
+
+    write_record_from_buffer(&env.state.buffer, &fcb, record as u16).unwrap_or(1)
+}
+
 fn read_record_in_buffer(buffer: &mut[u8], fcb: &Fcb, record: u16) -> io::Result<u8> {
     let paths = find_host_files(fcb.get_name(), false)?;
     let mut os_file = fs::File::open(&paths[0])?;
@@ -303,12 +335,19 @@ fn write_record_from_buffer(buffer: &[u8], fcb: &Fcb, record: u16) -> io::Result
     let mut os_file = fs::OpenOptions::new().write(true).open(&paths[0])?;
 
     let file_offset = record as u64 * RECORD_SIZE as u64;
-    os_file.seek(io::SeekFrom::Start(file_offset))?;
-    let size = os_file.write(buffer)?;
+    let file_pos = os_file.seek(io::SeekFrom::Start(file_offset))?;
 
-    if size != RECORD_SIZE {
-        return Err(io::Error::new(io::ErrorKind::Other, "Record not fully written"));
-    }    
+    if file_offset > file_pos {
+        // We want to write past the end of the file. Seek wasn't able to get
+        // there, so we will complete the holes with zeros as needed.
+        let zero = [0 as u8];
+        let needed = file_offset - file_pos;
+        for _ in 0..needed {
+            os_file.write(&zero)?;
+        }
+    }
+
+    os_file.write_all(buffer)?;
     Ok(0)
 }
 
