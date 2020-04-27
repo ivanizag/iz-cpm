@@ -191,7 +191,7 @@ impl Bdos {
                     res16 = Some(bdos_drive::get_read_only_vector(env));
                 }
                 // "F_ATTRIB"
-                31 => { // "DRV_DPB"
+                31 => { // DRV_DPB - Get disk parameter block
                     res16 = Some(bdos_drive::get_disk_parameter_block(env));
                 },
                 32 => { // F_USERNUM - Get/set user number
@@ -200,11 +200,15 @@ impl Bdos {
                 33 => { // F_READRAND - Random access read record
                     res8 = Some(bdos_file::read_rand(env, arg16));
                 },
-                34 => { // F_WRITERAND
+                34 => { // F_WRITERAND - Write random
                     res8 = Some(bdos_file::write_rand(env, arg16));
                 },
-                // "F_SIZE"
-                // "F_RANDREC",
+                35 => { // F_SIZE - Compute file size
+                    bdos_file::compute_file_size(env, arg16);
+                },
+                36 => { // F_RANDREC - Set random record
+                    bdos_file::set_random_record(env, arg16);
+                }
                 // "DRV_RESET"
                 _ => {
                     print!("BDOS command {} not implemented.\n", command);

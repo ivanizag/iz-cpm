@@ -164,7 +164,11 @@ impl <'a> Fcb<'_> {
         + ((self.get_byte(FCB_RANDOM_RECORD_OFFSET + 2) as u32) << 16)
     }
 
-
+    pub fn set_random_record_number(&mut self, record: u32) {
+        self.set_byte(FCB_RANDOM_RECORD_OFFSET, record as u8);
+        self.set_byte(FCB_RANDOM_RECORD_OFFSET + 1, (record >> 8) as u8);
+        self.set_byte(FCB_RANDOM_RECORD_OFFSET + 2, (record >> 16) as u8);
+    }
 }
 
 

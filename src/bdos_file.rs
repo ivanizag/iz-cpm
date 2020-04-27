@@ -366,6 +366,85 @@ pub fn get_set_user_number(env: &mut BdosEnvironment, user: u8) -> u8 {
     env.user()
 }
 
+pub fn compute_file_size(env: &mut BdosEnvironment, fcb_address: u16) {
+    // When computing the size of a file, the DE register pair addresses an FCB
+    // in random mode format (bytes r0, r1, and r2 are present). The FCB
+    // contains an unambiguous filename that is used in the directory scan. Upon
+    // return, the random record bytes contain the virtual file size, which is,
+    // in effect, the record address of the record following the end of the
+    // file. Following a call to Function 35, if the high record byte r2 is 01,
+    // the file contains the maximum record count 65536. Otherwise, bytes r0 and
+    // r1 constitute a 16-bit value as before (r0 is the least significant
+    // byte), which is the file size.
+    // Data can be appended to the end of an existing file by simply calling
+    // Function 35 to set the random record position to the end-of-file and then
+    // performing a sequence of random writes starting at the preset record
+    // address.
+    // The virtual size of a file corresponds to the physical size when the file
+    // is written sequentially. If the file was created in random mode and holes
+    // exist in the allocation, the file might contain fewer records than the
+    // size indicates. For example, if only the last record of an 8-megabyte
+    // file is written in random mode (that is, record number 65535), the
+    // virtual size is 65536 records, although only one block of data is
+    // actually allocated.
+    let mut fcb = Fcb::new(fcb_address, env.machine);
+    if env.call_trace {
+        print!("[[Size of {}]]", fcb.get_name());
+    }
+    let _ = compute_file_size_internal(&mut fcb);
+}
+
+fn compute_file_size_internal(fcb: &mut Fcb) -> io::Result<()> {
+    let paths = find_host_files(fcb.get_name(), false)?;
+    let os_file = fs::File::open(&paths[0])?;
+
+    let file_size = os_file.metadata()?.len();
+    let mut record = file_size / RECORD_SIZE as u64;
+    if record % RECORD_SIZE as u64 != 0 {
+        // We need integer division rounding up.
+        record += 1;
+    }
+
+    record += 1;
+    if record >= 65536 {
+        record = 65536;
+    }
+    fcb.set_random_record_number(record as u32);
+
+    Ok(())
+}
+
+pub fn set_random_record(env: &mut BdosEnvironment, fcb_address: u16) {
+    // The Set Random Record function causes the BDOS automatically to produce
+    // the random record position from a file that has been read or written
+    // sequentially to a particular point. The function can be useful in two
+    // ways.
+    // First, it is often necessary initially to read and scan a sequential file
+    // to extract the positions of various key fields. As each key is
+    // encountered, Function 36 is called to compute the random record position
+    // for the data corresponding to this key. If the data unit size is 128
+    // bytes, the resulting record position is placed into a table with the key
+    // for later retrieval. After scanning the entire file and tabulating the
+    // keys and their record numbers, the user can move instantly to a
+    // particular keyed record by performing a random read, using the
+    // corresponding random record number that was saved earlier. The scheme is
+    // easily generalized for variable record lengths, because the program need
+    // only store the buffer-relative byte position along with the key and
+    // record number to find the exact starting position of the keyed data at a
+    // later time.
+    // A second use of Function 36 occurs when switching from a sequential read
+    // or write over to random read or write. A file is sequentially accessed to
+    // a particular point in the file, Function 36 is called, which sets the
+    // record number, and subsequent random read and write operations continue
+    // from the selected point in the file.
+    let mut fcb = Fcb::new(fcb_address, env.machine);
+    if env.call_trace {
+        print!("[[Set pos of {}]]", fcb.get_name());
+    }
+    let record = fcb.get_sequential_record_number();
+    fcb.set_random_record_number(record as u32);
+}
+
 pub fn search_first(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // Search First scans the directory for a match with the file given by the
     // FCB addressed by DE. The value 255 (hexadecimal FF) is returned if the
