@@ -80,3 +80,18 @@ pub fn get_disk_parameter_block(_env: &BdosEnvironment) -> u16 {
     // require this facility.
     BDOS_DPB0_ADDRESS
 }
+
+pub fn reset_drives(env: &mut BdosEnvironment, drives: u16) -> u8 {
+    // The Reset Drive function allows resetting of specified drives. The passed
+    // parameter is a 16-bit vector of drives to be reset; the least significant
+    // bit is drive A:.
+    // To maintain compatibility with MP/M, CP/M returns a zero value.
+    env.state.selected_bitmap &= !drives;
+    env.state.read_only_bitmap &= !drives;
+
+    // Select current drive
+    let drive = env.drive();
+    env.state.selected_bitmap |= 1 << drive;
+
+    0
+}

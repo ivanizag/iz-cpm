@@ -311,6 +311,16 @@ pub fn write_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     write_record_from_buffer(&env.state.buffer, &fcb, record as u16).unwrap_or(1)
 }
 
+pub fn write_rand_zero_fill(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
+    // The Write With Zero Fill operation is similar to Function 34, with the
+    // exception that a previously unallocated block is filled with zeros before
+    // the data is written.
+
+    // On this emulator, spares files are managed by the host operating systems
+    // if possible. So, this methos is exactly the same as function 34.
+    write_rand(env, fcb_address)
+}
+
 fn read_record_in_buffer(buffer: &mut[u8], fcb: &Fcb, record: u16) -> io::Result<u8> {
     let paths = find_host_files(fcb.get_name(), false)?;
     let mut os_file = fs::File::open(&paths[0])?;

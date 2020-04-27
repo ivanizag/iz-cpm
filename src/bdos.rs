@@ -8,7 +8,7 @@ use super::bdos_file;
 use super::cpm_machine::CpmMachine;
 use super::constants::*;
 
-const BDOS_COMMAND_NAMES: [&'static str; 38] = [
+const BDOS_COMMAND_NAMES: [&'static str; 41] = [
     // 0
     "P_TERMCPM", "C_READ", "C_WRITE", "A_READ", "A_WRITE",
     "L_WRITE", "C_RAWIO", "A_STATIN", "A_STATOUT", "C_WRITESTR",
@@ -20,7 +20,9 @@ const BDOS_COMMAND_NAMES: [&'static str; 38] = [
     "DRV_GET", "F_DMAOFF", "DRV_ALLOCVEC", "DRV_SETRO", "DRV_ROVEC",
     // 30
     "*F_ATTRIB", "DRV_DPB", "F_USERNUM", "F_READRAND", "F_WRITERAND",
-    "*F_SIZE", "*F_RANDREC", "*DRV_RESET"]; 
+    "F_SIZE", "F_RANDREC", "DRV_RESET", "*", "",
+    // 40
+    "F_WRITEZ"];
 
 pub struct Bdos {
     state: BdosState,
@@ -35,7 +37,7 @@ impl Bdos {
     }
 
     pub fn setup(&self, machine: &mut CpmMachine) {
-        machine.poke( BDOS_ENTRY_ADDRESS,    0xc3 /* jp BDOS_BASE_ADDRESS */);
+        machine.poke(  BDOS_ENTRY_ADDRESS,   0xc3 /* jp BDOS_BASE_ADDRESS */);
         machine.poke16(BDOS_ENTRY_ADDRESS+1, BDOS_BASE_ADDRESS);
 
         // We put ret on that address
@@ -56,7 +58,7 @@ impl Bdos {
         machine.poke16(BDOS_DPB0_ADDRESS + 11,  16);        // Max allocation block number
         machine.poke16(BDOS_DPB0_ADDRESS + 13,   2);        // Number of tracks before directory
 
-        // Allocation vector 0, we need 30 bytes fot 242 blocks
+        // Allocation vector 0, we need 30 bytes for 242 blocks
         for i in 0..30 {
             machine.poke(BDOS_ALVEC0_ADDRESS + i, 0);
         }
@@ -208,8 +210,13 @@ impl Bdos {
                 },
                 36 => { // F_RANDREC - Set random record
                     bdos_file::set_random_record(env, arg16);
-                }
-                // "DRV_RESET"
+                },
+                37 => { // DRV_RESET - Reset drive
+                    res8 = Some(bdos_drive::reset_drives(env, arg16));
+                },
+                40 => { // F_WRITEZ - Write random with zero fill
+                    res8 = Some(bdos_file::write_rand_zero_fill(env, arg16));
+                },
                 _ => {
                     print!("BDOS command {} not implemented.\n", command);
                     panic!("BDOS command not implemented");
