@@ -13,6 +13,7 @@ mod bdos_environment;
 mod bdos_file;
 mod cpm_machine;
 mod fcb;
+mod terminal;
 
 use self::bdos::Bdos;
 use self::bios::Bios;

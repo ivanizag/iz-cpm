@@ -8,8 +8,10 @@ use std::time::Duration;
 use iz80::*;
 use super::cpm_machine::*;
 use super::constants::*;
+use super::terminal::Terminal;
 
 pub struct Bios {
+    terminal: Terminal,
     stdin_channel: Receiver<u8>,
     next_char: Option<u8>
 
@@ -36,6 +38,7 @@ impl Bios {
             }
         });
         Bios {
+            terminal: Terminal::new(),
             stdin_channel: rx,
             next_char: None
         }
@@ -105,9 +108,8 @@ impl Bios {
         }
     }
 
-    pub fn write(&self, ch: u8) {
-        print!("{}", ch as char);
-        stdout().flush().unwrap();
+    pub fn write(&mut self, ch: u8) {
+        self.terminal.put_char(ch);
     }
 
     pub fn execute(&mut self, reg: &mut Registers, call_trace: bool) -> bool {
