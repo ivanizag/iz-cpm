@@ -1,1 +1,3 @@
 /target
+/software
+!/software/download.sh
