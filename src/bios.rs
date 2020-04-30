@@ -77,7 +77,7 @@ impl Bios {
 
     pub fn setup_host_terminal(&self) {
         let mut new_term = self.previous_termios.clone();
-         new_term.c_iflag &= !(IXON | ICRNL);
+        new_term.c_iflag &= !(IXON | ICRNL);
         new_term.c_lflag &= !(ECHO | ICANON | IEXTEN);
         new_term.c_cc[VMIN] = 0;
         new_term.c_cc[VTIME] = 1;
@@ -120,7 +120,7 @@ impl Bios {
             Some(_) => 0xff,
             None => {
                 // Avoid 100% CPU usage waiting for input.
-                thread::sleep(Duration::from_nanos(100)); 
+                thread::sleep(Duration::from_nanos(1)); 
                 0
             }
         }
@@ -150,6 +150,7 @@ impl Bios {
             2  CONST: Console status
             3  CONIN: Console input
             4  CONOUT: Console output
+
             5  LIST: Printer output
             6  PUNCH: Paper tape punch output
             7  READER: Paper tape reader input

@@ -64,8 +64,9 @@ pub fn read_string(env: &mut BdosEnvironment, address: u16) -> u8 {
         if ch == 127 { // DEL
             if pos > 0 {
                 size -= 1;
-                pos += 1;
+                pos -= 1;
             }
+            continue;
         }
         env.machine.poke(pos, ch);
         size += 1;
