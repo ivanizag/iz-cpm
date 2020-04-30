@@ -86,7 +86,7 @@ impl Bios {
     }
 
     pub fn read(&mut self) -> u8 {
-        match self.next_char {
+        let res = match self.next_char {
             Some(ch) => {
                 self.next_char = None;
                 ch
@@ -97,15 +97,16 @@ impl Bios {
                 let mut buf = [0];
                 stdin().read(&mut buf).unwrap();
                 self.setup_host_terminal(false);
-                if buf[0] == 3 { // Control-C
-                    self.ctrl_c_count += 1;
-                } else {
-                    self.ctrl_c_count = 0;
-                }
                 buf[0]
             }
+        };
+        if res == 3 { // Control-C
+            self.ctrl_c_count += 1;
+        } else {
+            self.ctrl_c_count = 0;
         }
-    }
+        res
+}
 
     pub fn write(&mut self, ch: u8) {
         self.terminal.put_char(ch);
