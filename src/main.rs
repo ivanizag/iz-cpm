@@ -39,16 +39,20 @@ fn main() {
             .short("t")
             .long("call-trace")
             .help("Trace BDOS and BIOS calls"))
+            .arg(Arg::with_name("call_trace_all")
+            .short("T")
+            .long("call-trace_all")
+            .help("Trace BDOS and BIOS calls"))
         .arg(Arg::with_name("cpu_trace")
             .short("c")
             .long("cpu-trace")
-            .help("Trace BDOS and BIOS calls"))
+            .help("Trace BDOS and BIOS calls excluding screen I/O"))
         .get_matches();
     let filename = matches.value_of("CMD");
     let params = matches.value_of("ARGS");
-    let call_trace = matches.is_present("call_trace");
     let cpu_trace = matches.is_present("cpu_trace");
-    let call_trace_skip_console = true;
+    let call_trace = matches.is_present("call_trace") || matches.is_present("call_trace_all");
+    let call_trace_skip_console = !matches.is_present("call_trace_all");
 
     // Init device
     let mut machine = CpmMachine::new();
