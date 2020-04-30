@@ -61,7 +61,7 @@ fn main() {
     // Init cpm
     let mut bios = Bios::new();
     bios.setup(&mut machine);
-    bios.setup_host_terminal();
+    bios.setup_host_terminal(false);
     let mut bdos = Bdos::new();
     bdos.setup(&mut machine);
 

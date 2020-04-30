@@ -1,4 +1,4 @@
-# iz-cpm -- Portable CP/M 2.2 environment
+# iz-cpm -- CP/M 2.2 environment
 Work in progress
 
 CP/M Emulation. Emulation of the CP/M services on top of the host OS. Z80 CP/M binaries work directly with the host operating system file system.
@@ -16,6 +16,8 @@ Uses the [iz80](https://github.com/ivanizag/iz80) library for Z80 emulation.
 - Portable anywhere Rust runs
 
 ## Commands
+
+[Control-C twice to exit]
 
 Run the command prompt CCP:
 ```

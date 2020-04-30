@@ -1,7 +1,4 @@
 use std::io::*;
-use std::sync::mpsc;
-use std::sync::mpsc::Receiver;
-use std::sync::mpsc::TryRecvError;
 use std::thread;
 use std::time::Duration;
 
@@ -13,10 +10,10 @@ use super::constants::*;
 use super::terminal::Terminal;
 
 pub struct Bios {
+    previous_termios: Termios,
     terminal: Terminal,
-    stdin_channel: Receiver<u8>,
     next_char: Option<u8>,
-    previous_termios: termios::Termios
+    ctrl_c_count: u8
 }
 
 const BIOS_COMMAND_NAMES: [&'static str; 16] = [
@@ -32,75 +29,63 @@ const STDIN_FD: i32 = 0;
 
 impl Bios {
     pub fn new() -> Bios {
-        let (tx, rx) = mpsc::channel::<u8>();
-        thread::spawn(move || loop {
-            let mut buffer = String::new();
-            stdin().read_line(&mut buffer).unwrap();
-            for mut c in buffer.bytes() {
-                if c == 10 {c = 13};
-                tx.send(c).unwrap();
-            }
-        });
         Bios {
+            previous_termios: Termios::from_fd(STDIN_FD).unwrap(),
             terminal: Terminal::new(),
-            stdin_channel: rx,
             next_char: None,
-            previous_termios: termios::Termios::from_fd(STDIN_FD).unwrap()
+            ctrl_c_count: 0
         }
     }
 
     pub fn setup(&self, machine: &mut CpmMachine) {
-        /*
-        Setup BIOS location and entry points
-        .org $0
-            jp BIOS_BASE_ADDRESS + 3
-        */
-
         // Setup warm start at 0x000
         machine.poke(0, 0xc3 /* jp nnnn */);
         machine.poke16(1, BIOS_BASE_ADDRESS + 3); // Warm start is the second entrypoint in BIOS
 
-        /*
-        At BIOS_BASE_ADDRESS we need a "JMP address" for each entry point. At the
-        destination we will put a RET and trap that on the emulator.
-        Programs like MBASIC expect this and copy the address.
-        */
+        // At BIOS_BASE_ADDRESS we need a "JMP address" for each entry point. At
+        // the destination we will put a RET and trap that on the emulator.
+        // Programs like MBASIC expect this and copy the address.
         for i in 0..BIOS_ENTRY_POINT_COUNT {
             let entry_point = BIOS_BASE_ADDRESS + (i * 3) as u16;
             let ret_trap = BIOS_RET_TRAP_START + i as u16;
             machine.poke(entry_point, 0xc3 /* jp nnnn */);
             machine.poke16(entry_point+1, ret_trap);
             machine.poke(ret_trap, 0xc9 /*ret*/);
-
         }
     }
 
-    pub fn setup_host_terminal(&self) {
+    pub fn setup_host_terminal(&self, blocking: bool) {
         let mut new_term = self.previous_termios.clone();
         new_term.c_iflag &= !(IXON | ICRNL);
-        new_term.c_lflag &= !(ECHO | ICANON | IEXTEN);
-        new_term.c_cc[VMIN] = 0;
-        new_term.c_cc[VTIME] = 1;
-        termios::tcsetattr(STDIN_FD, termios::TCSANOW, &new_term).unwrap();
+        new_term.c_lflag &= !(ISIG | ECHO | ICANON | IEXTEN);
+        new_term.c_cc[VMIN] = if blocking {1} else {0};
+        new_term.c_cc[VTIME] = 0;
+        tcsetattr(STDIN_FD, TCSANOW, &new_term).unwrap();
     }
 
     pub fn restore_host_terminal(&self) {
-        termios::tcsetattr(STDIN_FD, termios::TCSANOW, &self.previous_termios).unwrap();
+        tcsetattr(STDIN_FD, TCSANOW, &self.previous_termios).unwrap();
     }
 
-    fn pool_keyboard(&mut self) {
-        if self.next_char == None {
-            self.next_char = match self.stdin_channel.try_recv() {
-                Ok(key) => Some(key),
-                Err(TryRecvError::Empty) => None,
-                Err(TryRecvError::Disconnected) => panic!("Stdin disconnected")
+    pub fn status(&mut self) -> u8 {
+        match self.next_char {
+            Some(_) => 0xff,
+            None => {
+                let mut buf = [0];
+                let size = stdin().read(&mut buf).unwrap_or(0);
+                if size != 0 {
+                    self.next_char = Some(buf[0]);
+                    0xff
+                } else {
+                    // Avoid 100% CPU usage waiting for input.
+                    thread::sleep(Duration::from_nanos(100));
+                    0
+                }
             }
         }
     }
 
     pub fn read(&mut self) -> u8 {
-        self.pool_keyboard();
-
         match self.next_char {
             Some(ch) => {
                 self.next_char = None;
@@ -108,20 +93,16 @@ impl Bios {
             },
             None => {
                 // Blocks waiting for char
-                self.stdin_channel.recv().unwrap()
-            }
-        }
-    }
-
-    pub fn status(&mut self) -> u8 {
-        self.pool_keyboard();
-
-        match self.next_char {
-            Some(_) => 0xff,
-            None => {
-                // Avoid 100% CPU usage waiting for input.
-                thread::sleep(Duration::from_nanos(1)); 
-                0
+                self.setup_host_terminal(true);
+                let mut buf = [0];
+                stdin().read(&mut buf).unwrap();
+                self.setup_host_terminal(false);
+                if buf[0] == 3 { // Control-C
+                    self.ctrl_c_count += 1;
+                } else {
+                    self.ctrl_c_count = 0;
+                }
+                buf[0]
             }
         }
     }
@@ -130,7 +111,16 @@ impl Bios {
         self.terminal.put_char(ch);
     }
 
+    pub fn stop(&self) -> bool {
+        self.ctrl_c_count > 1
+    }
+
     pub fn execute(&mut self, reg: &mut Registers, call_trace: bool) -> bool {
+        if self.stop() {
+            // Stop with two control-c
+            return true;
+        }
+
         let pc = reg.pc();
         if pc >= BIOS_RET_TRAP_START {
             let command = pc - BIOS_RET_TRAP_START;

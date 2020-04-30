@@ -58,6 +58,9 @@ pub fn read_string(env: &mut BdosEnvironment, address: u16) -> u8 {
     loop {
         let ch = env.bios.read();
         env.bios.write(ch);
+        if env.bios.stop() {
+            break;
+        }
         if ch == 10 || ch == 13 { // CR of LF
             break;
         }
