@@ -3,6 +3,7 @@
         "BDOS",
         "ZEXALL",
         "ZEXDOC",
-        "disasm"
+        "disasm",
+        "termios"
     ]
 }

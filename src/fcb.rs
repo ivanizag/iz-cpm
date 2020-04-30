@@ -196,12 +196,12 @@ pub fn name_to_8_3(os_name: &str) -> Option<String> {
     let mut name = String::new();
     let mut extension = String::new();
     let mut in_extension = false;
-    for ch in os_name.chars() {
+    for mut ch in os_name.chars() {
         if !ch.is_ascii() {
             return None; // Only ascii chars allowed.
         }
         // Note: let's not change to upper case. We may need to review this.
-        //ch = ch.to_ascii_uppercase();
+        ch = ch.to_ascii_uppercase();
         if !in_extension {
             if ch == '.' {
                 in_extension = true;

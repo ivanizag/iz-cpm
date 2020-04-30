@@ -56,6 +56,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "iz80",
+ "termios",
 ]
 
 [[package]]
@@ -75,6 +76,15 @@ name = "strsim"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ea5119cdb4c55b55d432abb513a0429384878c15dde60cc77b1c99de1a95a6a"
+
+[[package]]
+name = "termios"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6f0fcee7b24a25675de40d5bb4de6e41b0df07bc9856295e7e2b3a3600c400c2"
+dependencies = [
+ "libc",
+]
 
 [[package]]
 name = "textwrap"

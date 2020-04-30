@@ -5,6 +5,8 @@ use std::sync::mpsc::TryRecvError;
 use std::thread;
 use std::time::Duration;
 
+use termios::*;
+
 use iz80::*;
 use super::cpm_machine::*;
 use super::constants::*;
@@ -13,8 +15,8 @@ use super::terminal::Terminal;
 pub struct Bios {
     terminal: Terminal,
     stdin_channel: Receiver<u8>,
-    next_char: Option<u8>
-
+    next_char: Option<u8>,
+    previous_termios: termios::Termios
 }
 
 const BIOS_COMMAND_NAMES: [&'static str; 16] = [
@@ -25,6 +27,8 @@ const BIOS_COMMAND_NAMES: [&'static str; 16] = [
 
 const BIOS_ENTRY_POINT_COUNT: usize = 30;
 const BIOS_RET_TRAP_START: u16 = BIOS_BASE_ADDRESS + 0x80;
+
+const STDIN_FD: i32 = 0;
 
 impl Bios {
     pub fn new() -> Bios {
@@ -40,7 +44,8 @@ impl Bios {
         Bios {
             terminal: Terminal::new(),
             stdin_channel: rx,
-            next_char: None
+            next_char: None,
+            previous_termios: termios::Termios::from_fd(STDIN_FD).unwrap()
         }
     }
 
@@ -53,12 +58,12 @@ impl Bios {
 
         // Setup warm start at 0x000
         machine.poke(0, 0xc3 /* jp nnnn */);
-        machine.poke16(1, BIOS_BASE_ADDRESS + 3); // Warm start is the second entrypoin in BIOS
+        machine.poke16(1, BIOS_BASE_ADDRESS + 3); // Warm start is the second entrypoint in BIOS
 
         /*
         At BIOS_BASE_ADDRESS we need a "JMP address" for each entry point. At the
-        destination we will put a RET and trap that on the emulator
-        programs, like MBASIC expext this and copy the address.
+        destination we will put a RET and trap that on the emulator.
+        Programs like MBASIC expect this and copy the address.
         */
         for i in 0..BIOS_ENTRY_POINT_COUNT {
             let entry_point = BIOS_BASE_ADDRESS + (i * 3) as u16;
@@ -68,6 +73,19 @@ impl Bios {
             machine.poke(ret_trap, 0xc9 /*ret*/);
 
         }
+    }
+
+    pub fn setup_host_terminal(&self) {
+        let mut new_term = self.previous_termios.clone();
+         new_term.c_iflag &= !(IXON | ICRNL);
+        new_term.c_lflag &= !(ECHO | ICANON | IEXTEN);
+        new_term.c_cc[VMIN] = 0;
+        new_term.c_cc[VTIME] = 1;
+        termios::tcsetattr(STDIN_FD, termios::TCSANOW, &new_term).unwrap();
+    }
+
+    pub fn restore_host_terminal(&self) {
+        termios::tcsetattr(STDIN_FD, termios::TCSANOW, &self.previous_termios).unwrap();
     }
 
     fn pool_keyboard(&mut self) {

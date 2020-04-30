@@ -57,6 +57,7 @@ fn main() {
     // Init cpm
     let mut bios = Bios::new();
     bios.setup(&mut machine);
+    bios.setup_host_terminal();
     let mut bdos = Bdos::new();
     bdos.setup(&mut machine);
 
@@ -168,7 +169,8 @@ fn main() {
         let pc = cpu.registers().pc();
 
         if cpu.is_halted() {
-            panic!("HALT instruction")
+            println!("HALT instruction");
+            break;
         }
 
         if bios.execute(cpu.registers(), call_trace) {
@@ -185,8 +187,11 @@ fn main() {
 
         if pc == BDOS_BASE_ADDRESS - 1 {
             // Guard to detect code reaching BDOS (usually NOPs)
-            panic!("Executing into BDOS area");
+            println!("Executing into BDOS area");
+            break;
        }
-
     }
+
+    bios.restore_host_terminal();
 }
+

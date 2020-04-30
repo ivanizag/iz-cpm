@@ -12,3 +12,4 @@ path = "src/main.rs"
 iz80 = "^0.2.2"
 #iz80 = {path = "../iz80"}
 clap = "^2"
+termios = "^0.3"

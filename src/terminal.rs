@@ -66,6 +66,7 @@ impl Terminal {
             24 => Some("\x1b[K".to_string()),    // Erase to end of line
             26 => Some("\x1b[2J\x1b[H".to_string()),   // Clear screen, home cursor
             30 => Some("\x1b[H".to_string()),    // Home cursor
+            127 => Some("\x1b[D \x1b[D".to_string()), // Del: back+space+back
             // Escape sequences 
             27 => { // ESCAPE
                 if self.buffer_len < 2 {
@@ -121,6 +122,7 @@ impl Terminal {
                     }
                 }
             },    
+            //_ => Some(format!("0x{:02x} ", self.buffer[0] /*as char*/)) // Write the char
             _ => Some(format!("{}", self.buffer[0] as char)) // Write the char
         }
     }

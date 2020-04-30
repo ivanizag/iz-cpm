@@ -9,7 +9,9 @@ pub fn read(env: &mut BdosEnvironment) -> u8 {
     // CTRL-S, and start/stop printer echo, CTRL-P. The FDOS does not return to
     // the calling program until a character has been typed, thus suspending
     // execution if a character is not ready. 
-    env.bios.read()
+    let ch = env.bios.read();
+    env.bios.write(ch);
+    ch
 }
 
 pub fn write(env: &mut BdosEnvironment, ch: u8) {
@@ -55,8 +57,15 @@ pub fn read_string(env: &mut BdosEnvironment, address: u16) -> u8 {
     let mut pos = address + 2;
     loop {
         let ch = env.bios.read();
+        env.bios.write(ch);
         if ch == 10 || ch == 13 { // CR of LF
             break;
+        }
+        if ch == 127 { // DEL
+            if pos > 0 {
+                size -= 1;
+                pos += 1;
+            }
         }
         env.machine.poke(pos, ch);
         size += 1;
