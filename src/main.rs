@@ -1,5 +1,9 @@
 use std::fs::File;
 use std::io::prelude::*;
+use std::thread;
+use std::time::Duration;
+
+
 use clap::{Arg, App};
 
 use iz80::*;
@@ -47,12 +51,17 @@ fn main() {
             .short("c")
             .long("cpu-trace")
             .help("Trace BDOS and BIOS calls excluding screen I/O"))
+        .arg(Arg::with_name("slow")
+            .short("s")
+            .long("slow")
+            .help("Run slower"))
         .get_matches();
     let filename = matches.value_of("CMD");
     let params = matches.value_of("ARGS");
     let cpu_trace = matches.is_present("cpu_trace");
     let call_trace = matches.is_present("call_trace") || matches.is_present("call_trace_all");
     let call_trace_skip_console = !matches.is_present("call_trace_all");
+    let slow = matches.is_present("slow");
 
     // Init device
     let mut machine = CpmMachine::new();
@@ -167,6 +176,7 @@ fn main() {
     // Run the emulation
     cpu.registers().set_pc(binary_address);
     cpu.set_trace(cpu_trace);
+    let mut n = 0;
     loop {
         cpu.execute_instruction(&mut machine);
 
@@ -182,7 +192,9 @@ fn main() {
             break;
         }
 
-        bdos.execute(&mut bios, &mut machine, cpu.registers(), call_trace, call_trace_skip_console);
+        if bdos.execute(&mut bios, &mut machine, cpu.registers(), call_trace, call_trace_skip_console) {
+            break;
+        }
 
         if pc == RESTART_ADDRESS {
             println!("Terminated by JMP 0000h");
@@ -193,7 +205,15 @@ fn main() {
             // Guard to detect code reaching BDOS (usually NOPs)
             println!("Executing into BDOS area");
             break;
-       }
+        }
+
+        if slow {
+            n += 1;
+            if n > 20 {
+                thread::sleep(Duration::from_nanos(1000));
+                n = 0;
+            }
+        }
     }
 
     bios.restore_host_terminal();

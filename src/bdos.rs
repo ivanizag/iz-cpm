@@ -66,7 +66,7 @@ impl Bdos {
 
     pub fn execute(&mut self, bios: &mut Bios,
             machine: &mut CpmMachine, reg: &mut Registers,
-            call_trace: bool, call_trace_skip_console:bool) {
+            call_trace: bool, call_trace_skip_console: bool) -> bool {
 
         // We do the BIOS actions outside the emulation.
         let pc = reg.pc();
@@ -100,7 +100,8 @@ impl Bdos {
                     A. This function has exactly the same effect as a jump to
                     location BOOT.
                     */
-                    panic!("BOOT");
+                    println!("BDOS reset");
+                    return true;
                 },
                 1 => { // C_READ - Console input
                     res8 = Some(bdos_console::read(env));
@@ -244,7 +245,7 @@ impl Bdos {
                 }
             }
         }
-
+        false
     }
 }
 
