@@ -128,10 +128,25 @@ fn main() {
             program that executes in the TPA and thus implicity originates
             at TBASE in memory.
             */
-            let mut file = File::open(name).unwrap();            
-            binary_size = file.read(&mut buf).unwrap();
-            binary = &buf;
-            binary_address = TPA_BASE_ADDRESS;
+            match File::open(name) {
+                Err(err) => {
+                    eprintln!("Error opening \"{}\": {}", name, err);
+                    process::exit(1);
+                },
+                Ok(mut file) => {
+                    match file.read(&mut buf) {
+                        Err(err) => {
+                            eprintln!("Error loading \"{}\": {}", name, err);
+                            process::exit(1);
+                        },
+                        Ok(size) => {
+                            binary = &buf;
+                            binary_address = TPA_BASE_ADDRESS;
+                            binary_size = size;
+                        }
+                    };
+                }
+            }
         }
     }
 
@@ -212,7 +227,6 @@ fn main() {
     let initial_terminal = bios.initial_terminal();
     bios.setup_host_terminal(false);
     defer! {
-        println!("restaurando el terminal");
         bios::restore_host_terminal(&initial_terminal);
     }
 
