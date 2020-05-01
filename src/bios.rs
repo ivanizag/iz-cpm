@@ -10,7 +10,7 @@ use super::constants::*;
 use super::terminal::Terminal;
 
 pub struct Bios {
-    previous_termios: Termios,
+    initial_termios: Termios,
     terminal: Terminal,
     next_char: Option<u8>,
     ctrl_c_count: u8
@@ -27,10 +27,14 @@ const BIOS_RET_TRAP_START: u16 = BIOS_BASE_ADDRESS + 0x80;
 
 const STDIN_FD: i32 = 0;
 
+pub fn restore_host_terminal(value: &Termios) {
+    tcsetattr(STDIN_FD, TCSANOW, &value).unwrap();
+}
+
 impl Bios {
     pub fn new() -> Bios {
         Bios {
-            previous_termios: Termios::from_fd(STDIN_FD).unwrap(),
+            initial_termios: Termios::from_fd(STDIN_FD).unwrap(),
             terminal: Terminal::new(),
             next_char: None,
             ctrl_c_count: 0
@@ -55,7 +59,7 @@ impl Bios {
     }
 
     pub fn setup_host_terminal(&self, blocking: bool) {
-        let mut new_term = self.previous_termios.clone();
+        let mut new_term = self.initial_termios.clone();
         new_term.c_iflag &= !(IXON | ICRNL);
         new_term.c_lflag &= !(ISIG | ECHO | ICANON | IEXTEN);
         new_term.c_cc[VMIN] = if blocking {1} else {0};
@@ -63,8 +67,8 @@ impl Bios {
         tcsetattr(STDIN_FD, TCSANOW, &new_term).unwrap();
     }
 
-    pub fn restore_host_terminal(&self) {
-        tcsetattr(STDIN_FD, TCSANOW, &self.previous_termios).unwrap();
+    pub fn initial_terminal(&self) -> Termios {
+        self.initial_termios.clone()
     }
 
     pub fn status(&mut self) -> u8 {

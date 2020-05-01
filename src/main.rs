@@ -1,10 +1,13 @@
+use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
+use std::process;
 use std::thread;
 use std::time::Duration;
 
 
 use clap::{Arg, App};
+#[macro_use(defer)] extern crate scopeguard;
 
 use iz80::*;
 
@@ -50,16 +53,32 @@ fn main() {
             .help("Trace BDOS and BIOS calls"))
             .arg(Arg::with_name("call_trace_all")
             .short("T")
-            .long("call-trace_all")
+            .long("call-trace-all")
             .help("Trace BDOS and BIOS calls"))
         .arg(Arg::with_name("cpu_trace")
-            .short("c")
+            .short("z")
             .long("cpu-trace")
             .help("Trace BDOS and BIOS calls excluding screen I/O"))
         .arg(Arg::with_name("slow")
             .short("s")
             .long("slow")
             .help("Run slower"))
+        .arg(Arg::with_name("disk_a").long("disk-a").value_name("path").short("a").default_value(".").help("directory to map disk A:"))
+        .arg(Arg::with_name("disk_b").long("disk-b").value_name("path").short("b").help("directory to map disk B:"))
+        .arg(Arg::with_name("disk_c").long("disk-c").value_name("path").short("c").help("directory to map disk C:"))
+        .arg(Arg::with_name("disk_d").long("disk-d").value_name("path").short("d").help("directory to map disk D:"))
+        .arg(Arg::with_name("disk_e").long("disk-e").value_name("path").help("directory to map disk E:"))
+        .arg(Arg::with_name("disk_f").long("disk-f").value_name("path").help("directory to map disk F:"))
+        .arg(Arg::with_name("disk_g").long("disk-g").value_name("path").help("directory to map disk G:"))
+        .arg(Arg::with_name("disk_h").long("disk-h").value_name("path").help("directory to map disk H:"))
+        .arg(Arg::with_name("disk_i").long("disk-i").value_name("path").help("directory to map disk I:"))
+        .arg(Arg::with_name("disk_j").long("disk-j").value_name("path").help("directory to map disk J:"))
+        .arg(Arg::with_name("disk_k").long("disk-k").value_name("path").help("directory to map disk K:"))
+        .arg(Arg::with_name("disk_l").long("disk-l").value_name("path").help("directory to map disk L:"))
+        .arg(Arg::with_name("disk_m").long("disk-m").value_name("path").help("directory to map disk M:"))
+        .arg(Arg::with_name("disk_n").long("disk-n").value_name("path").help("directory to map disk N:"))
+        .arg(Arg::with_name("disk_o").long("disk-o").value_name("path").help("directory to map disk O:"))
+        .arg(Arg::with_name("disk_p").long("disk-p").value_name("path").help("directory to map disk P:"))
         .get_matches();
     let filename = matches.value_of("CMD");
     let params = matches.value_of("ARGS");
@@ -75,10 +94,20 @@ fn main() {
     // Init cpm
     let mut bios = Bios::new();
     bios.setup(&mut machine);
-    bios.setup_host_terminal(false);
     let mut bdos = Bdos::new();
     bdos.setup(&mut machine);
 
+    // Assign drives
+    for i in 0..15 {
+        let res = matches.value_of(format!("disk_{}", (i + 'a' as u8) as char));
+        if let Some(path) = res {
+            if let Err(err) = fs::read_dir(path) {
+                eprintln!("Error with directory \"{}\": {}", path, err);
+                process::exit(1);
+            }
+            bdos.assign_drive(i, path.to_string());
+        }
+    }
 
     // Load CCP or program
     let binary: &[u8];
@@ -179,6 +208,14 @@ fn main() {
         cpu.registers().set16(Reg16::SP, sp);
     }
 
+    // Prepare terminal
+    let initial_terminal = bios.initial_terminal();
+    bios.setup_host_terminal(false);
+    defer! {
+        println!("restaurando el terminal");
+        bios::restore_host_terminal(&initial_terminal);
+    }
+
     // Run the emulation
     cpu.registers().set_pc(binary_address);
     cpu.set_trace(cpu_trace);
@@ -221,6 +258,4 @@ fn main() {
             }
         }
     }
-
-    bios.restore_host_terminal();
 }

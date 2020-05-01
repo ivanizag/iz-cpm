@@ -64,6 +64,10 @@ impl Bdos {
         }
     }
 
+    pub fn assign_drive(&mut self, drive: u8, path: String) {
+        self.state.directories[(drive & 0x0f) as usize] = Some(path);
+    }
+
     pub fn execute(&mut self, bios: &mut Bios,
             machine: &mut CpmMachine, reg: &mut Registers,
             call_trace: bool, call_trace_skip_console: bool) -> bool {

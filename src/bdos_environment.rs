@@ -31,7 +31,7 @@ impl BdosState {
         BdosState {
             selected_bitmap: 1<<0,
             read_only_bitmap: 0,
-            directories: [Some(".".to_string()), Some("..".to_string()), None, None, None, None, None, None,
+            directories: [None, None, None, None, None, None, None, None,
                 None, None, None, None, None, None, None, None],
             dma: DEFAULT_DMA,
             dir_drive: 0,
