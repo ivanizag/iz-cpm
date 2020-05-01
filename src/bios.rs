@@ -203,8 +203,8 @@ impl Bios {
                     self.write(reg.get8(Reg8::C));
                 }
                 _ => {
-                    print!("BIOS command {} not implemented.\n", command);
-                    panic!("BIOS command not implemented");
+                    eprintln!("BIOS command {} not implemented.\n", command);
+                    return true;
                 }    
             }
         }

@@ -223,8 +223,8 @@ impl Bdos {
                     res8 = Some(bdos_file::write_rand_zero_fill(env, arg16));
                 },
                 _ => {
-                    print!("BDOS command {} not implemented.\n", command);
-                    panic!("BDOS command not implemented");
+                    eprintln!("BDOS command {} not implemented.\n", command);
+                    return true;
                 }
             }
 
