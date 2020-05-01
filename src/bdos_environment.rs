@@ -9,7 +9,7 @@ pub const DEFAULT_DMA: u16 = 0x0080;
 
 // Messages from http://www.gaby.de/cpm/manuals/archive/cpm22htm/axi.htm
 pub const ERR_BAD_SECTOR: &'static str = "Bad Sector";
-
+pub const ERR_DRIVE_READ_ONLY: &'static str = "R/O";
 
 pub struct BdosState {
     // Drive
@@ -102,12 +102,18 @@ impl <'a> BdosEnvironment<'_> {
         }
     }
 
-    pub fn get_directory(&self, fcb_drive: u8) -> Option<String> {
+    pub fn get_directory(&self, fcb_drive: u8, to_write: bool) -> Option<String> {
         let drive = if fcb_drive == 0 {
             self.drive()
         } else {
             fcb_drive - 1
         };
+
+        if to_write && (self.state.read_only_bitmap & 1 << drive) != 0 {
+            self.print_error_on_disk(ERR_DRIVE_READ_ONLY, drive);
+            return None
+        }
+
         let res = self.state.directories[drive as usize].clone();
         if res.is_none() {
             self.print_error_on_disk(ERR_BAD_SECTOR, drive);

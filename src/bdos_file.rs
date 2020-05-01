@@ -62,7 +62,7 @@ pub fn open(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     if env.call_trace {
         print!("[[Open file {}]]", fcb.get_name(env));
     }
-    match find_host_files(env, &fcb, false) {
+    match find_host_files(env, &fcb, false, false) {
         Err(_) => FILE_NOT_FOUND, // Error or file not found
         Ok(paths) => match fs::File::open(&paths[0]) {
             Err(_) => FILE_NOT_FOUND,
@@ -111,7 +111,7 @@ pub fn close(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // taken place. If write operations have occurred, the close operation is
     // necessary to record the new directory information permanently. 
     let fcb = Fcb::new(fcb_address);
-    match find_host_files(env, &fcb, false){
+    match find_host_files(env, &fcb, false, false){
         Err(_) => FILE_NOT_FOUND, // Error or file not found
         Ok(_) => DIRECTORY_CODE
     }
@@ -129,7 +129,7 @@ pub fn delete(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
         print!("[[Delete file {}]]", fcb.get_name(env));
     }
 
-    match find_host_files(env, &fcb, true) {
+    match find_host_files(env, &fcb, true, true) {
         Err(_) => FILE_NOT_FOUND, // Error or file not found
         Ok(paths) => {
             for name in paths {
@@ -154,7 +154,7 @@ pub fn rename(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     if env.call_trace {
         print!("[[Rename file {} to {}]]", fcb.get_name(env), fcb.get_name_secondary(env));
     }
-    match find_host_files(env, &fcb, false) {
+    match find_host_files(env, &fcb, false, true) {
         Err(_) => FILE_NOT_FOUND, // Error or file not found
         Ok(paths) => {
             for name in paths {
@@ -440,7 +440,7 @@ pub fn compute_file_size(env: &mut BdosEnvironment, fcb_address: u16) {
 }
 
 fn compute_file_size_internal(env: &mut BdosEnvironment, fcb: &Fcb) -> io::Result<u32> {
-    let paths = find_host_files(env, fcb, false)?;
+    let paths = find_host_files(env, fcb, false, false)?;
     let os_file = fs::File::open(&paths[0])?;
 
     let file_size = os_file.metadata()?.len();
@@ -457,9 +457,9 @@ fn compute_file_size_internal(env: &mut BdosEnvironment, fcb: &Fcb) -> io::Resul
     Ok(record as u32)
 }
 
-fn find_host_files(env: &mut BdosEnvironment, fcb: &Fcb, wildcard: bool) -> io::Result<Vec<OsString>> {
+fn find_host_files(env: &mut BdosEnvironment, fcb: &Fcb, wildcard: bool, to_write: bool) -> io::Result<Vec<OsString>> {
     let fcb_drive = fcb.get_drive(env);
-    let path = env.get_directory(fcb_drive)
+    let path = env.get_directory(fcb_drive, to_write)
         .ok_or(io::Error::new(io::ErrorKind::Other, "No directory assigned to drive"))?;
     let dir = fs::read_dir(path)?;
     let mut files = Vec::new();
@@ -485,7 +485,7 @@ fn find_host_files(env: &mut BdosEnvironment, fcb: &Fcb, wildcard: bool) -> io::
 
 fn create_file(env: &mut BdosEnvironment, fcb: &Fcb) -> io::Result<()> {
     let fcb_drive = fcb.get_drive(env);
-    let path = env.get_directory(fcb_drive)
+    let path = env.get_directory(fcb_drive, true)
         .ok_or(io::Error::new(io::ErrorKind::Other, "No directory assigned to drive"))?;
     let file = Path::new(&path).join(fcb.get_name_host(env));
     fs::File::create(&file)?;
@@ -493,7 +493,7 @@ fn create_file(env: &mut BdosEnvironment, fcb: &Fcb) -> io::Result<()> {
 }
 
 fn read_record_in_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16) -> io::Result<u8> {
-    let paths = find_host_files(env, fcb, false)?;
+    let paths = find_host_files(env, fcb, false, false)?;
     let mut os_file = fs::File::open(&paths[0])?;
 
     let file_offset = record as u64 * RECORD_SIZE as u64;
@@ -512,7 +512,7 @@ fn read_record_in_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16) -> i
 }
 
 fn write_record_from_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16) -> io::Result<u8> {
-    let paths = find_host_files(env, fcb, false)?;
+    let paths = find_host_files(env, fcb, false, true)?;
     let mut os_file = fs::OpenOptions::new().write(true).open(&paths[0])?;
 
     let file_offset = record as u64 * RECORD_SIZE as u64;
@@ -538,7 +538,7 @@ fn search_nth(env: &mut BdosEnvironment) -> io::Result<u8> {
     // For search_first and search_next, I will store a global index for the
     // position. I don't know if BDOS was storing the state on the FCB or
     // globally. [Later] Yes, it does.
-    let path = env.get_directory(env.state.dir_drive)
+    let path = env.get_directory(env.state.dir_drive, false)
         .ok_or(io::Error::new(io::ErrorKind::Other, "No directory assigned to drive"))?;
     let dir = fs::read_dir(path)?;
 

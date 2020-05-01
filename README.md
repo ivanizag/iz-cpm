@@ -73,6 +73,6 @@ cargo run MULISP.COM
 
 - Complete BIOS
 - Complete BDOS
-- Manage disks as separate folders
-- BIOS input from host console should not be echoed by the host
+- Manage read only disks
+- Manage read only files
 - Reset and boot after program execution
