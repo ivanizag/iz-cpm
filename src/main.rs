@@ -25,12 +25,17 @@ use self::constants::*;
 use self::cpm_machine::*;
 use self::fcb::*;
 
+// Welcome message 1970's style
+const WELCOME: &'static str =
+"iz-cpm https://github.com/ivanizag/iz-cpm
+CP/M 2.2 Copyright (c) 1979 by Digital Research
+Press ctrl-c ctrl-c to return to host";
 
 static CCP_BINARY: &'static [u8] = include_bytes!("../cpm22/OS2CCP.BIN");
 
 fn main() {
     // Parse arguments
-    let matches = App::new("Z80 CP/M 2.2 emulator")
+    let matches = App::new(WELCOME)
         .arg(Arg::with_name("CMD")
             .help("The z80 image to run")
             .required(false)
@@ -86,6 +91,7 @@ fn main() {
             binary = CCP_BINARY;
             binary_address = CCP_BASE_ADDRESS;
             binary_size = CCP_BINARY.len();
+            println!("{}", WELCOME);
         },
         Some(name) => {
             /*
@@ -218,4 +224,3 @@ fn main() {
 
     bios.restore_host_terminal();
 }
-
