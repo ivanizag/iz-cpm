@@ -7,14 +7,20 @@ use super::cpm_machine::*;
 pub const RECORD_SIZE: usize = 128;
 pub const DEFAULT_DMA: u16 = 0x0080;
 
+// Messages from http://www.gaby.de/cpm/manuals/archive/cpm22htm/axi.htm
+pub const ERR_BAD_SECTOR: &'static str = "Bad Sector";
+
+
 pub struct BdosState {
     // Drive
     pub selected_bitmap: u16,
     pub read_only_bitmap: u16,
+    pub directories: [Option<String>; 16],
     // File
     pub dma: u16,
     pub buffer: [u8; RECORD_SIZE],
     // DIR state
+    pub dir_drive: u8,
     pub dir_pattern: String,
     pub dir_pos: u16, // We will hold a global position in a DIR.
 
@@ -25,7 +31,10 @@ impl BdosState {
         BdosState {
             selected_bitmap: 1<<0,
             read_only_bitmap: 0,
+            directories: [Some(".".to_string()), Some("..".to_string()), None, None, None, None, None, None,
+                None, None, None, None, None, None, None, None],
             dma: DEFAULT_DMA,
+            dir_drive: 0,
             dir_pattern: "????????.???".to_string(),
             dir_pos: 0,
             buffer: [0; RECORD_SIZE],
@@ -91,5 +100,22 @@ impl <'a> BdosEnvironment<'_> {
         for i in 0..RECORD_SIZE {
             self.state.buffer[i] = self.machine.peek(self.state.dma + i as u16);
         }
+    }
+
+    pub fn get_directory(&self, fcb_drive: u8) -> Option<String> {
+        let drive = if fcb_drive == 0 {
+            self.drive()
+        } else {
+            fcb_drive - 1
+        };
+        let res = self.state.directories[drive as usize].clone();
+        if res.is_none() {
+            self.print_error_on_disk(ERR_BAD_SECTOR, drive);
+        }
+        res
+    }
+
+    pub fn print_error_on_disk(&self, message: &str, disk: u8) {
+        println!("\nBdos Err On {}: {}", ('A' as u8 + disk) as char, message);
     }
 }

@@ -1,5 +1,5 @@
 use iz80::Machine;
-use super::cpm_machine::*;
+use super::bdos_environment::BdosEnvironment;
 
 /*
 File Control Block
@@ -12,7 +12,6 @@ Fields:
             2 = auto disk select drive B,
             ...
             16 = auto disk select drive P.
-
 */
 const FCB_NAME_OFFSET: u16 = 1;
 /*
@@ -53,79 +52,78 @@ const FCB_RANDOM_RECORD_OFFSET: u16 = 33;
 
 const EXTENT_SIZE: u8 = 128; // We will assume all extent have 128 records.
 
-pub struct Fcb<'a> {
+pub struct Fcb {
     address: u16,
-    machine: &'a mut CpmMachine
 }
 
-impl <'a> Fcb<'_> {
-    pub fn new(address: u16, machine: &mut CpmMachine) -> Fcb {
+impl Fcb {
+    pub fn new(address: u16) -> Fcb {
         Fcb {
             address,
-            machine
         }
     }
 
-    //pub fn get_drive_code(&self) -> u8 {
-    //    self.machine.peek(self.address)
-    //}
-
-    fn get_byte(&self, offset: u16) -> u8 {
-        self.machine.peek(self.address + offset)
+    pub fn get_drive(&self, env: &mut BdosEnvironment) -> u8 {
+        env.machine.peek(self.address)
     }
 
-    fn set_byte(&mut self, offset: u16, v: u8) {
-        self.machine.poke(self.address + offset, v)
+    fn get_byte(&self, env: &mut BdosEnvironment, offset: u16) -> u8 {
+        env.machine.peek(self.address + offset)
     }
 
-    pub fn init(&mut self) {
-        self.set_byte(FCB_EXTENT_OFFSET, 0);
-        self.set_byte(FCB_CURRENT_RECORD_OFFSET, 0);
-        self.set_byte(FCB_RECORD_COUNT_OFFSET, 0);
+    fn set_byte(&self, env: &mut BdosEnvironment, offset: u16, v: u8) {
+        env.machine.poke(self.address + offset, v)
     }
 
-    pub fn get_name(&self) -> String {
+    pub fn init(&mut self, env: &mut BdosEnvironment) {
+        self.set_byte(env, FCB_EXTENT_OFFSET, 0);
+        self.set_byte(env, FCB_CURRENT_RECORD_OFFSET, 0);
+        self.set_byte(env, FCB_RECORD_COUNT_OFFSET, 0);
+    }
+
+    pub fn get_name(&self, env: &mut BdosEnvironment) -> String {
         let mut name = String::new();
         for i in 0..8 {
-            let ch = self.get_byte(i + FCB_NAME_OFFSET) & 0x7F;
+            let ch = self.get_byte(env, i + FCB_NAME_OFFSET) & 0x7F;
             name.push(ch as char)
         }
         name.push('.');
         for i in 0..3 {
-            let ch = self.get_byte(i + FCB_EXTENSION_OFFSET) & 0x7F;
+            let ch = self.get_byte(env, i + FCB_EXTENSION_OFFSET) & 0x7F;
             name.push(ch as char)
         }
         name
     }
 
-    pub fn get_name_secondary(&self) -> String {
+    pub fn get_name_secondary(&self, env: &mut BdosEnvironment) -> String {
         let mut name = String::new();
         for i in 0..8 {
-            let ch = self.get_byte(i + FCB_NAME_OFFSET + FCB_INTERNAL_OFFSET) & 0x7F;
+            let ch = self.get_byte(env, i + FCB_NAME_OFFSET + FCB_INTERNAL_OFFSET) & 0x7F;
             name.push(ch as char)
         }
         name.push('.');
         for i in 0..3 {
-            let ch = self.get_byte(i + FCB_EXTENSION_OFFSET + FCB_INTERNAL_OFFSET) & 0x7F;
+            let ch = self.get_byte(env, i + FCB_EXTENSION_OFFSET + FCB_INTERNAL_OFFSET) & 0x7F;
             name.push(ch as char)
         }
         name
     }
 
-    pub fn set_name(&mut self, name: String) {
+    pub fn set_name_direct(&mut self, machine: &mut dyn Machine, name: String) {
         let bytes = name.as_bytes();
         for i in 0..8 {
-            self.set_byte(i + FCB_NAME_OFFSET, 0x7F & bytes[i as usize]);
+            machine.poke(self.address + i + FCB_NAME_OFFSET, 0x7F & bytes[i as usize]);
         }
         for i in 0..3 {
-            self.set_byte(i + FCB_EXTENSION_OFFSET, 0x7F & bytes[9 + i as usize]);
+            machine.poke(self.address + i + FCB_EXTENSION_OFFSET, 0x7F & bytes[9 + i as usize]);
         }
     }
 
-    pub fn get_name_host(&self) -> String {
+
+    pub fn get_name_host(&self, env: &mut BdosEnvironment) -> String {
         let mut name = String::new();
         for i in 0..8 {
-            let ch = self.get_byte(i + FCB_NAME_OFFSET) & 0x7F;
+            let ch = self.get_byte(env, i + FCB_NAME_OFFSET) & 0x7F;
             if ch == ' ' as u8 {
                 break;
             }
@@ -133,7 +131,7 @@ impl <'a> Fcb<'_> {
         }
         name.push('.');
         for i in 0..3 {
-            let ch = self.get_byte(i + FCB_EXTENSION_OFFSET) & 0x7F;
+            let ch = self.get_byte(env, i + FCB_EXTENSION_OFFSET) & 0x7F;
             if ch == ' ' as u8 {
                 break;
             }
@@ -142,36 +140,34 @@ impl <'a> Fcb<'_> {
         name
     }
 
-    pub fn get_sequential_record_number(&self) -> u16 {
-        (EXTENT_SIZE as u16) * (self.get_byte(FCB_EXTENT_OFFSET) as u16)
-        + (self.get_byte(FCB_CURRENT_RECORD_OFFSET) as u16)
+    pub fn get_sequential_record_number(&self, env: &mut BdosEnvironment) -> u16 {
+        (EXTENT_SIZE as u16) * (self.get_byte(env, FCB_EXTENT_OFFSET) as u16)
+        + (self.get_byte(env, FCB_CURRENT_RECORD_OFFSET) as u16)
     }
 
-    pub fn inc_current_record(&mut self) {
-        let cr = 1 + self.get_byte(FCB_CURRENT_RECORD_OFFSET);
+    pub fn inc_current_record(&mut self, env: &mut BdosEnvironment) {
+        let cr = 1 + self.get_byte(env, FCB_CURRENT_RECORD_OFFSET);
         if cr == EXTENT_SIZE {
-            self.set_byte(FCB_CURRENT_RECORD_OFFSET, 0);
-            self.set_byte(FCB_EXTENT_OFFSET,
-                1 + self.get_byte(FCB_EXTENT_OFFSET)); 
+            self.set_byte(env, FCB_CURRENT_RECORD_OFFSET, 0);
+            let v = 1 + self.get_byte(env, FCB_EXTENT_OFFSET);
+            self.set_byte(env, FCB_EXTENT_OFFSET, v);
         } else {
-            self.set_byte(FCB_CURRENT_RECORD_OFFSET, cr);
+            self.set_byte(env, FCB_CURRENT_RECORD_OFFSET, cr);
         }
     }
 
-    pub fn get_random_record_number(&self) -> u32 {
-        self.get_byte(FCB_RANDOM_RECORD_OFFSET) as u32
-        + ((self.get_byte(FCB_RANDOM_RECORD_OFFSET + 1) as u32) << 8)
-        + ((self.get_byte(FCB_RANDOM_RECORD_OFFSET + 2) as u32) << 16)
+    pub fn get_random_record_number(&self, env: &mut BdosEnvironment) -> u32 {
+        self.get_byte(env, FCB_RANDOM_RECORD_OFFSET) as u32
+        + ((self.get_byte(env, FCB_RANDOM_RECORD_OFFSET + 1) as u32) << 8)
+        + ((self.get_byte(env, FCB_RANDOM_RECORD_OFFSET + 2) as u32) << 16)
     }
 
-    pub fn set_random_record_number(&mut self, record: u32) {
-        self.set_byte(FCB_RANDOM_RECORD_OFFSET, record as u8);
-        self.set_byte(FCB_RANDOM_RECORD_OFFSET + 1, (record >> 8) as u8);
-        self.set_byte(FCB_RANDOM_RECORD_OFFSET + 2, (record >> 16) as u8);
+    pub fn set_random_record_number(&mut self, env: &mut BdosEnvironment, record: u32) {
+        self.set_byte(env, FCB_RANDOM_RECORD_OFFSET, record as u8);
+        self.set_byte(env, FCB_RANDOM_RECORD_OFFSET + 1, (record >> 8) as u8);
+        self.set_byte(env, FCB_RANDOM_RECORD_OFFSET + 2, (record >> 16) as u8);
     }
 }
-
-
 
 /*
 The characters used in specifying an unambiguous file reference cannot contain

@@ -4,6 +4,7 @@ use std::io;
 use std::io::Read;
 use std::io::Seek;
 use std::io::Write;
+use std::path::Path;
 
 use super::bdos_environment::*;
 use super::fcb::*;
@@ -19,6 +20,7 @@ use super::fcb::*;
 // FCB.alloc
 // Here we will have always the files in directory code 0.
 const DIRECTORY_CODE: u8 = 0;
+const NO_DATA: u8 = 1;
 const FILE_NOT_FOUND: u8 = 0xff;
 
 pub fn set_dma(env: &mut BdosEnvironment, dma: u16) {
@@ -56,16 +58,16 @@ pub fn open(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // the first matching FCB is activated. Note that the current record, (cr)
     // must be zeroed by the program if the file is to be accessed sequentially
     // from the first record. 
-    let mut fcb = Fcb::new(fcb_address, env.machine);
+    let mut fcb = Fcb::new(fcb_address);
     if env.call_trace {
-        print!("[[Open file {}]]", fcb.get_name());
+        print!("[[Open file {}]]", fcb.get_name(env));
     }
-    match find_host_files(fcb.get_name(), false) {
+    match find_host_files(env, &fcb, false) {
         Err(_) => FILE_NOT_FOUND, // Error or file not found
         Ok(paths) => match fs::File::open(&paths[0]) {
             Err(_) => FILE_NOT_FOUND,
             Ok(_) => {
-                fcb.init();
+                fcb.init(env);
                 DIRECTORY_CODE
             }
         }
@@ -84,14 +86,14 @@ pub fn make(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // successful and 0FFH (255 decimal) if no more directory space is
     // available. The Make function has the side effect of activating the FCB
     // and thus a subsequent open is not necessary.
-    let mut fcb = Fcb::new(fcb_address, env.machine);
+    let mut fcb = Fcb::new(fcb_address);
     if env.call_trace {
-        print!("[[Create file {}]]", fcb.get_name());
+        print!("[[Create file {}]]", fcb.get_name(env));
     }
-    match fs::File::create(fcb.get_name_host()) {
+    match create_file(env, &fcb) {
         Err(_) => FILE_NOT_FOUND, // Error or file not found
         Ok(_) => {
-            fcb.init();
+            fcb.init(env);
             DIRECTORY_CODE
         }
     }
@@ -108,8 +110,8 @@ pub fn close(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // in the directory. A file need not be closed if only read operations have
     // taken place. If write operations have occurred, the close operation is
     // necessary to record the new directory information permanently. 
-    let fcb = Fcb::new(fcb_address, env.machine);
-    match find_host_files(fcb.get_name(), false){
+    let fcb = Fcb::new(fcb_address);
+    match find_host_files(env, &fcb, false){
         Err(_) => FILE_NOT_FOUND, // Error or file not found
         Ok(_) => DIRECTORY_CODE
     }
@@ -122,12 +124,12 @@ pub fn delete(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // ambiguous, as in the Search and Search Next functions.
     // Function 19 returns a decimal 255 if the referenced file or files cannot
     // be found; otherwise, a value in the range 0 to 3 returned.
-    let fcb = Fcb::new(fcb_address, env.machine);
+    let fcb = Fcb::new(fcb_address);
     if env.call_trace {
-        print!("[[Delete file {}]]", fcb.get_name());
+        print!("[[Delete file {}]]", fcb.get_name(env));
     }
 
-    match find_host_files(fcb.get_name(), true) {
+    match find_host_files(env, &fcb, true) {
         Err(_) => FILE_NOT_FOUND, // Error or file not found
         Ok(paths) => {
             for name in paths {
@@ -148,15 +150,15 @@ pub fn rename(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // FCB is assumed to be zero. Upon return, register A is set to a value
     // between 0 and 3 if the rename was successful and 0FFH (255 decimal) if
     // the first filename could not be found in the directory scan. 
-    let fcb = Fcb::new(fcb_address, env.machine);
+    let fcb = Fcb::new(fcb_address);
     if env.call_trace {
-        print!("[[Rename file {} to {}]]", fcb.get_name(), fcb.get_name_secondary());
+        print!("[[Rename file {} to {}]]", fcb.get_name(env), fcb.get_name_secondary(env));
     }
-    match find_host_files(fcb.get_name(), false) {
+    match find_host_files(env, &fcb, false) {
         Err(_) => FILE_NOT_FOUND, // Error or file not found
         Ok(paths) => {
             for name in paths {
-                let new_name = name_from_8_3(&fcb.get_name_secondary());
+                let new_name = name_from_8_3(&fcb.get_name_secondary(env));
                 if fs::rename(name, new_name).is_err() {
                     return FILE_NOT_FOUND;
                 }
@@ -177,15 +179,14 @@ pub fn read(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // returned in the A register if the read operation was successful, while a
     // nonzero value is returned if no data exist at the next record position
     // (for example, end-of-file occurs).
-    let mut fcb = Fcb::new(fcb_address, env.machine);
+    let mut fcb = Fcb::new(fcb_address);
+    let record = fcb.get_sequential_record_number(env);
     if env.call_trace {
-        print!("[Read record {:x} into {:04x}]",
-            fcb.get_sequential_record_number(), env.state.dma);
+        print!("[Read record {:x} into {:04x}]", record, env.state.dma);
     }
 
-    let record = fcb.get_sequential_record_number();
-    fcb.inc_current_record();
-    let res = read_record_in_buffer(&mut env.state.buffer, &fcb, record as u16).unwrap_or(1);
+    fcb.inc_current_record(env);
+    let res = read_record_in_buffer(env, &fcb, record as u16).unwrap_or(NO_DATA);
     if res == DIRECTORY_CODE {
         env.load_buffer();
     }
@@ -205,13 +206,13 @@ pub fn write(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // = 00H upon return from a successful write operation, while a nonzero
     // value indicates an unsuccessful write caused by a full disk.
     env.save_buffer();
-    let mut fcb = Fcb::new(fcb_address, env.machine);
-    let record = fcb.get_sequential_record_number();
+    let mut fcb = Fcb::new(fcb_address);
+    let record = fcb.get_sequential_record_number(env);
     if env.call_trace {
         print!("[Write record {:x} from {:04x}]", record, env.state.dma);
     }
-    fcb.inc_current_record();
-    write_record_from_buffer(&env.state.buffer, &fcb, record as u16).unwrap_or(1)
+    fcb.inc_current_record(env);
+    write_record_from_buffer(env, &fcb, record as u16).unwrap_or(NO_DATA)
 }
 
 pub fn read_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
@@ -264,15 +265,15 @@ pub fn read_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // nonzero under the current 2.0 release. Normally, nonzero return codes can
     // be treated as missing data, with zero return codes indicating operation
     // complete.
-    let fcb = Fcb::new(fcb_address, env.machine);
-    let record = fcb.get_random_record_number();
+    let fcb = Fcb::new(fcb_address);
+    let record = fcb.get_random_record_number(env);
     if env.call_trace {
         print!("[Read random record {:x} into {:04x}]", record, env.state.dma);
     }
     if record > 65535 {
         return 6; //06	seek Past Physical end of disk
     }
-    let res = read_record_in_buffer(&mut env.state.buffer, &fcb, record as u16).unwrap_or(1);
+    let res = read_record_in_buffer(env, &fcb, record as u16).unwrap_or(NO_DATA);
     if res == DIRECTORY_CODE {
         env.load_buffer();
     }
@@ -299,8 +300,8 @@ pub fn write_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // read operation with the addition of error code 05, which indicates that a
     // new extent cannot be created as a result of directory overflow.
     env.save_buffer();
-    let fcb = Fcb::new(fcb_address, env.machine);
-    let record = fcb.get_random_record_number();
+    let fcb = Fcb::new(fcb_address);
+    let record = fcb.get_random_record_number(env);
     if env.call_trace {
         print!("[Read random record {:x} into {:04x}]", record, env.state.dma);
     }
@@ -308,7 +309,7 @@ pub fn write_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
         return 6; //06	seek Past Physical end of disk
     }
 
-    write_record_from_buffer(&env.state.buffer, &fcb, record as u16).unwrap_or(1)
+    write_record_from_buffer(env, &fcb, record as u16).unwrap_or(NO_DATA)
 }
 
 pub fn write_rand_zero_fill(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
@@ -317,48 +318,8 @@ pub fn write_rand_zero_fill(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // the data is written.
 
     // On this emulator, spares files are managed by the host operating systems
-    // if possible. So, this methos is exactly the same as function 34.
+    // if possible. So, this method is exactly the same as function 34.
     write_rand(env, fcb_address)
-}
-
-fn read_record_in_buffer(buffer: &mut[u8], fcb: &Fcb, record: u16) -> io::Result<u8> {
-    let paths = find_host_files(fcb.get_name(), false)?;
-    let mut os_file = fs::File::open(&paths[0])?;
-
-    let file_offset = record as u64 * RECORD_SIZE as u64;
-    if file_offset >= os_file.metadata()?.len() {
-        return Ok(1); // End of file
-    }
-
-    os_file.seek(io::SeekFrom::Start(file_offset))?;
-    let size = os_file.read(buffer)?;
-
-    // Fill with zeros
-    for i in size..RECORD_SIZE {
-        buffer[i] = 26; // (CTRL-Z) 
-    }
-    Ok(0)
-}
-
-fn write_record_from_buffer(buffer: &[u8], fcb: &Fcb, record: u16) -> io::Result<u8> {
-    let paths = find_host_files(fcb.get_name(), false)?;
-    let mut os_file = fs::OpenOptions::new().write(true).open(&paths[0])?;
-
-    let file_offset = record as u64 * RECORD_SIZE as u64;
-    let file_pos = os_file.seek(io::SeekFrom::Start(file_offset))?;
-
-    if file_offset > file_pos {
-        // We want to write past the end of the file. Seek wasn't able to get
-        // there, so we will complete the holes with zeros as needed.
-        let zero = [0 as u8];
-        let needed = file_offset - file_pos;
-        for _ in 0..needed {
-            os_file.write(&zero)?;
-        }
-    }
-
-    os_file.write_all(buffer)?;
-    Ok(0)
 }
 
 pub fn get_set_user_number(env: &mut BdosEnvironment, user: u8) -> u8 {
@@ -374,54 +335,6 @@ pub fn get_set_user_number(env: &mut BdosEnvironment, user: u8) -> u8 {
         env.set_user(user & 0x0f);
     }
     env.user()
-}
-
-pub fn compute_file_size(env: &mut BdosEnvironment, fcb_address: u16) {
-    // When computing the size of a file, the DE register pair addresses an FCB
-    // in random mode format (bytes r0, r1, and r2 are present). The FCB
-    // contains an unambiguous filename that is used in the directory scan. Upon
-    // return, the random record bytes contain the virtual file size, which is,
-    // in effect, the record address of the record following the end of the
-    // file. Following a call to Function 35, if the high record byte r2 is 01,
-    // the file contains the maximum record count 65536. Otherwise, bytes r0 and
-    // r1 constitute a 16-bit value as before (r0 is the least significant
-    // byte), which is the file size.
-    // Data can be appended to the end of an existing file by simply calling
-    // Function 35 to set the random record position to the end-of-file and then
-    // performing a sequence of random writes starting at the preset record
-    // address.
-    // The virtual size of a file corresponds to the physical size when the file
-    // is written sequentially. If the file was created in random mode and holes
-    // exist in the allocation, the file might contain fewer records than the
-    // size indicates. For example, if only the last record of an 8-megabyte
-    // file is written in random mode (that is, record number 65535), the
-    // virtual size is 65536 records, although only one block of data is
-    // actually allocated.
-    let mut fcb = Fcb::new(fcb_address, env.machine);
-    if env.call_trace {
-        print!("[[Size of {}]]", fcb.get_name());
-    }
-    let _ = compute_file_size_internal(&mut fcb);
-}
-
-fn compute_file_size_internal(fcb: &mut Fcb) -> io::Result<()> {
-    let paths = find_host_files(fcb.get_name(), false)?;
-    let os_file = fs::File::open(&paths[0])?;
-
-    let file_size = os_file.metadata()?.len();
-    let mut record = file_size / RECORD_SIZE as u64;
-    if record % RECORD_SIZE as u64 != 0 {
-        // We need integer division rounding up.
-        record += 1;
-    }
-
-    record += 1;
-    if record >= 65536 {
-        record = 65536;
-    }
-    fcb.set_random_record_number(record as u32);
-
-    Ok(())
 }
 
 pub fn set_random_record(env: &mut BdosEnvironment, fcb_address: u16) {
@@ -447,12 +360,12 @@ pub fn set_random_record(env: &mut BdosEnvironment, fcb_address: u16) {
     // a particular point in the file, Function 36 is called, which sets the
     // record number, and subsequent random read and write operations continue
     // from the selected point in the file.
-    let mut fcb = Fcb::new(fcb_address, env.machine);
+    let mut fcb = Fcb::new(fcb_address);
     if env.call_trace {
-        print!("[[Set pos of {}]]", fcb.get_name());
+        print!("[[Set pos of {}]]", fcb.get_name(env));
     }
-    let record = fcb.get_sequential_record_number();
-    fcb.set_random_record_number(record as u32);
+    let record = fcb.get_sequential_record_number(env);
+    fcb.set_random_record_number(env, record as u32);
 }
 
 pub fn search_first(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
@@ -474,13 +387,14 @@ pub fn search_first(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // function is not normally used by application programs, but it allows
     // complete flexibility to scan all current directory values. If the dr
     // field is not a question mark, the s2 byte is automatically zeroed. 
-    let fcb = Fcb::new(fcb_address, env.machine);
+    let fcb = Fcb::new(fcb_address);
     if env.call_trace {
-        print!("[[DIR start {}]]", fcb.get_name());
+        print!("[[DIR start {}]]", fcb.get_name(env));
     }
-    env.state.dir_pattern = fcb.get_name();
+    env.state.dir_drive = fcb.get_drive(env);
+    env.state.dir_pattern = fcb.get_name(env);
     env.state.dir_pos = 0;
-    search_nth(env)
+    search_nth(env).unwrap_or(FILE_NOT_FOUND)
 }
 
 pub fn search_next(env: &mut BdosEnvironment) -> u8 {
@@ -488,42 +402,167 @@ pub fn search_next(env: &mut BdosEnvironment) -> u8 {
     // that the directory scan continues from the last matched entry. Similar to
     // Function 17, Function 18 returns the decimal value 255 in A when no more
     // directory items match. 
-    search_nth(env)
+    search_nth(env).unwrap_or(FILE_NOT_FOUND)
 }
 
-fn search_nth(env: &mut BdosEnvironment) -> u8 {
-    // For search_first and search_next, I will store a global index for the
-    // position. I don't know if BDOS was storing the state on the FCB or
-    // globally.
-    let mut i = 0 as u16;
-    match fs::read_dir("./") {
-        Err(_) => FILE_NOT_FOUND,
-        Ok(dir) => {
-            for entry in dir {
-                if let Ok(file) = entry {
-                    if let Ok(file_type) = file.file_type() {
-                        if file_type.is_file() {
-                            let os_name = file.file_name();
-                            if let Some(cpm_name) = name_to_8_3(&os_name.to_string_lossy()) {
-                                if name_match(&cpm_name, &env.state.dir_pattern) {
-                                    // Fits the pattern
-                                    if i == env.state.dir_pos {
-                                        // This is the one to show
-                                        build_directory_entry(&mut env.state.buffer, cpm_name);
-                                        env.state.dir_pos += 1;
-                                        env.load_buffer();
-                                        return DIRECTORY_CODE;
-                                    }
-                                    i += 1;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            FILE_NOT_FOUND // No more items
+pub fn compute_file_size(env: &mut BdosEnvironment, fcb_address: u16) {
+    // When computing the size of a file, the DE register pair addresses an FCB
+    // in random mode format (bytes r0, r1, and r2 are present). The FCB
+    // contains an unambiguous filename that is used in the directory scan. Upon
+    // return, the random record bytes contain the virtual file size, which is,
+    // in effect, the record address of the record following the end of the
+    // file. Following a call to Function 35, if the high record byte r2 is 01,
+    // the file contains the maximum record count 65536. Otherwise, bytes r0 and
+    // r1 constitute a 16-bit value as before (r0 is the least significant
+    // byte), which is the file size.
+    // Data can be appended to the end of an existing file by simply calling
+    // Function 35 to set the random record position to the end-of-file and then
+    // performing a sequence of random writes starting at the preset record
+    // address.
+    // The virtual size of a file corresponds to the physical size when the file
+    // is written sequentially. If the file was created in random mode and holes
+    // exist in the allocation, the file might contain fewer records than the
+    // size indicates. For example, if only the last record of an 8-megabyte
+    // file is written in random mode (that is, record number 65535), the
+    // virtual size is 65536 records, although only one block of data is
+    // actually allocated.
+    let mut fcb = Fcb::new(fcb_address);
+    if env.call_trace {
+        print!("[[Size of {}]]", fcb.get_name(env));
+    }
+    let size = compute_file_size_internal(env, &fcb);
+    match size {
+        Err(_) => (),
+        Ok(size) => {
+            fcb.set_random_record_number(env, size);
         }
     }
+}
+
+fn compute_file_size_internal(env: &mut BdosEnvironment, fcb: &Fcb) -> io::Result<u32> {
+    let paths = find_host_files(env, fcb, false)?;
+    let os_file = fs::File::open(&paths[0])?;
+
+    let file_size = os_file.metadata()?.len();
+    let mut record = file_size / RECORD_SIZE as u64;
+    if record % RECORD_SIZE as u64 != 0 {
+        // We need integer division rounding up.
+        record += 1;
+    }
+
+    record += 1;
+    if record >= 65536 {
+        record = 65536;
+    }
+    Ok(record as u32)
+}
+
+fn find_host_files(env: &mut BdosEnvironment, fcb: &Fcb, wildcard: bool) -> io::Result<Vec<OsString>> {
+    let fcb_drive = fcb.get_drive(env);
+    let path = env.get_directory(fcb_drive)
+        .ok_or(io::Error::new(io::ErrorKind::Other, "No directory assigned to drive"))?;
+    let dir = fs::read_dir(path)?;
+    let mut files = Vec::new();
+    for entry in dir {
+        let entry = entry?;
+        if entry.file_type()?.is_file() {
+            let fcb_name = fcb.get_name(env);
+            let cpm_name = name_to_8_3(&entry.file_name().to_string_lossy());
+            if let Some(cpm_name) = cpm_name {
+                if cpm_name == fcb_name || (wildcard && name_match(&cpm_name, &fcb_name)) {
+                    // File found
+                    files.push(entry.path().into_os_string());
+                }
+            }
+        }
+    }
+    if files.len() == 0 {
+        Err(io::Error::new(io::ErrorKind::NotFound, "Empty drive"))
+    } else {
+        Ok(files)
+    }
+}
+
+fn create_file(env: &mut BdosEnvironment, fcb: &Fcb) -> io::Result<()> {
+    let fcb_drive = fcb.get_drive(env);
+    let path = env.get_directory(fcb_drive)
+        .ok_or(io::Error::new(io::ErrorKind::Other, "No directory assigned to drive"))?;
+    let file = Path::new(&path).join(fcb.get_name_host(env));
+    fs::File::create(&file)?;
+    Ok(())
+}
+
+fn read_record_in_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16) -> io::Result<u8> {
+    let paths = find_host_files(env, fcb, false)?;
+    let mut os_file = fs::File::open(&paths[0])?;
+
+    let file_offset = record as u64 * RECORD_SIZE as u64;
+    if file_offset >= os_file.metadata()?.len() {
+        return Ok(1); // End of file
+    }
+
+    os_file.seek(io::SeekFrom::Start(file_offset))?;
+    let size = os_file.read(&mut env.state.buffer)?;
+
+    // Fill with zeros
+    for i in size..RECORD_SIZE {
+        env.state.buffer[i] = 26; // (CTRL-Z)
+    }
+    Ok(0)
+}
+
+fn write_record_from_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16) -> io::Result<u8> {
+    let paths = find_host_files(env, fcb, false)?;
+    let mut os_file = fs::OpenOptions::new().write(true).open(&paths[0])?;
+
+    let file_offset = record as u64 * RECORD_SIZE as u64;
+    let file_pos = os_file.seek(io::SeekFrom::Start(file_offset))?;
+
+    if file_offset > file_pos {
+        // We want to write past the end of the file. Seek wasn't able to get
+        // there, so we will complete the holes with zeros as needed.
+        let zero = [0 as u8];
+        let needed = file_offset - file_pos;
+        for _ in 0..needed {
+            os_file.write(&zero)?;
+        }
+    }
+
+    os_file.write_all(& env.state.buffer)?;
+    Ok(0)
+}
+
+
+
+fn search_nth(env: &mut BdosEnvironment) -> io::Result<u8> {
+    // For search_first and search_next, I will store a global index for the
+    // position. I don't know if BDOS was storing the state on the FCB or
+    // globally. [Later] Yes, it does.
+    let path = env.get_directory(env.state.dir_drive)
+        .ok_or(io::Error::new(io::ErrorKind::Other, "No directory assigned to drive"))?;
+    let dir = fs::read_dir(path)?;
+
+    let mut i = 0 as u16;
+    for entry in dir {
+        let file = entry?;
+        if file.file_type()?.is_file() {
+            let os_name = file.file_name();
+            if let Some(cpm_name) = name_to_8_3(&os_name.to_string_lossy()) {
+                if name_match(&cpm_name, &env.state.dir_pattern) {
+                    // Fits the pattern
+                    if i == env.state.dir_pos {
+                        // This is the one to show
+                        build_directory_entry(&mut env.state.buffer, cpm_name);
+                        env.state.dir_pos += 1;
+                        env.load_buffer();
+                        return Ok(DIRECTORY_CODE);
+                    }
+                    i += 1;
+                }
+            }
+        }
+    }
+    Ok(FILE_NOT_FOUND) // No more items
 }
 
 fn build_directory_entry(buffer: &mut [u8], cpm_name: String) {
@@ -550,28 +589,6 @@ fn build_directory_entry(buffer: &mut [u8], cpm_name: String) {
     buffer[32] = 0xe5;
     buffer[64] = 0xe5;
     buffer[96] = 0xe5;
-}
-
-fn find_host_files(name: String, wildcard: bool) -> io::Result<Vec<OsString>> {
-    let dir = fs::read_dir("./")?;
-    let mut files = Vec::new();
-    for entry in dir {
-        let entry = entry?;
-        if entry.file_type()?.is_file() {
-            let cpm_name = name_to_8_3(&entry.file_name().to_string_lossy());
-            if let Some(cpm_name) = cpm_name {
-                if cpm_name == name || (wildcard && name_match(&cpm_name, &name)) {
-                    // File found
-                    files.push(entry.path().into_os_string());
-                }
-            }
-        }
-    }
-    if files.len() == 0 {
-        Err(io::Error::new(io::ErrorKind::NotFound, ""))
-    } else {
-        Ok(files)
-    }
 }
 
 // An ambiguous file reference is used for directory search and pattern

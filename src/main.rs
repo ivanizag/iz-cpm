@@ -153,12 +153,12 @@ fn main() {
             let mut parts = p.split_ascii_whitespace();
             if let Some(arg1) = parts.next() {
                 if let Some(file1) = name_to_8_3(arg1) {
-                    Fcb::new(FCB1_ADDRESS, &mut machine).set_name(file1);
+                    Fcb::new(FCB1_ADDRESS).set_name_direct(&mut machine, file1);
                 }
             }
             if let Some(arg2) = parts.next() {
                 if let Some(file2) = name_to_8_3(arg2) {
-                    Fcb::new(FCB2_ADDRESS, &mut machine).set_name(file2);
+                    Fcb::new(FCB2_ADDRESS).set_name_direct(&mut machine, file2);
                 }
             }
         }
