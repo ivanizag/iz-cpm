@@ -13,16 +13,15 @@ pub fn select(env: &mut BdosEnvironment, selected: u8) {
     // = 00H) automatically reference the currently selected default drive.
     // Drive code values between 1 and 16 ignore the selected default drive and
     // directly reference drives A through P.
-    let drive = selected & 0x0f;
-    env.set_drive(drive);
-    env.state.selected_bitmap |= 1 << drive;
+    env.state.drive = selected & 0x0f;
+    env.state.selected_bitmap |= 1 << env.state.drive;
 }
 
 pub fn get_current(env: &BdosEnvironment) -> u8 {
     // Function 25 returns the currently selected default disk number in
     // register A. The disk numbers range from 0 through 15 corresponding to
     // drives A through P.
-    env.drive()
+    env.state.drive
 }
 
 pub fn get_log_in_vector(env: &BdosEnvironment) -> u16 {
@@ -43,8 +42,7 @@ pub fn set_disk_read_only(env: &mut BdosEnvironment) {
     // the currently selected disk. Any attempt to write to the disk before the
     // next cold or warm start operation produces the message:
     //      BDOS ERR on d: R/O
-    let drive = env.drive();
-    env.state.read_only_bitmap |= 1 << drive;
+    env.state.read_only_bitmap |= 1 << env.state.drive;
 }
 
 pub fn get_read_only_vector(env: &BdosEnvironment) -> u16 {
@@ -90,8 +88,7 @@ pub fn reset_drives(env: &mut BdosEnvironment, drives: u16) -> u8 {
     env.state.read_only_bitmap &= !drives;
 
     // Select current drive
-    let drive = env.drive();
-    env.state.selected_bitmap |= 1 << drive;
+    env.state.selected_bitmap |= 1 << env.state.drive;
 
     0
 }

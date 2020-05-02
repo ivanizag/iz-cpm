@@ -12,6 +12,8 @@ pub const ERR_BAD_SECTOR: &'static str = "Bad Sector";
 pub const ERR_DRIVE_READ_ONLY: &'static str = "R/O";
 
 pub struct BdosState {
+    pub user: u8,
+    pub drive: u8,
     // Drive
     pub selected_bitmap: u16,
     pub read_only_bitmap: u16,
@@ -29,6 +31,8 @@ pub struct BdosState {
 impl BdosState {
     pub fn new() -> BdosState {
         BdosState {
+            user: 0,
+            drive: 0,
             selected_bitmap: 1<<0,
             read_only_bitmap: 0,
             directories: [None, None, None, None, None, None, None, None,
@@ -42,6 +46,8 @@ impl BdosState {
     }
 
     pub fn reset(&mut self) {
+        self.user = 0;
+        self.drive = 0;
         self.selected_bitmap = 1<<0;
         self.read_only_bitmap = 0;
         self.dma =  DEFAULT_DMA;
@@ -67,22 +73,6 @@ impl <'a> BdosEnvironment<'_> {
         BdosEnvironment { state, bios, machine, call_trace}
     }
 
-    pub fn user(&self) -> u8 {
-        self.machine.peek(USER_DRIVE_ADDRESS) >> 4
-    }
-    pub fn set_user(&mut self, user: u8) {
-        let current = self.machine.peek(USER_DRIVE_ADDRESS);
-        self.machine.poke(USER_DRIVE_ADDRESS, (current & 0xf0) | (user << 4)); 
-    }
-
-    pub fn drive(&self) -> u8 {
-        self.machine.peek(USER_DRIVE_ADDRESS) & 0x0f
-    }
-    pub fn set_drive(&mut self, drive: u8) {
-        let current = self.machine.peek(USER_DRIVE_ADDRESS);
-        self.machine.poke(USER_DRIVE_ADDRESS, (current & 0x0f) | drive); 
-    }
-
     pub fn iobyte(&self) -> u8 {
         self.machine.peek(IOBYTE_ADDRESS) & 0x0f
     }
@@ -104,7 +94,7 @@ impl <'a> BdosEnvironment<'_> {
 
     pub fn get_directory(&self, fcb_drive: u8, to_write: bool) -> Option<String> {
         let drive = if fcb_drive == 0 {
-            self.drive()
+            self.state.drive
         } else {
             fcb_drive - 1
         };

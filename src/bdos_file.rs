@@ -60,7 +60,7 @@ pub fn open(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // from the first record. 
     let mut fcb = Fcb::new(fcb_address);
     if env.call_trace {
-        print!("[[Open file {}]]", fcb.get_name(env));
+        print!("[[Open file {}]]", fcb.get_name_for_log(env));
     }
     match find_host_files(env, &fcb, false, false) {
         Err(_) => FILE_NOT_FOUND, // Error or file not found
@@ -88,7 +88,7 @@ pub fn make(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // and thus a subsequent open is not necessary.
     let mut fcb = Fcb::new(fcb_address);
     if env.call_trace {
-        print!("[[Create file {}]]", fcb.get_name(env));
+        print!("[[Create file {}]]", fcb.get_name_for_log(env));
     }
     match create_file(env, &fcb) {
         Err(_) => FILE_NOT_FOUND, // Error or file not found
@@ -126,7 +126,7 @@ pub fn delete(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // be found; otherwise, a value in the range 0 to 3 returned.
     let fcb = Fcb::new(fcb_address);
     if env.call_trace {
-        print!("[[Delete file {}]]", fcb.get_name(env));
+        print!("[[Delete file {}]]", fcb.get_name_for_log(env));
     }
 
     match find_host_files(env, &fcb, true, true) {
@@ -152,7 +152,7 @@ pub fn rename(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // the first filename could not be found in the directory scan. 
     let fcb = Fcb::new(fcb_address);
     if env.call_trace {
-        print!("[[Rename file {} to {}]]", fcb.get_name(env), fcb.get_name_secondary(env));
+        print!("[[Rename file {} to {}]]", fcb.get_name_for_log(env), fcb.get_name_secondary(env));
     }
     match find_host_files(env, &fcb, false, true) {
         Err(_) => FILE_NOT_FOUND, // Error or file not found
@@ -332,9 +332,9 @@ pub fn get_set_user_number(env: &mut BdosEnvironment, user: u8) -> u8 {
     modulo 16.
     */
     if user != 0xff {
-        env.set_user(user & 0x0f);
+        env.state.user = user & 0x0f;
     }
-    env.user()
+    env.state.user
 }
 
 pub fn set_random_record(env: &mut BdosEnvironment, fcb_address: u16) {
@@ -362,7 +362,7 @@ pub fn set_random_record(env: &mut BdosEnvironment, fcb_address: u16) {
     // from the selected point in the file.
     let mut fcb = Fcb::new(fcb_address);
     if env.call_trace {
-        print!("[[Set pos of {}]]", fcb.get_name(env));
+        print!("[[Set pos of {}]]", fcb.get_name_for_log(env));
     }
     let record = fcb.get_sequential_record_number(env);
     fcb.set_random_record_number(env, record as u32);
@@ -389,7 +389,7 @@ pub fn search_first(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // field is not a question mark, the s2 byte is automatically zeroed. 
     let fcb = Fcb::new(fcb_address);
     if env.call_trace {
-        print!("[[DIR start {}]]", fcb.get_name(env));
+        print!("[[DIR start {}]]", fcb.get_name_for_log(env));
     }
     env.state.dir_drive = fcb.get_drive(env);
     env.state.dir_pattern = fcb.get_name(env);
@@ -428,7 +428,7 @@ pub fn compute_file_size(env: &mut BdosEnvironment, fcb_address: u16) {
     // actually allocated.
     let mut fcb = Fcb::new(fcb_address);
     if env.call_trace {
-        print!("[[Size of {}]]", fcb.get_name(env));
+        print!("[[Size of {}]]", fcb.get_name_for_log(env));
     }
     let size = compute_file_size_internal(env, &fcb);
     match size {

@@ -36,9 +36,15 @@ impl Bdos {
         }
     }
 
-    pub fn setup(&self, machine: &mut CpmMachine) {
+    pub fn reset(&mut self, machine: &mut CpmMachine) {
+        self.state.reset();
+
+        // Setup BOOT entrypoint
         machine.poke(  BDOS_ENTRY_ADDRESS,   0xc3 /* jp BDOS_BASE_ADDRESS */);
         machine.poke16(BDOS_ENTRY_ADDRESS+1, BDOS_BASE_ADDRESS);
+
+        // Reset IOBYTE
+        machine.poke(IOBYTE_ADDRESS, 0);
 
         // We put ret on that address
         machine.poke(BDOS_BASE_ADDRESS, 0xc9 /*ret*/);
@@ -70,7 +76,7 @@ impl Bdos {
 
     pub fn execute(&mut self, bios: &mut Bios,
             machine: &mut CpmMachine, reg: &mut Registers,
-            call_trace: bool, call_trace_skip_console: bool) -> bool {
+            call_trace: bool, call_trace_skip_console: bool) -> ExecutionResult {
 
         // We do the BIOS actions outside the emulation.
         let pc = reg.pc();
@@ -97,15 +103,12 @@ impl Bdos {
                 // See https://www.seasip.info/Cpm/bdos.html
                 // See http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch5.htm
                 0 => { // P_TERM_CPM - System reset
-                    /*
-                    The System Reset function returns control to the CP/M
-                    operating system at the CCP level. The CCP reinitializes
-                    the disk subsystem by selecting and logging-in disk drive
-                    A. This function has exactly the same effect as a jump to
-                    location BOOT.
-                    */
-                    println!("BDOS reset");
-                    return true;
+                    // The System Reset function returns control to the CP/M
+                    // operating system at the CCP level. The CCP reinitializes
+                    // the disk subsystem by selecting and logging-in disk drive
+                    // A. This function has exactly the same effect as a jump to
+                    // location BOOT.
+                    return ExecutionResult::ColdBoot;
                 },
                 1 => { // C_READ - Console input
                     res8 = Some(bdos_console::read(env));
@@ -224,16 +227,14 @@ impl Bdos {
                 },
                 _ => {
                     eprintln!("BDOS command {} not implemented.\n", command);
-                    return true;
+                    return ExecutionResult::Stop;
                 }
             }
 
-            /*
-            Single byte values are returned in register A, with double
-            byte values returned in HL, a zero value is returned when the
-            function number is out of range. For reasons of compatibility,
-            register A = L and register B = H upon return in all cases.
-            */
+            // Single byte values are returned in register A, with double byte
+            // values returned in HL, a zero value is returned when the function
+            // number is out of range. For reasons of compatibility, register A
+            // = L and register B = H upon return in all cases.
             if let Some(a) = res8 {
                 reg.set8(Reg8::A, a);
                 reg.set8(Reg8::L, a);
@@ -249,7 +250,7 @@ impl Bdos {
                 }
             }
         }
-        false
+        ExecutionResult::Continue
     }
 }
 

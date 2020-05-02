@@ -140,6 +140,15 @@ impl Fcb {
         name
     }
 
+    pub fn get_name_for_log(&self, env: &mut BdosEnvironment) -> String {
+        let drive = self.get_drive(env);
+        if drive == 0 {
+            self.get_name_host(env)
+        } else {
+            format!("{}:{}", ('A' as u8 - 1 + drive) as char, self.get_name_host(env))
+        }
+    }
+
     pub fn get_sequential_record_number(&self, env: &mut BdosEnvironment) -> u16 {
         (EXTENT_SIZE as u16) * (self.get_byte(env, FCB_EXTENT_OFFSET) as u16)
         + (self.get_byte(env, FCB_CURRENT_RECORD_OFFSET) as u16)

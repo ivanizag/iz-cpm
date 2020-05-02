@@ -50,11 +50,11 @@ fn main() {
         .arg(Arg::with_name("call_trace")
             .short("t")
             .long("call-trace")
-            .help("Trace BDOS and BIOS calls"))
+            .help("Trace BDOS calls excluding screen I/O"))
         .arg(Arg::with_name("call_trace_all")
             .short("T")
             .long("call-trace-all")
-            .help("Trace BDOS and BIOS calls excluding screen I/O"))
+            .help("Trace BDOS and BIOS calls"))
         .arg(Arg::with_name("cpu_trace")
             .short("z")
             .long("cpu-trace")
@@ -84,8 +84,9 @@ fn main() {
     let params = matches.value_of("ARGS");
     let cpu_trace = matches.is_present("cpu_trace");
     let call_trace = matches.is_present("call_trace") || matches.is_present("call_trace_all");
-    let call_trace_skip_console = !matches.is_present("call_trace_all");
+    let call_trace_all = matches.is_present("call_trace_all");
     let slow = matches.is_present("slow");
+    let use_tpa = filename.is_none();
 
     // Init device
     let mut machine = CpmMachine::new();
@@ -95,7 +96,7 @@ fn main() {
     let mut bios = Bios::new();
     bios.setup(&mut machine);
     let mut bdos = Bdos::new();
-    bdos.setup(&mut machine);
+    bdos.reset(&mut machine);
 
     // Assign drives
     for i in 0..15 {
@@ -155,72 +156,68 @@ fn main() {
         machine.poke(binary_address + i as u16, binary[i]);
     }
 
-    // Copy parameters
-    /*
-    As an added convenience, the default buffer area at location BOOT+0080H is
-    initialized to the command line tail typed by the operator following the
-    program name. The first position contains the number of characters, with
-    the characters themselves following the character count. The characters are
-    translated to upper-case ASCII with uninitialized memory following the last
-    valid character. 
-    */
-    match params {
-        None => machine.poke(SYSTEM_PARAMS_ADDRESS, 0),
-        Some(p) => {
-            let mut len = p.len();
-            if len > 0x7E {
-                len = 0x7E; // Max 0x7E chars for parameters
-            }
-            machine.poke(SYSTEM_PARAMS_ADDRESS, (len + 1) as u8);
-            machine.poke(SYSTEM_PARAMS_ADDRESS, ' ' as u8);
-            let p_bytes = p.as_bytes();
-            for i in 0..len {
-                machine.poke(SYSTEM_PARAMS_ADDRESS + (i as u16) + 2, p_bytes[i]);
-            }
+    if !use_tpa {
+        // Upon entry to a transient program, the CCP leaves the stack pointer
+        // set to an eight-level stack area with the CCP return address pushed
+        // onto the stack, leaving seven levels before overflow occurs. 
+        if binary_address == TPA_BASE_ADDRESS {
+            let mut sp = TPA_STACK_ADDRESS;
+            // Push 0x0000
+            machine.poke(sp, (0x0000 >> 8) as u8);
+            sp -= 1;
+            machine.poke(sp, 0x0000 as u8);
+            sp -= 1;
+            cpu.registers().set16(Reg16::SP, sp);
+        }
 
-            /*
-            As a convenience, the CCP takes the first two parameters that appear
-            in the command tail, attempts to parse them as though they were file
-            names, and places the results in FCBI and FCB2. The results, in this
-            context, mean that the logical disk letter is converted to its FCB
-            representation, and the file name and type, converted to uppercase,
-            are placed in the FCB in the correct bytes.
-            In addition, any use of "*" in the file name is expanded to one or
-            more question marks. For example, a file name of "abc*.*" will be
-            converted to a name of "ABC!!???" and type of "???".
-            Notice that FCB2 starts only 16 bytes above FCBI, yet a normal FCB
-            is at least 33 bytes long (36 bytes if you want to use random access).
-            In many cases, programs only require a single file name. Therefore,
-            you can proceed to use FCBI straight away, not caring that FCB2 will
-            be overwritten.
-            */
-            let mut parts = p.split_ascii_whitespace();
-            if let Some(arg1) = parts.next() {
-                if let Some(file1) = name_to_8_3(arg1) {
-                    Fcb::new(FCB1_ADDRESS).set_name_direct(&mut machine, file1);
+        // Copy parameters As an added convenience, the default buffer area at
+        // location BOOT+0080H is initialized to the command line tail typed by
+        // the operator following the program name. The first position contains
+        // the number of characters, with the characters themselves following
+        // the character count. The characters are translated to upper-case
+        // ASCII with uninitialized memory following the last valid character. 
+        match params {
+            None => machine.poke(SYSTEM_PARAMS_ADDRESS, 0),
+            Some(p) => {
+                let mut len = p.len();
+                if len > 0x7E {
+                    len = 0x7E; // Max 0x7E chars for parameters
                 }
-            }
-            if let Some(arg2) = parts.next() {
-                if let Some(file2) = name_to_8_3(arg2) {
-                    Fcb::new(FCB2_ADDRESS).set_name_direct(&mut machine, file2);
+                machine.poke(SYSTEM_PARAMS_ADDRESS, (len + 1) as u8);
+                machine.poke(SYSTEM_PARAMS_ADDRESS, ' ' as u8);
+                let p_bytes = p.as_bytes();
+                for i in 0..len {
+                    machine.poke(SYSTEM_PARAMS_ADDRESS + (i as u16) + 2, p_bytes[i]);
+                }
+
+                // As a convenience, the CCP takes the first two parameters that
+                // appear in the command tail, attempts to parse them as though
+                // they were file names, and places the results in FCBI and
+                // FCB2. The results, in this context, mean that the logical
+                // disk letter is converted to its FCB representation, and the
+                // file name and type, converted to uppercase, are placed in the
+                // FCB in the correct bytes. In addition, any use of "*" in the
+                // file name is expanded to one or more question marks. For
+                // example, a file name of "abc*.*" will be converted to a name
+                // of "ABC!!???" and type of "???". Notice that FCB2 starts only
+                // 16 bytes above FCBI, yet a normal FCB is at least 33 bytes
+                // long (36 bytes if you want to use random access). In many
+                // cases, programs only require a single file name. Therefore,
+                // you can proceed to use FCBI straight away, not caring that
+                // FCB2 will be overwritten.
+                let mut parts = p.split_ascii_whitespace();
+                if let Some(arg1) = parts.next() {
+                    if let Some(file1) = name_to_8_3(arg1) {
+                        Fcb::new(FCB1_ADDRESS).set_name_direct(&mut machine, file1);
+                    }
+                }
+                if let Some(arg2) = parts.next() {
+                    if let Some(file2) = name_to_8_3(arg2) {
+                        Fcb::new(FCB2_ADDRESS).set_name_direct(&mut machine, file2);
+                    }
                 }
             }
         }
-    }
-
-    /*
-    Upon entry to a transient program, the CCP leaves the stack pointer set to
-    an eight-level stack area with the CCP return address pushed onto the stack,
-    leaving seven levels before overflow occurs. 
-    */
-    if binary_address == TPA_BASE_ADDRESS {
-        let mut sp = TPA_STACK_ADDRESS;
-        // Push 0x0000
-        machine.poke(sp, (0x0000 >> 8) as u8);
-        sp -= 1;
-        machine.poke(sp, 0x0000 as u8);
-        sp -= 1;
-        cpu.registers().set16(Reg16::SP, sp);
     }
 
     // Prepare terminal
@@ -237,31 +234,56 @@ fn main() {
     loop {
         cpu.execute_instruction(&mut machine);
 
-        let pc = cpu.registers().pc();
-
         if cpu.is_halted() {
             println!("HALT instruction");
             break;
         }
 
-        if bios.execute(cpu.registers(), call_trace) {
-            println!("Terminated");
-            break;
+        let mut er = bios.execute(cpu.registers(), call_trace_all);
+        if er == ExecutionResult::Continue {
+            er = bdos.execute(&mut bios, &mut machine, cpu.registers(),
+                call_trace || call_trace_all, call_trace && ! call_trace_all);
         }
 
-        if bdos.execute(&mut bios, &mut machine, cpu.registers(), call_trace, call_trace_skip_console) {
-            break;
-        }
+    
+        match er {
+            ExecutionResult::Continue => (),
+            ExecutionResult::Stop => {
+                break;
+            },
+            ExecutionResult::WarmBoot => {
+                if call_trace || call_trace_all {
+                    print!("[[Warm boot]]");
+                }
+                if use_tpa {
+                    for i in 0..binary_size {
+                        machine.poke(binary_address + i as u16, binary[i]);
+                    }
+                    cpu.registers().set_pc(binary_address);
+                    let user_drive = machine.peek(CCP_USER_DRIVE_ADDRESS);
+                    cpu.registers().set8(Reg8::C, user_drive);
+                } else {
+                    break;
+                }
+            },
+            ExecutionResult::ColdBoot => {
+                if call_trace || call_trace_all {
+                    print!("[[Cold boot]]");
+                }
+                if use_tpa {
+                    bdos.reset(&mut machine);
+                    for i in 0..binary_size {
+                        machine.poke(binary_address + i as u16, binary[i]);
+                    }
+                    cpu.registers().set_pc(binary_address);
+                    cpu.registers().set8(Reg8::C, 0); // Reset user and drive
+                    bdos.reset(&mut machine); // Reset Bdos
+                } else {
+                    break;
+                }
+            }
+            
 
-        if pc == RESTART_ADDRESS {
-            println!("Terminated by JMP 0000h");
-            break;
-        }
-
-        if pc == BDOS_BASE_ADDRESS - 1 {
-            // Guard to detect code reaching BDOS (usually NOPs)
-            println!("Executing into BDOS area");
-            break;
         }
 
         if slow {

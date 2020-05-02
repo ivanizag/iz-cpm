@@ -32,11 +32,11 @@ rm mbasic.zip
 
 # Game of Ladder for CP/M
 wget http://www.retroarchive.org/cpm/misc/LADDER.ZIP
-unzip -u -d sofware/ladder LADDER.ZIP
+unzip -u -d software/ladder LADDER.ZIP
 rm LADDER.ZIP
 
 # Zork I, II & III for CP/M-80
 wget http://www.retroarchive.org/cpm/games/zork123_80.zip
-unzip -u -d sofware/zork zork123_80.zip
+unzip -u -d software/zork zork123_80.zip
 rm zork123_80.zip
 

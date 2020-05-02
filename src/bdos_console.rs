@@ -54,10 +54,8 @@ pub fn read_string(env: &mut BdosEnvironment, address: u16) -> u8 {
     // TODO: Process controls characters
     let max_size = env.machine.peek(address + 0);
     let mut size = 0;
-    let mut pos = address + 2;
     loop {
         let ch = env.bios.read();
-        env.bios.write(ch);
         if env.bios.stop() {
             break;
         }
@@ -65,15 +63,15 @@ pub fn read_string(env: &mut BdosEnvironment, address: u16) -> u8 {
             break;
         }
         if ch == 127 { // DEL
-            if pos > 0 {
+            if size > 0 {
                 size -= 1;
-                pos -= 1;
+                env.bios.write(ch);
             }
             continue;
         }
-        env.machine.poke(pos, ch);
+        env.bios.write(ch);
+        env.machine.poke(address + 2 + size as u16, ch);
         size += 1;
-        pos += 1;
         if size >= max_size {
             // The buffer is full
             break;

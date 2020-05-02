@@ -120,10 +120,10 @@ impl Bios {
         self.ctrl_c_count > 1
     }
 
-    pub fn execute(&mut self, reg: &mut Registers, call_trace: bool) -> bool {
+    pub fn execute(&mut self, reg: &mut Registers, call_trace: bool) -> ExecutionResult {
         if self.stop() {
             // Stop with two control-c
-            return true;
+            return ExecutionResult::Stop;
         }
 
         let pc = reg.pc();
@@ -161,53 +161,46 @@ impl Bios {
             match command {
                 0 => { // BOOT: Cold Start Routine
                     println!("Terminated. cold restart");
-                    return true;
+                    return ExecutionResult::ColdBoot;
                 }
                 1 => { // WBOOT: Warm boot.
                     // Reload command processor. We will go back to the host.
-                    println!("Terminated, warm restart");
-                    return true;
+                    return ExecutionResult::WarmBoot;
                 }
                 2 => { // CONST: Check for console ready
-                    /*
-                    You should sample the status of the currently assigned
-                    console device and return 0FFH in register A if a
-                    character is ready to read and 00H in register A if no
-                    console characters are ready. 
-                    */
-                    let res8 = self.status();
+                    // You should sample the status of the currently assigned
+                    // console device and return 0FFH in register A if a
+                    // character is ready to read and 00H in register A if no
+                    // console characters are ready. 
+                let res8 = self.status();
                     reg.set_a(res8);
                 }
                 3 => { // CONIN: Console Input
-                    /*
-                    The next console character is read into register A, and
-                    the parity bit is set, high-order bit, to zero. If no
-                    console character is ready, wait until a character is
-                    typed before returning. 
-                    */
+                    // The next console character is read into register A, and
+                    // the parity bit is set, high-order bit, to zero. If no
+                    // console character is ready, wait until a character is
+                    // typed before returning. 
                     let res8 = self.read();
                     reg.set_a(res8);
                 }
                 4 => {  // CONOUT: Console Output
-                    /*
-                    The character is sent from register C to the console output
-                    device. The character is in ASCII, with high-order parity
-                    bit set to zero. You might want to include a time-out on a
-                    line-feed or carriage return, if the console device
-                    requires some time interval at the end of the line (such as
-                    a TI Silent 700 terminal). You can filter out control
-                    characters that cause the console device to react in a
-                    strange way (CTRL-Z causes the Lear- Siegler terminal to
-                    clear the screen, for example). 
-                    */
+                    // The character is sent from register C to the console
+                    // output device. The character is in ASCII, with high-order
+                    // parity bit set to zero. You might want to include a
+                    // time-out on a line-feed or carriage return, if the
+                    // console device requires some time interval at the end of
+                    // the line (such as a TI Silent 700 terminal). You can
+                    // filter out control characters that cause the console
+                    // device to react in a strange way (CTRL-Z causes the Lear-
+                    // Siegler terminal to clear the screen, for example). 
                     self.write(reg.get8(Reg8::C));
                 }
                 _ => {
                     eprintln!("BIOS command {} not implemented.\n", command);
-                    return true;
+                    return ExecutionResult::Stop;
                 }    
             }
         }
-        false
+        ExecutionResult::Continue
     }
 }
