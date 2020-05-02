@@ -19,7 +19,7 @@ const BDOS_COMMAND_NAMES: [&'static str; 41] = [
     "F_READ", "F_WRITE", "F_MAKE", "F_RENAME", "DRV_LOGINVEC",
     "DRV_GET", "F_DMAOFF", "DRV_ALLOCVEC", "DRV_SETRO", "DRV_ROVEC",
     // 30
-    "*F_ATTRIB", "DRV_DPB", "F_USERNUM", "F_READRAND", "F_WRITERAND",
+    "F_ATTRIB", "DRV_DPB", "F_USERNUM", "F_READRAND", "F_WRITERAND",
     "F_SIZE", "F_RANDREC", "DRV_RESET", "*", "",
     // 40
     "F_WRITEZ"];
@@ -199,8 +199,10 @@ impl Bdos {
                 }
                 29 => { // DRV_ROVEC - Get read-only vector
                     res16 = Some(bdos_drive::get_read_only_vector(env));
-                }
-                // "F_ATTRIB"
+                },
+                30 => { // F_ATTRIB - Set File Attributes
+                    res8 = Some(bdos_file::set_attributes(env, arg16))
+                },
                 31 => { // DRV_DPB - Get disk parameter block
                     res16 = Some(bdos_drive::get_disk_parameter_block(env));
                 },
