@@ -10,7 +10,7 @@ use super::constants::*;
 use super::terminal::Terminal;
 
 pub struct Bios {
-    initial_termios: Termios,
+    initial_termios: Option<Termios>,
     terminal: Terminal,
     next_char: Option<u8>,
     ctrl_c_count: u8
@@ -27,14 +27,16 @@ const BIOS_RET_TRAP_START: u16 = BIOS_BASE_ADDRESS + 0x80;
 
 const STDIN_FD: i32 = 0;
 
-pub fn restore_host_terminal(value: &Termios) {
-    tcsetattr(STDIN_FD, TCSANOW, &value).unwrap();
+pub fn restore_host_terminal(value: &Option<Termios>) {
+    if let Some(termios) = value {
+        tcsetattr(STDIN_FD, TCSANOW, &termios).unwrap();
+    }
 }
 
 impl Bios {
     pub fn new() -> Bios {
         Bios {
-            initial_termios: Termios::from_fd(STDIN_FD).unwrap(),
+            initial_termios: Termios::from_fd(STDIN_FD).ok(),
             terminal: Terminal::new(),
             next_char: None,
             ctrl_c_count: 0
@@ -59,15 +61,17 @@ impl Bios {
     }
 
     pub fn setup_host_terminal(&self, blocking: bool) {
-        let mut new_term = self.initial_termios.clone();
-        new_term.c_iflag &= !(IXON | ICRNL);
-        new_term.c_lflag &= !(ISIG | ECHO | ICANON | IEXTEN);
-        new_term.c_cc[VMIN] = if blocking {1} else {0};
-        new_term.c_cc[VTIME] = 0;
-        tcsetattr(STDIN_FD, TCSANOW, &new_term).unwrap();
+        if let Some(initial) = self.initial_termios {
+            let mut new_term = initial.clone();
+            new_term.c_iflag &= !(IXON | ICRNL);
+            new_term.c_lflag &= !(ISIG | ECHO | ICANON | IEXTEN);
+            new_term.c_cc[VMIN] = if blocking {1} else {0};
+            new_term.c_cc[VTIME] = 0;
+            tcsetattr(STDIN_FD, TCSANOW, &new_term).unwrap();
+        }
     }
 
-    pub fn initial_terminal(&self) -> Termios {
+    pub fn initial_terminal(&self) -> Option<Termios> {
         self.initial_termios.clone()
     }
 
