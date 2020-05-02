@@ -118,8 +118,8 @@ ARGS:
 
 ## Features
 
-- Execute 8080 and Z80 binaries on top of CP/M
-- Uses directly the host computer filesystem
+- Execution of 8080 and Z80 binaries on top of CP/M
+- Direct usage of the host computer filesystem
 - Terminal emulation of ADM-3A as used in the KAYPRO computers
 - Z80 emulation validated with ZEXALL
 - Z80 execution tracing

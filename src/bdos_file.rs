@@ -142,6 +142,28 @@ pub fn delete(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     }
 }
 
+pub fn set_attributes(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
+    // The Set File Attributes function allows programmatic manipulation of
+    // permanent indicators attached to files. In particular, the R/O and System
+    // attributes (t1' and t2') can be set or reset. The DE pair addresses an
+    // unambiguous filename with the appropriate attributes set or reset.
+    // Function 30 searches for a match and changes the matched directory entry
+    // to contain the selected indicators. Indicators f1' through f4' are not
+    // currently used, but may be useful for applications programs, since they
+    // are not involved in the matching process during file open and close
+    // operations. Indicators f5' through f8' and t3' are reserved for future
+    // system expansion.
+    let fcb = Fcb::new(fcb_address);
+    if env.call_trace {
+        print!("[[Set attribuyes {}]]", fcb.get_name_for_log(env));
+    }
+
+    match find_host_files(env, &fcb, false, true) {
+        Err(_) => FILE_NOT_FOUND, // Error or file not found
+        Ok(_) => DIRECTORY_CODE // TODO: Do something with this.
+    }
+}
+
 pub fn rename(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // The Rename function uses the FCB addressed by DE to change all
     // occurrences of the file named in the first 16 bytes to the file named in
