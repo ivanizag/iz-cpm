@@ -10,7 +10,7 @@ wget http://www.retroarchive.org/cpm/text/Wskpro33.zip
 unzip -u -d software/wordstar33 Wskpro33.zip
 rm Wskpro33.zip
 
-#
+# Two versions of Lisp
 wget http://www.retroarchive.org/cpm/lang/lisp80.zip
 unzip -u -d software/lisp80 lisp80.zip
 rm lisp80.zip

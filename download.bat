@@ -9,7 +9,7 @@ powershell -Command "Invoke-WebRequest http://www.retroarchive.org/cpm/text/Wskp
 powershell -Command "Expand-Archive -DestinationPath software/wordstar33 -LiteralPath Wskpro33.zip"
 del Wskpro33.zip
 
-# Two versions of Lisp
+:: Two versions of Lisp
 powershell -Command "Invoke-WebRequest http://www.retroarchive.org/cpm/lang/lisp80.zip -OutFile lisp80.zip"
 powershell -Command "Expand-Archive -DestinationPath software/lisp80 -LiteralPath lisp80.zip"
 del lisp80.zip
