@@ -128,7 +128,6 @@ dependencies = [
  "clap",
  "crossterm",
  "iz80",
- "scopeguard",
  "termios",
 ]
 

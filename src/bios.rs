@@ -4,14 +4,8 @@ use super::constants::*;
 
 #[cfg(windows)]
 use super::console_windows::Console;
-
-/*
-pub trait Console {
-    fn status(&self) -> bool;
-    fn read(&self) -> u8;
-    fn put(&self, char: u8);
-}
-*/
+#[cfg(unix)]
+use super::console_unix::Console;
 
 pub struct Bios{
     console: Console,

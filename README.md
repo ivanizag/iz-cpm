@@ -151,3 +151,4 @@ To emulate this environment using the host filesystem, we have to provide a repl
 ## TODO
 - Proper documentation
 - File level read-only option
+- Verify in Mac

@@ -1,43 +1,32 @@
-use termios::*;
-use translate::*;
+use std::io::{Read, stdin, Write, stdout};
 use std::thread;
 use std::time::Duration;
 
-#[macro_use(defer)] extern crate scopeguard;
+use termios::*;
 
+use super::translate::Adm3aToAnsi;
 
 const STDIN_FD: i32 = 0;
 
 pub struct Console {
     initial_termios: Option<Termios>,
     next_char: Option<u8>,
-    translator: Adm3aToAnsi,
+    translator: Adm3aToAnsi
 }
 
 impl Console {
-    pun fn new() -> Console {
-        Console {
-            initial_termios: Termios::from_fd(STDIN_FD).ok(),
+    pub fn new() -> Console {
+        // Prepare terminal
+        let initial_termios = Termios::from_fd(STDIN_FD).ok();
+
+        let c = Console {
+            initial_termios: initial_termios,
             next_char: None,
-            translator: Adm3AToAnsi::new(),
-        }
-    }
+            translator: Adm3aToAnsi::new(),
+        };
 
-/*
-    // Prepare terminal
-    let initial_terminal = bios.initial_terminal();
-    bios.setup_host_terminal(false);
-    defer! {
-        bios::restore_host_terminal(&initial_terminal);
-    }
-
-*/
-
-    fn restore(&self) {
-        if let Some(termios) = value {
-            tcsetattr(STDIN_FD, TCSANOW, &termios).unwrap();
-        }
-
+        c.setup_host_terminal(false);
+        c
     }
 
     fn setup_host_terminal(&self, blocking: bool) {
@@ -50,7 +39,7 @@ impl Console {
             tcsetattr(STDIN_FD, TCSANOW, &new_term).unwrap();
         }
     }
-    
+
     pub fn status(&mut self) -> bool {
         match self.next_char {
             Some(_) => true,
@@ -85,8 +74,8 @@ impl Console {
             }
         }
     }
-    
-    fn put(&self, ch: u8) {
+
+    pub fn put(&mut self, ch: u8) {
         if let Some(sequence) = self.translator.translate(ch) {
             print!("{}", sequence);
             stdout().flush().unwrap();
@@ -94,3 +83,10 @@ impl Console {
     }
 }
 
+impl Drop for Console {
+    fn drop(&mut self) {
+        if let Some(initial) = self.initial_termios {
+            tcsetattr(STDIN_FD, TCSANOW, &initial).unwrap();
+        }
+    }
+}

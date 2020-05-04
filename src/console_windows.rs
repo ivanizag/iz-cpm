@@ -1,7 +1,6 @@
 use std::io::{Write, stdout};
 use std::time::Duration;
 
-//#[macro_use(defer)] extern crate scopeguard;
 use crossterm::terminal;
 use crossterm::event;
 
@@ -15,9 +14,6 @@ pub struct Console {
 impl Console {
     pub fn new() -> Console {
         terminal::enable_raw_mode().unwrap();
-        //defer! {
-        //    terminal::disable_raw_mode().unwrap();
-        //}
     
         Console {
             next_char: None,
@@ -66,12 +62,18 @@ impl Console {
             }
         }
     }
-    
+
     pub fn put(&mut self, ch: u8) {
         if let Some(sequence) = self.translator.translate(ch) {
             print!("{}", sequence);
             stdout().flush().unwrap();
         }
+    }
+}
+
+impl Drop for Console {
+    fn drop(&mut self) {
+        terminal::disable_raw_mode().unwrap();
     }
 }
 

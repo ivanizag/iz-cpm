@@ -21,6 +21,8 @@ mod translate;
 
 #[cfg(windows)]
 mod console_windows;
+#[cfg(unix)]
+mod console_unix;
 
 use self::bdos::Bdos;
 use self::bios::Bios;

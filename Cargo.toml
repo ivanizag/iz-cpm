@@ -12,7 +12,6 @@ path = "src/main.rs"
 iz80 = "^0.2.2"
 #iz80 = {path = "../iz80"}
 clap = "^2"
-scopeguard = "^1.1"
 
 [target.'cfg(windows)'.dependencies]
 crossterm = "^0.17"
