@@ -5,10 +5,7 @@ use std::process;
 use std::thread;
 use std::time::Duration;
 
-
 use clap::{Arg, App};
-#[macro_use(defer)] extern crate scopeguard;
-
 use iz80::*;
 
 mod bdos;
@@ -20,12 +17,15 @@ mod bdos_environment;
 mod bdos_file;
 mod cpm_machine;
 mod fcb;
-mod terminal;
+mod translate;
+
+#[cfg(windows)]
+mod console_windows;
 
 use self::bdos::Bdos;
 use self::bios::Bios;
 use self::constants::*;
-use self::cpm_machine::*;
+use self::cpm_machine::CpmMachine;
 use self::fcb::*;
 
 // Welcome message 1970's style
@@ -218,13 +218,6 @@ fn main() {
                 }
             }
         }
-    }
-
-    // Prepare terminal
-    let initial_terminal = bios.initial_terminal();
-    bios.setup_host_terminal(false);
-    defer! {
-        bios::restore_host_terminal(&initial_terminal);
     }
 
     // Run the emulation

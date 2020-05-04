@@ -13,4 +13,9 @@ iz80 = "^0.2.2"
 #iz80 = {path = "../iz80"}
 clap = "^2"
 scopeguard = "^1.1"
+
+[target.'cfg(windows)'.dependencies]
+crossterm = {path="../crossterm"}
+
+[target.'cfg(unix)'.dependencies]
 termios = "^0.3"

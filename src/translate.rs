@@ -1,5 +1,3 @@
-use std::io::*;
-
 /*
 See:
     http://bitsavers.informatik.uni-stuttgart.de/pdf/kaypro/3318-A_Kaypro_Robbie_Users_Guide_Feb85.pdf
@@ -42,14 +40,14 @@ ESCape Sequences
     Status line preservation off                ESC,C,7 -> ??
 */
 
-pub struct Terminal {
+pub struct Adm3aToAnsi {
     buffer: [u8;4],
     buffer_len: usize
 }
 
-impl Terminal {
-    pub fn new() -> Terminal {
-        Terminal {
+impl Adm3aToAnsi {
+    pub fn new() -> Adm3aToAnsi {
+        Adm3aToAnsi {
             buffer: [0,0,0,0],
             buffer_len: 0
         }
@@ -58,6 +56,7 @@ impl Terminal {
     fn conversion(&mut self) -> Option<String> {
         match self.buffer[0] {
             // Control characters
+            3 => Some("".to_string()),           // Invisible control-C
             8  => Some("\x1b[D".to_string()),    // Cursor left (non-destructive)
             // 10 => Some("\x1b[B".to_string()),    // Cursor Down
             11 => Some("\x1b[A".to_string()),    // Cursor Up
@@ -127,16 +126,15 @@ impl Terminal {
         }
     }
 
-    pub fn put_char(&mut self, ch: u8) {
+    pub fn translate(&mut self, ch: u8) -> Option<String> {
         self.buffer[self.buffer_len] = ch;
         self.buffer_len += 1;
 
         let conversion = self.conversion();
-        if let Some(sequence) = conversion {
-            print!("{}", sequence);
-            stdout().flush().unwrap();
+        if conversion.is_some() {
             self.buffer_len = 0;
         }
+        conversion
     }     
 }
 

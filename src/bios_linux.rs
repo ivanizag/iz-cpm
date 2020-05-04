@@ -1,20 +1,18 @@
+use std::io::*;
+use std::thread;
+use std::time::Duration;
+
+use termios::*;
+
 use iz80::*;
 use super::cpm_machine::*;
 use super::constants::*;
+use super::terminal::Terminal;
 
-#[cfg(windows)]
-use super::console_windows::Console;
-
-/*
-pub trait Console {
-    fn status(&self) -> bool;
-    fn read(&self) -> u8;
-    fn put(&self, char: u8);
-}
-*/
-
-pub struct Bios{
-    console: Console,
+pub struct Bios {
+    initial_termios: Option<Termios>,
+    terminal: Terminal,
+    next_char: Option<u8>,
     ctrl_c_count: u8
 }
 
@@ -27,10 +25,20 @@ const BIOS_COMMAND_NAMES: [&'static str; 16] = [
 const BIOS_ENTRY_POINT_COUNT: usize = 30;
 const BIOS_RET_TRAP_START: u16 = BIOS_BASE_ADDRESS + 0x80;
 
+const STDIN_FD: i32 = 0;
+
+pub fn restore_host_terminal(value: &Option<Termios>) {
+    if let Some(termios) = value {
+        tcsetattr(STDIN_FD, TCSANOW, &termios).unwrap();
+    }
+}
+
 impl Bios {
     pub fn new() -> Bios {
         Bios {
-            console: Console::new(),
+            initial_termios: Termios::from_fd(STDIN_FD).ok(),
+            terminal: Terminal::new(),
+            next_char: None,
             ctrl_c_count: 0
         }
     }
@@ -52,26 +60,64 @@ impl Bios {
         }
     }
 
+    pub fn setup_host_terminal(&self, blocking: bool) {
+        if let Some(initial) = self.initial_termios {
+            let mut new_term = initial.clone();
+            new_term.c_iflag &= !(IXON | ICRNL);
+            new_term.c_lflag &= !(ISIG | ECHO | ICANON | IEXTEN);
+            new_term.c_cc[VMIN] = if blocking {1} else {0};
+            new_term.c_cc[VTIME] = 0;
+            tcsetattr(STDIN_FD, TCSANOW, &new_term).unwrap();
+        }
+    }
+
+    pub fn initial_terminal(&self) -> Option<Termios> {
+        self.initial_termios.clone()
+    }
+
     pub fn status(&mut self) -> u8 {
-        if self.console.status() {
-            0xff
-        } else {
-            0
+        match self.next_char {
+            Some(_) => 0xff,
+            None => {
+                let mut buf = [0];
+                let size = stdin().read(&mut buf).unwrap_or(0);
+                if size != 0 {
+                    self.next_char = Some(buf[0]);
+                    0xff
+                } else {
+                    // Avoid 100% CPU usage waiting for input.
+                    thread::sleep(Duration::from_nanos(100));
+                    0
+                }
+            }
         }
     }
 
     pub fn read(&mut self) -> u8 {
-        let ch = self.console.read();
-        if ch == 3 { // Control-C
+        let res = match self.next_char {
+            Some(ch) => {
+                self.next_char = None;
+                ch
+            },
+            None => {
+                // Blocks waiting for char
+                self.setup_host_terminal(true);
+                let mut buf = [0];
+                stdin().read(&mut buf).unwrap();
+                self.setup_host_terminal(false);
+                buf[0]
+            }
+        };
+        if res == 3 { // Control-C
             self.ctrl_c_count += 1;
         } else {
             self.ctrl_c_count = 0;
         }
-        ch
-    }
+        res
+}
 
     pub fn write(&mut self, ch: u8) {
-        self.console.put(ch);
+        self.terminal.put_char(ch);
     }
 
     pub fn stop(&self) -> bool {

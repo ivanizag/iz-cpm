@@ -70,7 +70,7 @@ impl <'a> BdosEnvironment<'_> {
             bios: &'a mut Bios,
             machine: &'a mut CpmMachine,
             call_trace: bool) -> BdosEnvironment<'a> {
-        BdosEnvironment { state, bios, machine, call_trace}
+        BdosEnvironment { state, bios: bios, machine, call_trace}
     }
 
     pub fn iobyte(&self) -> u8 {
