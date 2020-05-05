@@ -9,7 +9,7 @@ Uses my [iz80](https://github.com/ivanizag/iz80) library for Z80 emulation.
 Made with Rust
 
 ## Installation
-Extract the zip. Optionally run download.sh to download the CP/M system disk, Microsoft Basic, Turbo Pascal, Lisp and some games.
+Extract the [latest zip](https://github.com/ivanizag/iz-cpm/releases) for Linux, MacOS or Windows. Optionally run `download.sh` or `download.bat`  to download the CP/M 2.2 system disk, Microsoft Basic, Turbo Pascal, Lisp and some games.
 
 ## Usage examples
 
@@ -86,11 +86,11 @@ USAGE:
     iz-cpm [FLAGS] [OPTIONS] [ARGS]
 
 FLAGS:
-    -t, --call-trace        Trace BDOS and BIOS calls
-    -T, --call-trace-all    Trace BDOS and BIOS calls excluding screen I/O
-    -z, --cpu-trace         Trace Z80 instructions execution
+    -t, --call-trace        Traces BDOS calls excluding screen I/O
+    -T, --call-trace-all    Traces BDOS and BIOS calls
+    -z, --cpu-trace         Traces Z80 instructions execution
     -h, --help              Prints help information
-    -s, --slow              Run slower
+    -s, --slow              Runs slower
     -V, --version           Prints version information
 
 OPTIONS:
@@ -150,5 +150,6 @@ To emulate this environment using the host filesystem, we have to provide a repl
 
 ## TODO
 - Proper documentation
-- File level read-only option
-- Verify in Mac
+- File level read-only option (I won't do that, the host can control that)
+- BIOS support for punch cards (Nope)
+- BIOS support for track/sector access to disks (Not needed)

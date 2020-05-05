@@ -1,42 +1,41 @@
 mkdir software
 
 # Standard CP/M v2.2 with BIOS and CBIOS sources included.
-wget http://www.retroarchive.org/cpm/os/STDCPM22.ZIP
+curl http://www.retroarchive.org/cpm/os/STDCPM22.ZIP -o STDCPM22.ZIP
 unzip -u -d software/cpm22 STDCPM22.ZIP
 rm STDCPM22.ZIP
 
 # WordStar 3.3 for CP/M-80/Kaypro
-wget http://www.retroarchive.org/cpm/text/Wskpro33.zip
+curl http://www.retroarchive.org/cpm/text/Wskpro33.zip -o Wskpro33.zip
 unzip -u -d software/wordstar33 Wskpro33.zip
 rm Wskpro33.zip
 
 # Two versions of Lisp
-wget http://www.retroarchive.org/cpm/lang/lisp80.zip
+curl http://www.retroarchive.org/cpm/lang/lisp80.zip -o lisp80.zip
 unzip -u -d software/lisp80 lisp80.zip
 rm lisp80.zip
 
 # Turbo Pascal v3.01a
-wget http://www.retroarchive.org/cpm/lang/TP_301A.ZIP
+curl http://www.retroarchive.org/cpm/lang/TP_301A.ZIP -o TP_301A.ZIP
 unzip -u -d software/turbopascal30 TP_301A.ZIP
 rm TP_301A.ZIP
 
 # Microsoft BASIC v4.51
-rm software/OBASIC.COM
-wget http://www.retroarchive.org/cpm/lang/OBASIC.COM
+curl http://www.retroarchive.org/cpm/lang/OBASIC.COM -o OBASIC.COM
 mv OBASIC.COM software
 
 # Microsoft MBASIC v5.29
-wget http://www.retroarchive.org/cpm/lang/mbasic.zip
+curl http://www.retroarchive.org/cpm/lang/mbasic.zip -o mbasic.zip
 unzip -u -d software mbasic.zip
 rm mbasic.zip
 
 # Game of Ladder for CP/M
-wget http://www.retroarchive.org/cpm/misc/LADDER.ZIP
+curl http://www.retroarchive.org/cpm/misc/LADDER.ZIP -o LADDER.ZIP
 unzip -u -d software/ladder LADDER.ZIP
 rm LADDER.ZIP
 
 # Zork I, II & III for CP/M-80
-wget http://www.retroarchive.org/cpm/games/zork123_80.zip
+curl http://www.retroarchive.org/cpm/games/zork123_80.zip -o zork123_80.zip
 unzip -u -d software/zork zork123_80.zip
 rm zork123_80.zip
 
