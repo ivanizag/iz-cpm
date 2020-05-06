@@ -3,6 +3,8 @@ use std::time::Duration;
 
 use crossterm::terminal;
 use crossterm::event;
+use crossterm::queue;
+use crossterm::style;
 
 use super::translate::Adm3aToAnsi;
 
@@ -14,7 +16,7 @@ pub struct Console {
 impl Console {
     pub fn new() -> Console {
         terminal::enable_raw_mode().unwrap();
-    
+
         Console {
             next_char: None,
             translator: Adm3aToAnsi::new(),
@@ -30,7 +32,7 @@ impl Console {
                 loop {
                     if event::poll(Duration::from_nanos(100)).unwrap() {
                         let event = event::read().unwrap();
-                        let some_ch = event_to_chat(event);
+                        let some_ch = event_to_char(event);
                         if let Some(ch) = some_ch {
                             self.next_char = Some(ch);
                             break true
@@ -53,7 +55,7 @@ impl Console {
             None => {
                 loop {
                     let event = event::read().unwrap();
-                    let some_ch = event_to_chat(event);
+                    let some_ch = event_to_char(event);
                     if let Some(ch) = some_ch {
                         break ch;
                     }
@@ -65,7 +67,7 @@ impl Console {
 
     pub fn put(&mut self, ch: u8) {
         if let Some(sequence) = self.translator.translate(ch) {
-            print!("{}", sequence);
+            queue!(stdout(), style::Print(sequence)).unwrap();
             stdout().flush().unwrap();
         }
     }
@@ -77,9 +79,7 @@ impl Drop for Console {
     }
 }
 
-fn event_to_chat(event: event::Event) -> Option<u8> {
-    //println!("Event::{:?}\r", event);
-
+fn event_to_char(event: event::Event) -> Option<u8> {
     let a = match event {
         event::Event::Key(k) => match k.code {
             event::KeyCode::Char(c) => {
@@ -116,6 +116,5 @@ fn event_to_chat(event: event::Event) -> Option<u8> {
         _ => None, // Not a keyboard event, ignore.
     };
 
-    //println!("Ascci: {:?}", a);
     a
 }
