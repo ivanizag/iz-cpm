@@ -42,7 +42,7 @@ fn main() {
     // Parse arguments
     let matches = App::new(WELCOME)
         .arg(Arg::with_name("CMD")
-            .help("The z80 image to run")
+            .help("The binary image to run, usually a .COM file")
             .required(false)
             .index(1))
             .arg(Arg::with_name("ARGS")
@@ -60,11 +60,16 @@ fn main() {
         .arg(Arg::with_name("cpu_trace")
             .short("z")
             .long("cpu-trace")
-            .help("Traces Z80 instructions execution"))
+            .help("Traces CPU instructions execution"))
         .arg(Arg::with_name("slow")
             .short("s")
             .long("slow")
             .help("Runs slower"))
+        .arg(Arg::with_name("cpu")
+            .long("cpu")
+            .value_name("model")
+            .default_value("z80")
+            .help("cpu model z80 or 8080"))
         .arg(Arg::with_name("disk_a").long("disk-a").value_name("path").short("a").default_value(".").help("directory to map disk A:"))
         .arg(Arg::with_name("disk_b").long("disk-b").value_name("path").short("b").help("directory to map disk B:"))
         .arg(Arg::with_name("disk_c").long("disk-c").value_name("path").short("c").help("directory to map disk C:"))
@@ -88,11 +93,19 @@ fn main() {
     let call_trace = matches.is_present("call_trace") || matches.is_present("call_trace_all");
     let call_trace_all = matches.is_present("call_trace_all");
     let slow = matches.is_present("slow");
+    let cpu_mode = matches.value_of("cpu");
     let use_tpa = filename.is_none();
 
     // Init device
     let mut machine = CpmMachine::new();
-    let mut cpu = Cpu::new();
+    let mut cpu = match cpu_mode {
+        Some("z80") => Cpu::new_z80(),
+        Some("8080") => Cpu::new_8080(),
+        _ => {
+            eprintln!("Invalid CPU model. Choose \"z80\" or \"8080\" as the CPU.");
+            return;
+        }
+    };
 
     // Init cpm
     let mut bios = Bios::new();
@@ -106,7 +119,7 @@ fn main() {
         if let Some(path) = res {
             if let Err(err) = fs::read_dir(path) {
                 eprintln!("Error with directory \"{}\": {}", path, err);
-                process::exit(1);
+                return;
             }
             bdos.assign_drive(i, path.to_string());
         }
@@ -153,7 +166,7 @@ fn main() {
         }
     }
 
-    // Load the code in Z80 memory
+    // Load the code in memory
     for i in 0..binary_size {
         machine.poke(binary_address + i as u16, binary[i]);
     }

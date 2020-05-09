@@ -2,9 +2,9 @@
 
 ## What is this?
 
-This is a CP/M 2.2 execution environment. It provides everything needed to run a standard CP/M for Z80 binary.
+This is a CP/M 2.2 execution environment. It provides everything needed to run a standard CP/M for Z80 or 8080 binary.
 
-Uses my [iz80](https://github.com/ivanizag/iz80) library for Z80 emulation.
+Uses my [iz80](https://github.com/ivanizag/iz80) library for Zilog Z80 and Intel 8080 emulation.
 
 Made with Rust
 
@@ -38,7 +38,7 @@ A>
 
 Execute `iz-cpm` with a file to execute a CP/M binary directly, bypassing the CPP:
 ```console
-casa@servidor:~/code/z80/iz-cpm$ ./iz-cpm software/OBASIC.COM 
+casa@servidor:~$ ./iz-cpm software/OBASIC.COM 
 44531 Bytes free
 BASIC Rev. 4.51
 [CP/M Version]
@@ -94,6 +94,7 @@ FLAGS:
     -V, --version           Prints version information
 
 OPTIONS:
+        --cpu <model>      cpu model z80 or 8080 [default: z80]
     -a, --disk-a <path>    directory to map disk A: [default: .]
     -b, --disk-b <path>    directory to map disk B:
     -c, --disk-c <path>    directory to map disk C:
@@ -112,7 +113,7 @@ OPTIONS:
         --disk-p <path>    directory to map disk P:
 
 ARGS:
-    <CMD>     The z80 image to run
+    <CMD>     The binay image to run, 
     <ARGS>    Parameters for the given command
 ```
 
@@ -122,7 +123,7 @@ ARGS:
 - Direct usage of the host computer filesystem
 - Terminal emulation of ADM-3A as used in the KAYPRO computers
 - Z80 emulation validated with ZEXALL
-- Z80 execution tracing
+- CPU execution tracing
 - BDOS and BIOS tracing
 - Portable, runs in Linux, MacOS and Windows. Mmm, not in CP/M.
 

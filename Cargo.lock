@@ -133,9 +133,9 @@ dependencies = [
 
 [[package]]
 name = "iz80"
-version = "0.2.2"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "666f3cc2ddc1c1219d18444410a3f89793d3054278c58aa13141b79fe1fcec00"
+checksum = "a7926349db666ff6408247addc982908b03a35c5f7a29e881b0ba9218303b98f"
 
 [[package]]
 name = "kernel32-sys"
