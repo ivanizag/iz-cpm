@@ -359,6 +359,25 @@ pub fn get_set_user_number(env: &mut BdosEnvironment, user: u8) -> u8 {
     env.state.user
 }
 
+pub fn set_error_mode(_env: &mut BdosEnvironment, _mode: u8) {
+    /*
+    Instructs CP/M what action to take if there is a hardware error:
+    E < 254
+        Compatibility mode; program is terminated and an error message printed.
+    E = 254
+        Error code is returned in H, error message is printed.
+    E = 255
+        Error code is returned in H, no error message is printed.
+    Note that the messages (if printed) are not followed by a carriage return or linefeed.
+
+    Not in CP/M 2.2 per the "CP/M Operating System Manual", but
+    the BBC BASIC version for Z80 uses it.
+
+    */
+    // Wo don't do anything with this on the emulator.
+}
+
+
 pub fn set_random_record(env: &mut BdosEnvironment, fcb_address: u16) {
     // The Set Random Record function causes the BDOS automatically to produce
     // the random record position from a file that has been read or written

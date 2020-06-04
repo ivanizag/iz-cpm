@@ -8,7 +8,7 @@ use super::bdos_file;
 use super::cpm_machine::CpmMachine;
 use super::constants::*;
 
-const BDOS_COMMAND_NAMES: [&'static str; 41] = [
+const BDOS_COMMAND_NAMES: [&'static str; 46] = [
     // 0
     "P_TERMCPM", "C_READ", "C_WRITE", "A_READ", "A_WRITE",
     "L_WRITE", "C_RAWIO", "A_STATIN", "A_STATOUT", "C_WRITESTR",
@@ -22,7 +22,7 @@ const BDOS_COMMAND_NAMES: [&'static str; 41] = [
     "F_ATTRIB", "DRV_DPB", "F_USERNUM", "F_READRAND", "F_WRITERAND",
     "F_SIZE", "F_RANDREC", "DRV_RESET", "*", "",
     // 40
-    "F_WRITEZ"];
+    "F_WRITEZ", "", "", "", "", "F_ERRMODE"];
 
 pub struct Bdos {
     state: BdosState,
@@ -226,6 +226,9 @@ impl Bdos {
                 },
                 40 => { // F_WRITEZ - Write random with zero fill
                     res8 = Some(bdos_file::write_rand_zero_fill(env, arg16));
+                },
+                45 => { // F_ERRMODE - Set action on hardware error
+                    bdos_file::set_error_mode(env, arg8);
                 },
                 _ => {
                     eprintln!("BDOS command {} not implemented.\n", command);

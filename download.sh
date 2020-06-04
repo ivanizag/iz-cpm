@@ -39,3 +39,8 @@ curl http://www.retroarchive.org/cpm/games/zork123_80.zip -o zork123_80.zip
 unzip -u -d software/zork zork123_80.zip
 rm zork123_80.zip
 
+# BBC Basic for the Z-80
+curl  http://www.bbcbasic.co.uk/bbcbasic/bbccpm.zip -o bbccpm.zip
+unzip -u -d software/bbcbasic bbccpm.zip
+rm bbccpm.zip
+
