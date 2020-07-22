@@ -5,6 +5,7 @@ use std::io::Read;
 use std::io::Seek;
 use std::io::Write;
 use std::path::Path;
+use std::path::PathBuf;
 
 use super::bdos_environment::*;
 use super::fcb::*;
@@ -180,8 +181,12 @@ pub fn rename(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
         Err(_) => FILE_NOT_FOUND, // Error or file not found
         Ok(paths) => {
             for name in paths {
+                let src_path = Path::new(&name);
                 let new_name = name_from_8_3(&fcb.get_name_secondary(env));
-                if fs::rename(name, new_name).is_err() {
+                let mut dst_path = PathBuf::from(src_path.parent().unwrap_or(Path::new("")));
+                dst_path.push(new_name);
+
+                if fs::rename(src_path, dst_path).is_err() {
                     return FILE_NOT_FOUND;
                 }
             }
