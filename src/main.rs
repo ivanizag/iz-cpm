@@ -33,8 +33,8 @@ use self::fcb::*;
 // Welcome message 1970's style
 const WELCOME: &'static str =
 "iz-cpm https://github.com/ivanizag/iz-cpm
-CP/M 2.2 Copyright (c) 1979 by Digital Research
-Press ctrl-c ctrl-c to return to host";
+CP/M 2.2 Emulation
+Press ctrl-c ctrl-c Y to return to host";
 
 static CCP_BINARY: &'static [u8] = include_bytes!("../cpm22/OS2CCP.BIN");
 
@@ -258,6 +258,14 @@ fn main() {
             ExecutionResult::Continue => (),
             ExecutionResult::Stop => {
                 break;
+            },
+            ExecutionResult::StopConfirm => {
+                eprintln!();
+                eprintln!("Press Y to exit iz-cpm. Any other key to continue.");
+                let ch = bios.read() as char;
+                if ch == 'Y' || ch == 'y' {
+                    break;
+                }
             },
             ExecutionResult::WarmBoot => {
                 if call_trace || call_trace_all {

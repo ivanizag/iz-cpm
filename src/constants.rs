@@ -21,5 +21,6 @@ pub enum ExecutionResult {
     Continue,
     WarmBoot,
     ColdBoot,
-    Stop
+    Stop,
+    StopConfirm
 }

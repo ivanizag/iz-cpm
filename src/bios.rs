@@ -75,7 +75,8 @@ impl Bios {
     pub fn execute(&mut self, reg: &mut Registers, call_trace: bool) -> ExecutionResult {
         if self.stop() {
             // Stop with two control-c
-            return ExecutionResult::Stop;
+            self.ctrl_c_count = 0;
+            return ExecutionResult::StopConfirm;
         }
 
         let pc = reg.pc();
