@@ -8,7 +8,7 @@ Uses my [iz80](https://github.com/ivanizag/iz80) library for Zilog Z80 and Intel
 
 Made with Rust
 
-Note that iz-cpm is a very basic implementation, mostly for eductional purposes. I recommend MockbaTheBorg's [RunCPM](https://github.com/MockbaTheBorg/RunCPM) for a much more complete CP/M emulation. 
+Note that iz-cpm is a very basic implementation, mostly for eductional purposes. I recommend MockbaTheBorg's [RunCPM](https://github.com/MockbaTheBorg/RunCPM) or [Z80pack](https://github.com/udo-munk/z80pack/blob/master/doc/README-cpm.txt) for a much more complete CP/M emulation. 
 
 ## Installation
 Extract the [latest zip](https://github.com/ivanizag/iz-cpm/releases) for Linux, MacOS or Windows. Optionally run `download.sh` or `download.bat`  to download the CP/M 2.2 system disk, Microsoft Basic, Turbo Pascal, Lisp and some games.
