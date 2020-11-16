@@ -1,7 +1,6 @@
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
-use std::process;
 use std::thread;
 use std::time::Duration;
 
@@ -147,13 +146,13 @@ fn main() {
             match File::open(name) {
                 Err(err) => {
                     eprintln!("Error opening \"{}\": {}", name, err);
-                    process::exit(1);
+                    return; //process::exit(1);
                 },
                 Ok(mut file) => {
                     match file.read(&mut buf) {
                         Err(err) => {
                             eprintln!("Error loading \"{}\": {}", name, err);
-                            process::exit(1);
+                            return; //process::exit(1);
                         },
                         Ok(size) => {
                             binary = &buf;

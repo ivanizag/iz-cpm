@@ -85,7 +85,7 @@ impl Adm3aToAnsi {
                                     '3' => Some("\x1b[4m".to_string()),   // Underline start
                                     '4' => Some("\x1b[?25h".to_string()), // Cursor on
                                     '6' => Some("\x1b7".to_string()),     // Remember current cursor position
-                                     _  => Some("".to_string())           // Unknown, ignore      
+                                     _  => Some("".to_string())           // Unknown, ignore
                                 }
                             }
                         },
@@ -100,10 +100,24 @@ impl Adm3aToAnsi {
                                     '3' => Some("\x1b[24m".to_string()),  // Underline stop
                                     '4' => Some("\x1b[?25l".to_string()), // Cursor off
                                     '6' => Some("\x1b7".to_string()),     // Return to last remembered cursor position
-                                     _  => Some("".to_string())           // Unknown, ignore      
+                                     _  => Some("".to_string())           // Unknown, ignore
                                 }
                             }
                         },
+                        'G' => {
+                            if self.buffer_len < 3 {
+                                None // We need more buffer
+                            } else {
+                                match self.buffer[2] as char {
+                                    '0' => Some("\x1b[27m".to_string()),  // Reset to standard video: doing reverse video stop
+                                    '4' => Some("\x1b[7m".to_string()),   // Reversing of disignated area: doing reverse video start
+                                     _  => Some("".to_string())           // Unknown, ignore
+                                }
+                            }
+                        },
+                        'T' => Some("\x1b[K".to_string()),    // Erase to end of line
+                        '(' => Some("\x1b[2m".to_string()),   // Write protect start (reduced intensity): doing half intensity start
+                        ')' => Some("\x1b[22m".to_string()),  // Write protect stop (reduced intensity): doing half intensity stop
                         '=' => {
                             if self.buffer_len < 4 {
                                 None // We need more buffer
@@ -117,7 +131,8 @@ impl Adm3aToAnsi {
                                 }
                             }
                         },
-                        _  => Some("".to_string()) // Unknown, ignore      
+                        _  => Some("".to_string()) // Unknown, ignore
+                        //_  => Some(format!("[Unknown escape code -{}-]", self.buffer[1] as char)) // Unknown
                     }
                 }
             },    

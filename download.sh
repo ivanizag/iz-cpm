@@ -44,3 +44,6 @@ curl  http://www.bbcbasic.co.uk/bbcbasic/bbccpm.zip -o bbccpm.zip
 unzip -u -d software/bbcbasic bbccpm.zip
 rm bbccpm.zip
 
+## Gorilla using Turbo Modula-2
+wget https://github.com/sblendorio/gorilla-cpm/raw/master/binary/gorilla.com
+mv gorilla.com software

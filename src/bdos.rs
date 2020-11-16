@@ -8,7 +8,7 @@ use super::bdos_file;
 use super::cpm_machine::CpmMachine;
 use super::constants::*;
 
-const BDOS_COMMAND_NAMES: [&'static str; 46] = [
+const BDOS_COMMAND_NAMES: [&'static str; 106] = [
     // 0
     "P_TERMCPM", "C_READ", "C_WRITE", "A_READ", "A_WRITE",
     "L_WRITE", "C_RAWIO", "A_STATIN", "A_STATOUT", "C_WRITESTR",
@@ -22,7 +22,19 @@ const BDOS_COMMAND_NAMES: [&'static str; 46] = [
     "F_ATTRIB", "DRV_DPB", "F_USERNUM", "F_READRAND", "F_WRITERAND",
     "F_SIZE", "F_RANDREC", "DRV_RESET", "*", "",
     // 40
-    "F_WRITEZ", "", "", "", "", "F_ERRMODE"];
+    "F_WRITEZ", "", "", "", "",
+    "F_ERRMODE", "", "", "", "",
+
+    "", "", "", "", "", "", "", "", "", "", // 50-59
+    "", "", "", "", "", "", "", "", "", "", // 60-69
+    "", "", "", "", "", "", "", "", "", "", // 70-79
+    "", "", "", "", "", "", "", "", "", "", // 80-89
+    "", "", "", "", "", "", "", "", "", "", // 00-09
+
+    // 100
+    "", "", "", "", "",
+    "T_GET"
+    ];
 
 pub struct Bdos {
     state: BdosState,
@@ -230,6 +242,13 @@ impl Bdos {
                 45 => { // F_ERRMODE - Set action on hardware error
                     bdos_file::set_error_mode(env, arg8);
                 },
+
+
+                105 => { // T_GET - Get date and time
+                    // Not implemented
+                    // Ignored silently to run https://github.com/sblendorio/gorilla-cpm
+                },
+
                 _ => {
                     eprintln!("BDOS command {} not implemented.\n", command);
                     return ExecutionResult::Stop;
