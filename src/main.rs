@@ -198,7 +198,7 @@ fn main() {
                     len = 0x7E; // Max 0x7E chars for parameters
                 }
                 machine.poke(SYSTEM_PARAMS_ADDRESS, (len + 1) as u8);
-                machine.poke(SYSTEM_PARAMS_ADDRESS, ' ' as u8);
+                machine.poke(SYSTEM_PARAMS_ADDRESS + 1, ' ' as u8);
                 let p_bytes = p.as_bytes();
                 for i in 0..len {
                     machine.poke(SYSTEM_PARAMS_ADDRESS + (i as u16) + 2, p_bytes[i]);
@@ -219,14 +219,23 @@ fn main() {
                 // cases, programs only require a single file name. Therefore,
                 // you can proceed to use FCBI straight away, not caring that
                 // FCB2 will be overwritten.
+                // Both are initialized with spaces.
+                Fcb::new(FCB1_ADDRESS).set_name_direct(&mut machine, "        .   ".to_string());
+                Fcb::new(FCB2_ADDRESS).set_name_direct(&mut machine, "        .   ".to_string());
                 let mut parts = p.split_ascii_whitespace();
                 if let Some(arg1) = parts.next() {
                     if let Some(file1) = name_to_8_3(arg1) {
+                        if call_trace {
+                            println!("[[FCB1 loaded with {}]]", file1);
+                        }
                         Fcb::new(FCB1_ADDRESS).set_name_direct(&mut machine, file1);
                     }
                 }
                 if let Some(arg2) = parts.next() {
                     if let Some(file2) = name_to_8_3(arg2) {
+                        if call_trace {
+                            println!("[[FCB2 loaded with {}]]", file2);
+                        }
                         Fcb::new(FCB2_ADDRESS).set_name_direct(&mut machine, file2);
                     }
                 }
