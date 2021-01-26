@@ -142,7 +142,7 @@ impl Adm3aToAnsi {
     }
 
     pub fn translate(&mut self, ch: u8) -> Option<String> {
-        self.buffer[self.buffer_len] = ch;
+        self.buffer[self.buffer_len] = ch & 0x7f; // Only 7 bits ASCII
         self.buffer_len += 1;
 
         let conversion = self.conversion();
