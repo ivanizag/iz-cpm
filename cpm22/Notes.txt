@@ -1,9 +1,0 @@
-Source code from http://www.cpm.z80.de/source.html,
-file http://www.cpm.z80.de/download/cpm2-plm.zip
-
-See: https://mirrors.apple2.org.za/ftp.apple.asimov.net/documentation/programming/cpm/Programmers%20CPM%20Handbook%20by%20Andy%20Johnson-Laird.pdf
-
-Build CCP with:
-  make CCP
-
-
