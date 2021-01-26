@@ -1,0 +1,3249 @@
+   1:					TITLE	'ZCPR Version 1.0'
+   2:				;
+   3:				;  CP/M Z80 Command Processor Replacement (CPR) Version 1.0
+   4:				;	CCPZ CREATED AND CUSTOMIZED FOR ARIES-II BY RLC
+   5:				;	FURTHER MODIFIED BY RGF AS V2.0
+   6:				;	FURTHER MODIFIED BY RLC AS V2.1
+   7:				;	FURTHER MODIFIED BY KBP AS V2.2
+   8:				;	FURTHER MODIFIED BY RLC AS V2.4 (V2.3 skipped)
+   9:				;	FURTHER MODIFIED BY RLC AS V2.5
+  10:				;	FURTHER MODIFIED BY RLC AS V2.6
+  11:				;	FURTHUR MODIFIED BY SBB AS V2.7
+  12:				;	FURTHER MODIFIED BY RLC AS V2.8
+  13:				;	FURTHER MODIFIED BY RLC AS V2.9
+  14:				;	FURTHER MODIFIED BY RLC AS V3.0
+  15:				;	FURTHER MODIFIED BY RLC AS V3.1
+  16:				;	FURTHER MODIFIED BY RLC AS V4.0
+  17:				;	ZCPR VERSION 1.0 CREATED FROM CCPZ VERSION 4.0 BY RLC IN
+  18:				;		A COORDINATED EFFORT WITH CCP-GROUP
+  19:				;
+  20:				;	ZCPR is a group effort by CCP-GROUP, whose active membership involved
+  21:				; in this project consists of the following:
+  22:				;		RLC - Richard Conn
+  23:				;		RGF - Ron Fowler
+  24:				;		KBP - Keith Peterson
+  25:				;		FJW - Frank Wancho
+  26:				;	The following individual also provided a contribution:
+  27:				;		SBB - Steve Bogolub
+  28:				;
+  29:				;
+  30:				;******** Structure Notes ********
+  31:				;
+  32:				;	This CPR is divided into a number of major sections.  The following
+  33:				; is an outline of these sections and the names of the major routines
+  34:				; located therein.
+  35:				;
+  36:				; Section	Function/Routines
+  37:				; -------	-----------------
+  38:				;
+  39:				;   --		Opening Comments, Equates, and Macro Definitions
+  40:				;
+  41:				;    0		JMP Table into CPR
+  42:				;
+  43:				;    1		Buffers
+  44:				;
+  45:				;    2		CPR Starting Modules
+  46:				;			CPR1	CPR	RESTRT	RSTCPR	RCPRNL
+  47:				;			PRNNF
+  48:				;
+  49:				;    3		Utilities
+  50:				;			CRLF	CONOUT	CONIN	LCOUT	LSTOUT
+  51:				;			READF	READ	BDOSB	PRINTC	PRINT
+  52:				;			GETDRV	DEFDMA	DMASET	RESET	BDOSJP
+  53:				;			LOGIN	OPENF	OPEN	GRBDOS	CLOSE
+  54:				;			SEARF	SEAR1	SEARN	SUBKIL	DELETE
+  55:				;			RESETUSR GETUSR	SETUSR
+  56:				;
+  57:				;     4		CPR Utilities
+  58:				;			SETUD	SETU0D	UCASE	REDBUF	CNVBUF
+  59:				;			BREAK	USRNUM	ERROR	SDELM	ADVAN
+  60:				;			SBLANK	ADDAH	NUMBER	NUMERR	HEXNUM
+  61:				;			DIRPTR	SLOGIN	DLOGIN	COMLOG	SCANER
+  62:				;			CMDSER
+  63:				;
+  64:				;     5		CPR-Resident Commands and Functions
+  65:				;     5A		DIR	DIRPR	FILLQ
+  66:				;     5B		ERA
+  67:				;     5C		LIST
+  68:				;     5D		TYPE	PAGER
+  69:				;     5E		SAVE
+  70:				;     5F		REN
+  71:				;     5G		USER
+  72:				;     5H		DFU
+  73:				;     5I		JUMP
+  74:				;     5J		GO
+  75:				;     5K		COM	CALLPROG	ERRLOG	ERRJMP
+  76:				;     5L		GET	MEMLOAD	PRNLE
+  77:				;
+  78:				;
+  79:     -	0000'         	FALSE	EQU	0
+  80:     -	FFFF'         	TRUE	EQU	NOT FALSE
+  81:				;
+  82:				;  CUSTOMIZATION EQUATES
+  83:				;
+  84:				;  The following equates may be used to customize this CPR for the user's
+  85:				;    system and integration technique.  The following constants are provided:
+  86:				;
+  87:				;    REL - TRUE if integration is to be done via MOVCPM
+  88:				;        - FALSE if integration is to be done via DDT and SYSGEN
+  89:				;
+  90:				;    BASE - Base Address of user's CP/M system (normally 0 for DR version)
+  91:				;           This equate allows easy modification by non-standard CP/M (eg,H89)
+  92:				;
+  93:				;    CPRLOC - Base Page Address of CPR; this value can be obtained by running
+  94:				;	      the BDOSLOC program on your system, or by setting the
+  95:				;	      MSIZE and BIOSEX equates to the system memory size in
+  96:				;	      K-bytes and the "extra" memory required by your BIOS
+  97:				;	      in K-bytes. BIOSEX is zero if your BIOS is normal size,
+  98:				;	      and can be negative if your BIOS is in PROM or in
+  99:				;	      non-contiguous memory.
+ 100:				;
+ 101:				;    RAS - Remote-Access System; setting this equate to TRUE disables
+ 102:				;	   certain CPR commands that are considered harmful in a Remote-
+ 103:				;	   Access environment; use under Remote-Access Systems (RBBS) for
+ 104:				;	   security purposes
+ 105:				;
+ 106:     -	FFFF'         	REL	EQU	TRUE	;SET TO TRUE FOR MOVCPM INTEGRATION
+ 107:				;
+ 108:     -	0000'         	BASE	EQU	0	;BASE OF CP/M SYSTEM (SET FOR STANDARD CP/M)
+ 109:				;
+ 110:     -	FFFF'         		IF	REL
+ 111:     -	0000'         	CPRLOC	EQU	0	;MOVCPM IMAGE
+ 112:					ELSE
+ 141:					ENDIF
+ 142:				;
+ 143:     -	0000'         	RAS	EQU	FALSE	;SET TO TRUE IF CPR IS FOR A REMOTE-ACCESS SYSTEM
+ 144:				;
+ 145:				; The following is presented as an option, but is not generally user-customiz-
+ 146:				; able.  A basic design choice had to be made in the design of ZCPR concerning
+ 147:				; the execution of SUBMIT files.  The original CCP had a problem in this sense
+ 148:				; in that it ALWAYS looked for the SUBMIT file from drive A: and the SUBMIT
+ 149:				; program itself (SUBMIT.COM) would place the $$$.SUB file on the currently
+ 150:				; logged-in drive, so when the user was logged into B: and he issued a SUBMIT
+ 151:				; command, the $$$.SUB was placed on B: and did not execute because the CCP
+ 152:				; looked for it on A: and never found it.
+ 153:				;	After much debate it was decided to have ZCPR perform the same type of
+ 154:				; function as CCP (look for the $$$.SUB file on A:), but the problem with
+ 155:				; SUBMIT.COM still exists.  Hence, RGF designed SuperSUB and RLC took his
+ 156:				; SuperSUB and designed SUB from it; both programs are set up to allow the
+ 157:				; selection at assembly time of creating the $$$.SUB on the logged-in drive
+ 158:				; or on drive A:.
+ 159:				;	A final definition of the Indirect Command File ($$$.SUB or SUBMIT
+ 160:				; File) is presented as follows:
+ 161:				;		"An Indirect Command File is one which contains
+ 162:				;		 a series of commands exactly as they would be
+ 163:				;		 entered from a CP/M Console.  The SUBMIT Command
+ 164:				;		 (or SUB Command) reads this files and transforms
+ 165:				;		 it for processing by the ZCPR (the $$$.SUB File).
+ 166:				;		 ZCPR will then execute the commands indicated
+ 167:				;		 EXACTLY as if they were typed at the Console."
+ 168:				;	Hence, to permit this to happen, the $$$.SUB file must always
+ 169:				; be present on a specific drive, and A: is the choice for said drive.
+ 170:				; With this facility engaged as such, Indirect Command Files like:
+ 171:				;		DIR
+ 172:				;		A:
+ 173:				;		DIR
+ 174:				; can be executed, even though the currently logged-in drive is changed
+ 175:				; during execution.  If the $$$.SUB file was present on the currently
+ 176:				; logged-in drive, the above series of commands would not work since the
+ 177:				; ZCPR would be looking for $$$.SUB on the logged-in drive, and switching
+ 178:				; logged-in drives without moving the $$$.SUB file as well would cause
+ 179:				; processing to abort.
+ 180:				;
+ 181:     -	FFFF'         	SUBA	equ	TRUE 	; Set to TRUE to have $$$.SUB always on A:
+ 182:							; Set to FALSE to have $$$.SUB on the logged-in drive
+ 183:				;
+ 184:				;   The following flag enables extended processing for user-program supplied
+ 185:				; command lines.  This is for Command Level 3 of ZCPR.  Under the CCPZ Version
+ 186:				; 4.0 philosophy, three command levels exist:
+ 187:				;	(1) that command issued by the user from his console at the '>' prompt
+ 188:				;	(2) that command issued by a $$$.SUB file at the '$' prompt
+ 189:				;	(3) that command issued by a user program by placing the command into
+ 190:				; CIBUFF and setting the character count in CBUFF
+ 191:				;   Setting CLEVEL3 to TRUE enables extended processing of the third level of
+ 192:				; ZCPR command.  All the user program need do is to store the command line and
+ 193:				; set the character count; ZCPR will initialize the pointers properly, store
+ 194:				; the ending zero properly, and capitalize the command line for processing.
+ 195:				; Once the command line is properly stored, the user executes the command line
+ 196:				; by reentering the ZCPR through CPRLOC [NOTE:  The C register MUST contain
+ 197:				; a valid User/Disk Flag (see location 4) at this time.]
+ 198:				;
+ 199:     -	FFFF'         	CLEVEL3	equ	TRUE		;ENABLE COMMAND LEVEL 3 PROCESSING
+ 200:				;
+ 201:				;
+ 202:				;*** TERMINAL AND 'TYPE' CUSTOMIZATION EQUATES
+ 203:				;
+ 204:     -	0018'         	NLINES	EQU	24		;NUMBER OF LINES ON CRT SCREEN
+ 205:     -	FFFF'         	WIDE	EQU	TRUE		;TRUE IF WIDE DIR DISPLAY
+ 206:     -	007C'         	FENCE	EQU	'|'		;SEP CHAR BETWEEN DIR FILES
+ 207:				;
+ 208:     -	FFFF'         	PGDFLT	EQU	TRUE  		;SET TO FALSE TO DISABLE PAGING BY DEFAULT
+ 209:     -	0050'         	PGDFLG	EQU	'P'		;FOR TYPE COMMAND: PAGE OR NOT (DEP ON PGDFLT)
+ 210:								;  THIS FLAG REVERSES THE DEFAULT EFFECT
+ 211:				;
+ 212:     -	000F'         	MAXUSR	EQU	15 		;MAXIMUM USER NUMBER ACCESSABLE
+ 213:				;
+ 214:     -	0041'         	SYSFLG	EQU	'A' 		;FOR DIR COMMAND: LIST $SYS AND $DIR
+ 215:				;
+ 216:     -	0053'         	SOFLG	EQU	'S'		;FOR DIR COMMAND: LIST $SYS FILES ONLY
+ 217:				;
+ 218:     -	FFFF'         	SUPRES	EQU	TRUE 		;SUPRESSES USER # REPORT FOR USER 0
+ 219:				;
+ 220:     -	0000'         	DEFUSR	EQU	0 		;DEFAULT USER NUMBER FOR COM FILES
+ 221:				;
+ 222:     -	0024'         	SPRMPT	EQU	'$'		;CPR PROMPT INDICATING SUBMIT COMMAND
+ 223:     -	003E'         	CPRMPT	EQU	'>'		;CPR PROMPT INDICATING USER COMMAND
+ 224:				;
+ 225:     -	0048'         	NUMBASE	EQU	'H'		;CHARACTER USED TO SWITCH FROM DEFAULT
+ 226:								; NUMBER BASE
+ 227:				;
+ 228:     -	0053'         	SECTFLG	EQU	'S'		;OPTION CHAR FOR SAVE COMMAND TO SAVE SECTORS
+ 229:				;
+ 230:				; END OF CUSTOMIZATION SECTION
+ 231:				;
+ 232:     -	000D'         	CR	EQU	0DH
+ 233:     -	000A'         	LF	EQU	0AH
+ 234:     -	0009'         	TAB	EQU	09H
+ 235:				;
+ 236:     -	0000'         	WBOOT	EQU	BASE+0000H		;CP/M WARM BOOT ADDRESS
+ 237:     -	0004'         	UDFLAG	EQU	BASE+0004H		;USER NUM IN HIGH NYBBLE, DISK IN LOW
+ 238:     -	0005'         	BDOS	EQU	BASE+0005H		;BDOS FUNCTION CALL ENTRY PT
+ 239:     -	005C'         	TFCB	EQU	BASE+005CH		;DEFAULT FCB BUFFER
+ 240:     -	0080'         	TBUFF	EQU	BASE+0080H		;DEFAULT DISK I/O BUFFER
+ 241:     -	0100'         	TPA	EQU	BASE+0100H		;BASE OF TPA
+ 242:				;
+ 243:				;
+ 244:				; MACROS TO PROVIDE Z80 EXTENSIONS
+ 245:				;   MACROS INCLUDE:
+ 246:				;
+ 247:				;	JR	- JUMP RELATIVE
+ 248:				;	JRC	- JUMP RELATIVE IF CARRY
+ 249:				;	JRNC	- JUMP RELATIVE IF NO CARRY
+ 250:				;	JRZ	- JUMP RELATIVE IF ZERO
+ 251:				;	JRNZ	- JUMP RELATIVE IF NO ZERO
+ 252:				;	DJNZ	- DECREMENT B AND JUMP RELATIVE IF NO ZERO
+ 253:				;	LDIR	- MOV @HL TO @DE FOR COUNT IN BC
+ 254:				;	LXXD	- LOAD DOUBLE REG DIRECT
+ 255:				;	SXXD	- STORE DOUBLE REG DIRECT
+ 256:				;
+ 257:				;
+ 258:				;
+ 259:				;	@GENDD MACRO USED FOR CHECKING AND GENERATING
+ 260:				;	8-BIT JUMP RELATIVE DISPLACEMENTS
+ 261:				;
+ 262:				@GENDD	MACRO	?DD	;;USED FOR CHECKING RANGE OF 8-BIT DISPLACEMENTS
+ 263:					IF (?DD GT 7FH) AND (?DD LT 0FF80H)
+ 264:					DB	100H	;Displacement Range Error on Jump Relative
+ 265:					ELSE
+ 266:					DB	?DD
+ 267:					ENDIF
+ 268:					ENDM
+ 269:				;
+ 270:				;
+ 271:				; Z80 MACRO EXTENSIONS
+ 272:				;
+ 273:				JR	MACRO	?N	;;JUMP RELATIVE
+W Macro 'JR' will override the built-in 'JR'
+ 274:					DB	18H
+ 275:					@GENDD	?N-$-1
+ 276:					ENDM
+ 277:				;
+ 278:				JRC	MACRO	?N	;;JUMP RELATIVE ON CARRY
+W Macro 'JRC' will override the built-in 'JRC'
+ 279:					DB	38H
+ 280:					@GENDD	?N-$-1
+ 281:					ENDM
+ 282:				;
+ 283:				JRNC	MACRO	?N	;;JUMP RELATIVE ON NO CARRY
+W Macro 'JRNC' will override the built-in 'JRNC'
+ 284:					DB	30H
+ 285:					@GENDD	?N-$-1
+ 286:					ENDM
+ 287:				;
+ 288:				JRZ	MACRO	?N	;;JUMP RELATIVE ON ZERO
+W Macro 'JRZ' will override the built-in 'JRZ'
+ 289:					DB	28H
+ 290:					@GENDD	?N-$-1
+ 291:					ENDM
+ 292:				;
+ 293:				JRNZ	MACRO	?N	;;JUMP RELATIVE ON NO ZERO
+W Macro 'JRNZ' will override the built-in 'JRNZ'
+ 294:					DB	20H
+ 295:					@GENDD	?N-$-1
+ 296:					ENDM
+ 297:				;
+ 298:				DJNZ	MACRO	?N	;;DECREMENT B AND JUMP RELATIVE ON NO ZERO
+W Macro 'DJNZ' will override the built-in 'DJNZ'
+ 299:					DB	10H
+ 300:					@GENDD	?N-$-1
+ 301:					ENDM
+ 302:				;
+ 303:				LDIR	MACRO		;;LDIR
+W Macro 'LDIR' will override the built-in 'LDIR'
+ 304:					DB	0EDH,0B0H
+ 305:					ENDM
+ 306:				;
+ 307:				LDED	MACRO	?N	;;LOAD DE DIRECT
+W Macro 'LDED' will override the built-in 'LDED'
+ 308:					DB	0EDH,05BH
+ 309:					DW	?N
+ 310:					ENDM
+ 311:				;
+ 312:				LBCD	MACRO	?N	;;LOAD BC DIRECT
+W Macro 'LBCD' will override the built-in 'LBCD'
+ 313:					DB	0EDH,4BH
+ 314:					DW	?N
+ 315:					ENDM
+ 316:				;
+ 317:				SDED	MACRO	?N	;;STORE DE DIRECT
+W Macro 'SDED' will override the built-in 'SDED'
+ 318:					DB	0EDH,53H
+ 319:					DW	?N
+ 320:					ENDM
+ 321:				;
+ 322:				SBCD	MACRO	?N	;;STORE BC DIRECT
+W Macro 'SBCD' will override the built-in 'SBCD'
+ 323:					DB	0EDH,43H
+ 324:					DW	?N
+ 325:					ENDM
+ 326:				;
+ 327:				; END OF Z80 MACRO EXTENSIONS
+ 328:				;
+ 329:				;
+ 330:				;**** Section 0 ****
+ 331:				;
+ 332:					CSEG
+ 333:				;
+ 334:				;  ENTRY POINTS INTO ZCPR
+ 335:				;    If the ZCPR is entered at location CPRLOC (at the JMP to CPR), then
+ 336:				; the default command in CIBUFF will be processed.  If the ZCPR is entered
+ 337:				; at location CPRLOC+3 (at the JMP to CPR1), then the default command in
+ 338:				; CIBUFF will NOT be processed.
+ 339:				;    NOTE:  Entry into ZCPR in this way is permitted under ZCPR Version 4.0,
+ 340:				; but in order for this to work, CIBUFF and CBUFF MUST be initialized properly
+ 341:				; AND the C register MUST contain a valid User/Disk Flag (see Location 4: the
+ 342:				; most significant nybble contains the User Number and the least significant
+ 343:				; nybble contains the Disk Number).
+ 344:				;    Some user programs (such as SYNONYM3) attempt to use the default
+ 345:				; command facility.  Under the original CPR, it was necessary to initialize
+ 346:				; the pointer after the reserved space for the command buffer to point to
+ 347:				; the first byte of the command buffer.  Under Version 4.x of ZCPR, this is
+ 348:				; no longer the case.  The CIBPTR (Command Input Buffer PoinTeR) is located
+ 349:				; to be compatable with such programs (provided they determine the buffer
+ 350:				; length from the byte at MBUFF [CPRLOC + 6]), but under Version 4.x of ZCPR
+ 351:				; this is no longer necessary.  ZCPR Version 4.x automatically initializes
+ 352:				; this buffer pointer in all cases.
+ 353:				;
+ 354:					public CBASE
+ 355:     -	0000'         	CBASE:
+ 356:     -	0000'         	ENTRY:
+ 357:    0+10	0000' C30501  		JMP	CPR	; Process potential default command
+ 358:   10+10	0003' C30101  		JMP	CPR1	; Do NOT process potential default command
+ 359:				;
+ 360:				;**** Section 1 ****
+ 361:				; BUFFERS ET AL
+ 362:				;
+ 363:				; INPUT COMMAND LINE AND DEFAULT COMMAND
+ 364:				;   The command line to be executed is stored here.  This command line
+ 365:				; is generated in one of three ways:
+ 366:				;	(1) by the user entering it through the BDOS READLN function at
+ 367:				; the du> prompt [user input from keyboard]
+ 368:				;	(2) by the SUBMIT File Facility placing it there from a $$$.SUB
+ 369:				; file
+ 370:				;	(3) by an external program or user placing the required command
+ 371:				; into this buffer
+ 372:				;   In all cases, the command line is placed into the buffer starting at
+ 373:				; CIBUFF.  This command line is terminated by the last character (NOT Carriage
+ 374:				; Return), and a character count of all characters in the command line
+ 375:				; up to and including the last character is placed into location CBUFF
+ 376:				; (immediately before the command line at CIBUFF).  The placed command line
+ 377:				; is then parsed, interpreted, and the indicated command is executed.
+ 378:				; If CLEVEL3 is permitted, a terminating zero is placed after the command
+ 379:				; (otherwise the user program has to place this zero) and the CIBPTR is
+ 380:				; properly initialized (otherwise the user program has to init this ptr).
+ 381:				; If the command is placed by a user program, entering at CPRLOC is enough
+ 382:				; to have the command processed.  Again, under CCPZ Version 4.0, it is not
+ 383:				; necessary to store the pointer to CIBUFF in CIBPTR; ZCPR will do this for
+ 384:				; the calling program if CLEVEL3 is made TRUE.
+ 385:				;   WARNING:  The command line must NOT exceed BUFLEN characters in length.
+ 386:				; For user programs which load this command, the value of BUFLEN can be
+ 387:				; obtained by examining the byte at MBUFF (CPRLOC + 6).
+ 388:				;
+ 389:     -	0050'         	BUFLEN	EQU	80		;MAXIMUM BUFFER LENGTH
+ 390:     -	0006'         	MBUFF:
+ 391:     -	0006' 50      		DB	BUFLEN		;MAXIMUM BUFFER LENGTH
+ 392:     -	0007'         	CBUFF:
+ 393:     -	0007' 00      		DB	0		;NUMBER OF VALID CHARS IN COMMAND LINE
+ 394:     -	0008'         	CIBUFF:
+ 395:     -	0008' 20202020		DB	'               '	;DEFAULT (COLD BOOT) COMMAND
+	              20202020
+	              20202020
+	              202020
+ 396:     -	0017'         	CIBUF:
+ 397:     -	0017' 00      		DB	0			;COMMAND STRING TERMINATOR
+ 398:     -	0018'         		DS	BUFLEN-($-CIBUFF)+1	;TOTAL IS 'BUFLEN' BYTES
+ 399:				;
+ 400:     -	0059'         	CIBPTR:
+ 401:     -	0059' 0800    		DW	CIBUFF		;POINTER TO COMMAND INPUT BUFFER
+ 402:     -	005B'         	CIPTR:
+ 403:     -	005B' 1700    		DW	CIBUF		;CURRENT POINTER
+ 404:				;
+ 405:     -	005D'         		DS	26		;STACK AREA
+ 406:     -	0077'         	STACK	EQU	$		;TOP OF STACK
+ 407:				;
+ 408:				; FILE TYPE FOR COMMAND
+ 409:				;
+ 410:     -	0077'         	COMMSG:
+ 411:     -	0077' 434F4D  		DB	'COM'
+ 412:				;
+ 413:				; SUBMIT FILE CONTROL BLOCK
+ 414:				;
+ 415:     -	007A'         	SUBFCB:
+ 416:     -	FFFF'         		IF	SUBA		;IF $$$.SUB ON A:
+ 417:     -	007A' 01      		DB	1		;DISK NAME SET TO DEFAULT TO DRIVE A:
+ 418:					ENDIF
+ 419:				;
+ 420:     -	0000'         		IF	NOT SUBA	;IF $$$.SUB ON CURRENT DRIVE
+ 422:					ENDIF
+ 423:				;
+ 424:     -	007B' 242424  		DB	'$$$'		;FILE NAME
+ 425:     -	007E' 20202020		DB	'     '
+	              20
+ 426:     -	0083' 535542  		DB	'SUB'		;FILE TYPE
+ 427:     -	0086' 00      		DB	0		;EXTENT NUMBER
+ 428:     -	0087' 00      		DB	0		;S1
+ 429:     -	0088'         	SUBFS2:
+ 430:     -	0088'         		DS	1		;S2
+ 431:     -	0089'         	SUBFRC:
+ 432:     -	0089'         		DS	1		;RECORD COUNT
+ 433:     -	008A'         		DS	16		;DISK GROUP MAP
+ 434:     -	009A'         	SUBFCR:
+ 435:     -	009A'         		DS	1		;CURRENT RECORD NUMBER
+ 436:				;
+ 437:				; COMMAND FILE CONTROL BLOCK
+ 438:				;
+ 439:     -	009B'         	FCBDN:
+ 440:     -	009B'         		DS	1		;DISK NAME
+ 441:     -	009C'         	FCBFN:
+ 442:     -	009C'         		DS	8		;FILE NAME
+ 443:     -	00A4'         	FCBFT:
+ 444:     -	00A4'         		DS	3		;FILE TYPE
+ 445:     -	00A7'         		DS	1		;EXTENT NUMBER
+ 446:     -	00A8'         		DS	2		;S1 AND S2
+ 447:     -	00AA'         		DS	1		;RECORD COUNT
+ 448:     -	00AB'         	FCBDM:
+ 449:     -	00AB'         		DS	16		;DISK GROUP MAP
+ 450:     -	00BB'         	FCBCR:
+ 451:     -	00BB'         		DS	1		;CURRENT RECORD NUMBER
+ 452:				;
+ 453:				; OTHER BUFFERS
+ 454:				;
+ 455:     -	00BC'         	PAGCNT:
+ 456:     -	00BC' 16      		DB	NLINES-2	;LINES LEFT ON PAGE
+ 457:     -	00BD'         	CHRCNT:
+ 458:     -	00BD' 00      		DB	0		;CHAR COUNT FOR TYPE
+ 459:     -	00BE'         	QMCNT:
+ 460:     -	00BE' 00      		DB	0		;QUESTION MARK COUNT FOR FCB TOKEN SCANNER
+ 461:				;
+ 462:				; CPR BUILT-IN COMMAND TABLE
+ 463:				;
+ 464:     -	0004'         	NCHARS	EQU	4		;NUMBER OF CHARS/COMMAND
+ 465:				;
+ 466:				; CPR COMMAND NAME TABLE
+ 467:				;   EACH TABLE ENTRY IS COMPOSED OF THE 4-BYTE COMMAND AND 2-BYTE ADDRESS
+ 468:				;
+ 469:     -	00BF'         	CMDTBL:
+ 470:     -	00BF' 44495220		DB	'DIR '
+ 471:     -	00C3' 8404    		DW	DIR
+ 472:     -	00C5' 4C495354		DB	'LIST'
+ 473:     -	00C9' 5D05    		DW	LIST
+ 474:     -	00CB' 54595045		DB	'TYPE'
+ 475:     -	00CF' 6105    		DW	TYPE
+ 476:     -	00D1' 55534552		DB	'USER'
+ 477:     -	00D5' C006    		DW	USER
+ 478:     -	00D7' 44465520		DB	'DFU '
+ 479:     -	00DB' CA06    		DW	DFU
+ 480:				;
+ 481:     -	FFFF'         		IF	NOT RAS		;FOR NON-RAS
+ 482:     -	00DD' 474F2020		DB	'GO  '
+ 483:     -	00E1' D706    		DW	GO
+ 484:     -	00E3' 45524120		DB	'ERA '
+ 485:     -	00E7' 3505    		DW	ERA
+ 486:     -	00E9' 53415645		DB	'SAVE'
+ 487:     -	00ED' FA05    		DW	SAVE
+ 488:     -	00EF' 52454E20		DB	'REN '
+ 489:     -	00F3' 7C06    		DW	REN
+ 490:     -	00F5' 47455420		DB	'GET '
+ 491:     -	00F9' 8107    		DW	GET
+ 492:     -	00FB' 4A554D50		DB	'JUMP'
+ 493:     -	00FF' D206    		DW	JUMP
+ 494:					ENDIF
+ 495:				;
+ 496:     -	000B'         	NCMNDS	EQU	($-CMDTBL)/(NCHARS+2)
+ 497:				;
+ 498:				;
+ 499:				;**** Section 2 ****
+ 500:				; CPR STARTING POINTS
+ 501:				;
+ 502:				; START CPR AND DON'T PROCESS DEFAULT COMMAND STORED
+ 503:				;
+ 504:     -	0101'         	CPR1:
+ 505:   20+4	0101' AF      		XRA	A		;SET NO DEFAULT COMMAND
+ 506:   24+13	0102' 320700  		STA	CBUFF
+ 507:				;
+ 508:				; START CPR AND POSSIBLY PROCESS DEFAULT COMMAND
+ 509:				;
+ 510:				; NOTE ON MODIFICATION BY RGF: BDOS RETURNS 0FFH IN
+ 511:				; ACCUMULATOR WHENEVER IT LOGS IN A DIRECTORY, IF ANY
+ 512:				; FILE NAME CONTAINS A '$' IN IT.  THIS IS NOW USED AS
+ 513:				; A CLUE TO DETERMINE WHETHER OR NOT TO DO A SEARCH
+ 514:				; FOR SUBMIT FILE, IN ORDER TO ELIMINATE WASTEFUL SEARCHES.
+ 515:				;
+ 516:     -	0105'         	CPR:
+ 517:   37+10	0105' 317700  		LXI	SP,STACK	;RESET STACK
+ 518:   47+11	0108' C5      		PUSH	B
+ 519:   58+5	0109' 79      		MOV	A,C		;C=USER/DISK NUMBER (SEE LOC 4)
+ 520:   63+4	010A' 1F      		RAR			;EXTRACT USER NUMBER
+ 521:   67+4	010B' 1F      		RAR
+ 522:   71+4	010C' 1F      		RAR
+ 523:   75+4	010D' 1F      		RAR
+ 524:   79+7	010E' E60F    		ANI	0FH
+ 525:   86+5	0110' 5F      		MOV	E,A		;SET USER NUMBER
+ 526:   91+17	0111' CD4802  		CALL	SETUSR
+ 527:  108+17	0114' CD0B02  		CALL	RESET		;RESET DISK SYSTEM
+ 528:  125+13	0117' 322A01  		STA	RNGSUB		;SAVE SUBMIT CLUE FROM DRIVE A:
+ 529:  138+10	011A' C1      		POP	B
+ 530:  148+5	011B' 79      		MOV	A,C		;C=USER/DISK NUMBER (SEE LOC 4)
+ 531:  153+7	011C' E60F    		ANI	0FH		;EXTRACT DEFAULT DISK DRIVE
+ 532:  160+13	011E' 325C02  		STA	TDRIVE		;SET IT
+ 533:     -	0121' 28      		DB	28H
+ 533:     -	0000'         		IF (NOLOG-$-1 GT 7FH) AND (NOLOG-$-1 LT 0FF80H)
+ 533:					ELSE
+ 533:     -	0122' 03      		DB	NOLOG-$-1
+ 533:					ENDIF
+ 533:     -	0123'         		ENDM
+ 533:     -	0122' 03      		@GENDD	NOLOG-$-1
+ 533:     -	0123'         		ENDM
+ 533:     -	0121' 2803    		JRZ	NOLOG		;SKIP IF 0...ALREADY LOGGED
+ 534:  173+17	0123' CD1002  		CALL	LOGIN		;LOG IN DEFAULT DISK
+ 535:				;
+ 536:     -	0000'         		IF	NOT SUBA	;IF $$$.SUB IS ON CURRENT DRIVE
+ 538:					ENDIF
+ 539:				;
+ 540:     -	0126'         	NOLOG:
+ 541:  190+10	0126' 117A00  		LXI	D,SUBFCB	;CHECK FOR $$$.SUB ON CURRENT DISK
+ 542:     -	012A'         	RNGSUB	EQU	$+1		;POINTER FOR IN-THE-CODE MODIFICATION
+ 543:  200+7	0129' 3E00    		MVI	A,0		;2ND BYTE (IMMEDIATE ARG) IS THE RNGSUB FLAG
+ 544:  207+4	012B' B7      		ORA	A		;SET FLAGS ON CLUE
+ 545:  211+4	012C' 2F      		CMA			;PREPARE FOR COMING 'CMA'
+ 546:  215+11+6	012D' C42A02  		CNZ	SEAR1
+ 547:  226+4	0130' 2F      		CMA			;0FFH IS RETURNED IF NO $$$.SUB, SO COMPLEMENT
+ 548:  230+13	0131' 322A01  		STA	RNGSUB		;SET FLAG (0=NO $$$.SUB)
+ 549:  243+13	0134' 3A0700  		LDA	CBUFF		;EXECUTE DEFAULT COMMAND?
+ 550:  256+4	0137' B7      		ORA	A		;0=NO
+ 551:     -	0138' 20      		DB	20H
+ 551:     -	0000'         		IF (RS1-$-1 GT 7FH) AND (RS1-$-1 LT 0FF80H)
+ 551:					ELSE
+ 551:     -	0139' 29      		DB	RS1-$-1
+ 551:					ENDIF
+ 551:     -	013A'         		ENDM
+ 551:     -	0139' 29      		@GENDD	RS1-$-1
+ 551:     -	013A'         		ENDM
+ 551:     -	0138' 2029    		JRNZ	RS1
+ 552:				;
+ 553:				; PROMPT USER AND INPUT COMMAND LINE FROM HIM
+ 554:				;
+ 555:     -	013A'         	RESTRT:
+ 556:  260+10	013A' 317700  		LXI	SP,STACK	;RESET STACK
+ 557:				;
+ 558:				; PRINT PROMPT (DU>)
+ 559:				;
+ 560:  270+17	013D' CDAA01  		CALL	CRLF		;PRINT PROMPT
+ 561:  287+17	0140' CD0002  		CALL	GETDRV		;CURRENT DRIVE IS PART OF PROMPT
+ 562:  304+7	0143' C641    		ADI	'A'		;CONVERT TO ASCII A-P
+ 563:  311+17	0145' CDB101  		CALL	CONOUT
+ 564:  328+17	0148' CD4602  		CALL	GETUSR		;GET USER NUMBER
+ 565:				;
+ 566:     -	FFFF'         		IF	SUPRES		;IF SUPPRESSING USR # REPORT FOR USR 0
+ 567:  345+4	014B' B7      		ORA	A
+ 568:     -	014C' 28      		DB	28H
+ 568:     -	0000'         		IF (RS000-$-1 GT 7FH) AND (RS000-$-1 LT 0FF80H)
+ 568:					ELSE
+ 568:     -	014D' 12      		DB	RS000-$-1
+ 568:					ENDIF
+ 568:     -	014E'         		ENDM
+ 568:     -	014D' 12      		@GENDD	RS000-$-1
+ 568:     -	014E'         		ENDM
+ 568:     -	014C' 2812    		JRZ	RS000
+ 569:					ENDIF
+ 570:				;
+ 571:  349+7	014E' FE0A    		CPI	10		;USER < 10?
+ 572:     -	0150' 38      		DB	38H
+ 572:     -	0000'         		IF (RS00-$-1 GT 7FH) AND (RS00-$-1 LT 0FF80H)
+ 572:					ELSE
+ 572:     -	0151' 09      		DB	RS00-$-1
+ 572:					ENDIF
+ 572:     -	0152'         		ENDM
+ 572:     -	0151' 09      		@GENDD	RS00-$-1
+ 572:     -	0152'         		ENDM
+ 572:     -	0150' 3809    		JRC	RS00
+ 573:  356+7	0152' D60A    		SUI	10		;SUBTRACT 10 FROM IT
+ 574:  363+11	0154' F5      		PUSH	PSW		;SAVE IT
+ 575:  374+7	0155' 3E31    		MVI	A,'1'		;OUTPUT 10'S DIGIT
+ 576:  381+17	0157' CDB101  		CALL	CONOUT
+ 577:  398+10	015A' F1      		POP	PSW
+ 578:     -	015B'         	RS00:
+ 579:  408+7	015B' C630    		ADI	'0'		;OUTPUT 1'S DIGIT (CONVERT TO ASCII)
+ 580:  415+17	015D' CDB101  		CALL	CONOUT
+ 581:				;
+ 582:				; READ INPUT LINE FROM USER OR $$$.SUB
+ 583:				;
+ 584:     -	0160'         	RS000:
+ 585:  432+17	0160' CD6A02  		CALL	REDBUF		;INPUT COMMAND LINE FROM USER (OR $$$.SUB)
+ 586:				;
+ 587:				; PROCESS INPUT LINE
+ 588:				;
+ 589:     -	0163'         	RS1:
+ 590:				;
+ 591:     -	FFFF'         		IF	CLEVEL3		;IF THIRD COMMAND LEVEL IS PERMITTED
+ 592:  449+17	0163' CDCB02  		CALL	CNVBUF		;CAPITALIZE COMMAND LINE, PLACE ENDING 0,
+ 593:								; AND SET CIBPTR VALUE
+ 594:					ENDIF
+ 595:				;
+ 596:  466+17	0166' CD0402  		CALL	DEFDMA		;SET TBUFF TO DMA ADDRESS
+ 597:  483+17	0169' CD0002  		CALL	GETDRV		;GET DEFAULT DRIVE NUMBER
+ 598:  500+13	016C' 325C02  		STA	TDRIVE		;SET IT
+ 599:  513+17	016F' CDE303  		CALL	SCANER		;PARSE COMMAND NAME FROM COMMAND LINE
+ 600:  530+11+6	0172' C4F202  		CNZ	ERROR		;ERROR IF COMMAND NAME CONTAINS A '?'
+ 601:  541+10	0175' 118B01  		LXI	D,RSTCPR	;PUT RETURN ADDRESS OF COMMAND
+ 602:  551+11	0178' D5      		PUSH	D		;ON THE STACK
+ 603:  562+13	0179' 3ADA03  		LDA	TEMPDR		;IS COMMAND OF FORM 'D:COMMAND'?
+ 604:  575+4	017C' B7      		ORA	A		;NZ=YES
+ 605:  579+10	017D' C2DC06  		JNZ	COM		; IMMEDIATELY
+ 606:  589+17	0180' CD6204  		CALL	CMDSER		;SCAN FOR CPR-RESIDENT COMMAND
+ 607:  606+10	0183' C2DC06  		JNZ	COM		;NOT CPR-RESIDENT
+ 608:  616+7	0186' 7E      		MOV	A,M		;FOUND IT:  GET LOW-ORDER PART
+ 609:  623+5	0187' 23      		INX	H		;GET HIGH-ORDER PART
+ 610:  628+7	0188' 66      		MOV	H,M		;STORE HIGH
+ 611:  635+5	0189' 6F      		MOV	L,A		;STORE LOW
+ 612:  640+5	018A' E9      		PCHL			;EXECUTE CPR ROUTINE
+ 613:				;
+ 614:				; ENTRY POINT FOR RESTARTING CPR AND LOGGING IN DEFAULT DRIVE
+ 615:				;
+ 616:     -	018B'         	RSTCPR:
+ 617:  645+17	018B' CDCF03  		CALL	DLOGIN		;LOG IN DEFAULT DRIVE
+ 618:				;
+ 619:				; ENTRY POINT FOR RESTARTING CPR WITHOUT LOGGING IN DEFAULT DRIVE
+ 620:				;
+ 621:     -	018E'         	RCPRNL:
+ 622:  662+17	018E' CDE303  		CALL	SCANER		;EXTRACT NEXT TOKEN FROM COMMAND LINE
+ 623:  679+13	0191' 3A9C00  		LDA	FCBFN		;GET FIRST CHAR OF TOKEN
+ 624:  692+7	0194' D620    		SUI	' '		;ANY CHAR?
+ 625:  699+10	0196' 21DA03  		LXI	H,TEMPDR
+ 626:  709+7	0199' B6      		ORA	M
+ 627:  716+10	019A' C2F202  		JNZ	ERROR
+ 628:     -	019D' 18      		DB	18H
+ 628:     -	0000'         		IF (RESTRT-$-1 GT 7FH) AND (RESTRT-$-1 LT 0FF80H)
+ 628:					ELSE
+ 628:     -	019E' 9B      		DB	RESTRT-$-1
+ 628:					ENDIF
+ 628:     -	019F'         		ENDM
+ 628:     -	019E' 9B      		@GENDD	RESTRT-$-1
+ 628:     -	019F'         		ENDM
+ 628:     -	019D' 189B    		JR	RESTRT
+ 629:				;
+ 630:				; No File Error Message
+ 631:				;
+ 632:     -	019F'         	PRNNF:
+ 633:  726+17	019F' CDE801  		CALL	PRINTC		;NO FILE MESSAGE
+ 634:     -	01A2' 4E6F2046		DB	'No Fil','e'+80H
+	              696CE5
+ 635:  743+10	01A9' C9      		RET
+ 636:				;
+ 637:				;**** Section 3 ****
+ 638:				; I/O UTILITIES
+ 639:				;
+ 640:				; OUTPUT CHAR IN REG A TO CONSOLE AND DON'T CHANGE BC
+ 641:				;
+ 642:				;
+ 643:				; OUTPUT <CRLF>
+ 644:				;
+ 645:     -	01AA'         	CRLF:
+ 646:  753+7	01AA' 3E0D    		MVI	A,CR
+ 647:  760+17	01AC' CDB101  		CALL	CONOUT
+ 648:  777+7	01AF' 3E0A    		MVI	A,LF	;FALL THRU TO CONOUT
+ 649:				;
+ 650:     -	01B1'         	CONOUT:
+ 651:  784+11	01B1' C5      		PUSH	B
+ 652:  795+7	01B2' 0E02    		MVI	C,02H
+ 653:     -	01B4'         	OUTPUT:
+ 654:  802+5	01B4' 5F      		MOV	E,A
+ 655:  807+11	01B5' E5      		PUSH	H
+ 656:  818+17	01B6' CD0500  		CALL	BDOS
+ 657:  835+10	01B9' E1      		POP	H
+ 658:  845+10	01BA' C1      		POP	B
+ 659:  855+10	01BB' C9      		RET
+ 660:				;
+ 661:     -	01BC'         	CONIN:
+ 662:  865+7	01BC' 0E01    		MVI	C,01H	;GET CHAR FROM CON: WITH ECHO
+ 663:  872+17	01BE' CDE101  		CALL	BDOSB
+ 664:  889+10	01C1' C36102  		JMP	UCASE	;CAPITALIZE
+ 665:				;
+ 666:     -	01C4'         	LCOUT:
+ 667:  899+11	01C4' F5      		PUSH	PSW	;OUTPUT CHAR TO CON: OR LST: DEP ON PRFLG
+ 668:     -	01C6'         	PRFLG	EQU	$+1	;POINTER FOR IN-THE-CODE MODIFICATION
+ 669:  910+7	01C5' 3E00    		MVI	A,0	;2ND BYTE (IMMEDIATE ARG) IS THE PRINT FLAG
+ 670:  917+4	01C7' B7      		ORA	A	;0=TYPE
+ 671:     -	01C8' 28      		DB	28H
+ 671:     -	0000'         		IF (LC1-$-1 GT 7FH) AND (LC1-$-1 LT 0FF80H)
+ 671:					ELSE
+ 671:     -	01C9' 06      		DB	LC1-$-1
+ 671:					ENDIF
+ 671:     -	01CA'         		ENDM
+ 671:     -	01C9' 06      		@GENDD	LC1-$-1
+ 671:     -	01CA'         		ENDM
+ 671:     -	01C8' 2806    		JRZ	LC1
+ 672:  921+10	01CA' F1      		POP	PSW	;GET CHAR
+ 673:				;
+ 674:				; OUTPUT CHAR IN REG A TO LIST DEVICE
+ 675:				;
+ 676:     -	01CB'         	LSTOUT:
+ 677:  931+11	01CB' C5      		PUSH	B
+ 678:  942+7	01CC' 0E05    		MVI	C,05H
+ 679:     -	01CE' 18      		DB	18H
+ 679:     -	0000'         		IF (OUTPUT-$-1 GT 7FH) AND (OUTPUT-$-1 LT 0FF80H)
+ 679:					ELSE
+ 679:     -	01CF' E4      		DB	OUTPUT-$-1
+ 679:					ENDIF
+ 679:     -	01D0'         		ENDM
+ 679:     -	01CF' E4      		@GENDD	OUTPUT-$-1
+ 679:     -	01D0'         		ENDM
+ 679:     -	01CE' 18E4    		JR	OUTPUT
+ 680:     -	01D0'         	LC1:
+ 681:  949+10	01D0' F1      		POP	PSW	;GET CHAR
+ 682:  959+11	01D1' F5      		PUSH	PSW
+ 683:  970+17	01D2' CDB101  		CALL	CONOUT	;OUTPUT TO CON:
+ 684:  987+10	01D5' F1      		POP	PSW
+ 685:  997+7	01D6' FE0A    		CPI	LF	;CHECK FOR PAGING
+ 686: 1004+10	01D8' CAE105  		JZ	PAGER
+ 687: 1014+10	01DB' C9      		RET
+ 688:				;
+ 689:     -	01DC'         	READF:
+ 690: 1024+10	01DC' 119B00  		LXI	D,FCBDN ;FALL THRU TO READ
+ 691:     -	01DF'         	READ:
+ 692: 1034+7	01DF' 0E14    		MVI	C,14H	;FALL THRU TO BDOSB
+ 693:				;
+ 694:				; CALL BDOS AND SAVE BC
+ 695:				;
+ 696:     -	01E1'         	BDOSB:
+ 697: 1041+11	01E1' C5      		PUSH	B
+ 698: 1052+17	01E2' CD0500  		CALL	BDOS
+ 699: 1069+10	01E5' C1      		POP	B
+ 700: 1079+4	01E6' B7      		ORA	A
+ 701: 1083+10	01E7' C9      		RET
+ 702:				;
+ 703:				; PRINT STRING (ENDING IN 0) PTED TO BY RET ADR;START WITH <CRLF>
+ 704:				;
+ 705:     -	01E8'         	PRINTC:
+ 706: 1093+11	01E8' F5      		PUSH	PSW		;SAVE FLAGS
+ 707: 1104+17	01E9' CDAA01  		CALL	CRLF		;NEW LINE
+ 708: 1121+10	01EC' F1      		POP	PSW
+ 709:				;
+ 710:     -	01ED'         	PRINT:
+ 711: 1131+18	01ED' E3      		XTHL			;GET PTR TO STRING
+ 712: 1149+11	01EE' F5      		PUSH	PSW		;SAVE FLAGS
+ 713: 1160+17	01EF' CDF501  		CALL	PRIN1		;PRINT STRING
+ 714: 1177+10	01F2' F1      		POP	PSW		;GET FLAGS
+ 715: 1187+18	01F3' E3      		XTHL			;RESTORE HL AND RET ADR
+ 716: 1205+10	01F4' C9      		RET
+ 717:				;
+ 718:				; PRINT STRING (ENDING IN 0) PTED TO BY HL
+ 719:				;
+ 720:     -	01F5'         	PRIN1:
+ 721: 1215+7	01F5' 7E      		MOV	A,M		;GET NEXT BYTE
+ 722: 1222+17	01F6' CDB101  		CALL	CONOUT		;PRINT CHAR
+ 723: 1239+7	01F9' 7E      		MOV	A,M		;GET NEXT BYTE AGAIN FOR TEST
+ 724: 1246+5	01FA' 23      		INX	H		;PT TO NEXT BYTE
+ 725: 1251+4	01FB' B7      		ORA	A		;SET FLAGS
+ 726: 1255+5+6	01FC' C8      		RZ			;DONE IF ZERO
+ 727: 1260+5+6	01FD' F8      		RM			;DONE IF MSB SET
+ 728:     -	01FE' 18      		DB	18H
+ 728:     -	0000'         		IF (PRIN1-$-1 GT 7FH) AND (PRIN1-$-1 LT 0FF80H)
+ 728:					ELSE
+ 728:     -	01FF' F5      		DB	PRIN1-$-1
+ 728:					ENDIF
+ 728:     -	0200'         		ENDM
+ 728:     -	01FF' F5      		@GENDD	PRIN1-$-1
+ 728:     -	0200'         		ENDM
+ 728:     -	01FE' 18F5    		JR	PRIN1
+ 729:				;
+ 730:				; BDOS FUNCTION ROUTINES
+ 731:				;
+ 732:				;
+ 733:				; RETURN NUMBER OF CURRENT DISK IN A
+ 734:				;
+ 735:     -	0200'         	GETDRV:
+ 736: 1265+7	0200' 0E19    		MVI	C,19H
+ 737:     -	0202' 18      		DB	18H
+ 737:     -	0000'         		IF (BDOSJP-$-1 GT 7FH) AND (BDOSJP-$-1 LT 0FF80H)
+ 737:					ELSE
+ 737:     -	0203' 09      		DB	BDOSJP-$-1
+ 737:					ENDIF
+ 737:     -	0204'         		ENDM
+ 737:     -	0203' 09      		@GENDD	BDOSJP-$-1
+ 737:     -	0204'         		ENDM
+ 737:     -	0202' 1809    		JR	BDOSJP
+ 738:				;
+ 739:				; SET 80H AS DMA ADDRESS
+ 740:				;
+ 741:     -	0204'         	DEFDMA:
+ 742: 1272+10	0204' 118000  		LXI	D,TBUFF 	;80H=TBUFF
+ 743:     -	0207'         	DMASET:
+ 744: 1282+7	0207' 0E1A    		MVI	C,1AH
+ 745:     -	0209' 18      		DB	18H
+ 745:     -	0000'         		IF (BDOSJP-$-1 GT 7FH) AND (BDOSJP-$-1 LT 0FF80H)
+ 745:					ELSE
+ 745:     -	020A' 02      		DB	BDOSJP-$-1
+ 745:					ENDIF
+ 745:     -	020B'         		ENDM
+ 745:     -	020A' 02      		@GENDD	BDOSJP-$-1
+ 745:     -	020B'         		ENDM
+ 745:     -	0209' 1802    		JR	BDOSJP
+ 746:				;
+ 747:     -	020B'         	RESET:
+ 748: 1289+7	020B' 0E0D    		MVI	C,0DH
+ 749:     -	020D'         	BDOSJP:
+ 750: 1296+10	020D' C30500  		JMP	BDOS
+ 751:				;
+ 752:     -	0210'         	LOGIN:
+ 753: 1306+5	0210' 5F      		MOV	E,A
+ 754: 1311+7	0211' 0E0E    		MVI	C,0EH
+ 755:     -	0213' 18      		DB	18H
+ 755:     -	0000'         		IF (BDOSJP-$-1 GT 7FH) AND (BDOSJP-$-1 LT 0FF80H)
+ 755:					ELSE
+ 755:     -	0214' F8      		DB	BDOSJP-$-1
+ 755:					ENDIF
+ 755:     -	0215'         		ENDM
+ 755:     -	0214' F8      		@GENDD	BDOSJP-$-1
+ 755:     -	0215'         		ENDM
+ 755:     -	0213' 18F8    		JR	BDOSJP	;SAVE SOME CODE SPACE
+ 756:				;
+ 757:     -	0215'         	OPENF:
+ 758: 1318+4	0215' AF      		XRA	A
+ 759: 1322+13	0216' 32BB00  		STA	FCBCR
+ 760: 1335+10	0219' 119B00  		LXI	D,FCBDN ;FALL THRU TO OPEN
+ 761:				;
+ 762:     -	021C'         	OPEN:
+ 763: 1345+7	021C' 0E0F    		MVI	C,0FH	;FALL THRU TO GRBDOS
+ 764:				;
+ 765:     -	021E'         	GRBDOS:
+ 766: 1352+17	021E' CD0500  		CALL	BDOS
+ 767: 1369+5	0221' 3C      		INR	A	;SET ZERO FLAG FOR ERROR RETURN
+ 768: 1374+10	0222' C9      		RET
+ 769:				;
+ 770:     -	0223'         	CLOSE:
+ 771: 1384+7	0223' 0E10    		MVI	C,10H
+ 772:     -	0225' 18      		DB	18H
+ 772:     -	0000'         		IF (GRBDOS-$-1 GT 7FH) AND (GRBDOS-$-1 LT 0FF80H)
+ 772:					ELSE
+ 772:     -	0226' F7      		DB	GRBDOS-$-1
+ 772:					ENDIF
+ 772:     -	0227'         		ENDM
+ 772:     -	0226' F7      		@GENDD	GRBDOS-$-1
+ 772:     -	0227'         		ENDM
+ 772:     -	0225' 18F7    		JR	GRBDOS
+ 773:				;
+ 774:     -	0227'         	SEARF:
+ 775: 1391+10	0227' 119B00  		LXI	D,FCBDN ;SPECIFY FCB
+ 776:     -	022A'         	SEAR1:
+ 777: 1401+7	022A' 0E11    		MVI	C,11H
+ 778:     -	022C' 18      		DB	18H
+ 778:     -	0000'         		IF (GRBDOS-$-1 GT 7FH) AND (GRBDOS-$-1 LT 0FF80H)
+ 778:					ELSE
+ 778:     -	022D' F0      		DB	GRBDOS-$-1
+ 778:					ENDIF
+ 778:     -	022E'         		ENDM
+ 778:     -	022D' F0      		@GENDD	GRBDOS-$-1
+ 778:     -	022E'         		ENDM
+ 778:     -	022C' 18F0    		JR	GRBDOS
+ 779:				;
+ 780:     -	022E'         	SEARN:
+ 781: 1408+7	022E' 0E12    		MVI	C,12H
+ 782:     -	0230' 18      		DB	18H
+ 782:     -	0000'         		IF (GRBDOS-$-1 GT 7FH) AND (GRBDOS-$-1 LT 0FF80H)
+ 782:					ELSE
+ 782:     -	0231' EC      		DB	GRBDOS-$-1
+ 782:					ENDIF
+ 782:     -	0232'         		ENDM
+ 782:     -	0231' EC      		@GENDD	GRBDOS-$-1
+ 782:     -	0232'         		ENDM
+ 782:     -	0230' 18EC    		JR	GRBDOS
+ 783:				;
+ 784:				; CHECK FOR SUBMIT FILE IN EXECUTION AND ABORT IT IF SO
+ 785:				;
+ 786:     -	0232'         	SUBKIL:
+ 787: 1415+10	0232' 212A01  		LXI	H,RNGSUB	;CHECK FOR SUBMIT FILE IN EXECUTION
+ 788: 1425+7	0235' 7E      		MOV	A,M
+ 789: 1432+4	0236' B7      		ORA	A		;0=NO
+ 790: 1436+5+6	0237' C8      		RZ
+ 791: 1441+10	0238' 3600    		MVI	M,0		;ABORT SUBMIT FILE
+ 792: 1451+10	023A' 117A00  		LXI	D,SUBFCB	;DELETE $$$.SUB
+ 793:				;
+ 794:     -	023D'         	DELETE:
+ 795: 1461+7	023D' 0E13    		MVI	C,13H
+ 796:     -	023F' 18      		DB	18H
+ 796:     -	0000'         		IF (BDOSJP-$-1 GT 7FH) AND (BDOSJP-$-1 LT 0FF80H)
+ 796:					ELSE
+ 796:     -	0240' CC      		DB	BDOSJP-$-1
+ 796:					ENDIF
+ 796:     -	0241'         		ENDM
+ 796:     -	0240' CC      		@GENDD	BDOSJP-$-1
+ 796:     -	0241'         		ENDM
+ 796:     -	023F' 18CC    		JR	BDOSJP	;SAVE MORE SPACE
+ 797:				;
+ 798:				; RESET USER NUMBER IF CHANGED
+ 799:				;
+ 800:     -	0241'         	RESETUSR:
+ 801:     -	0242'         	TMPUSR	EQU	$+1		;POINTER FOR IN-THE-CODE MODIFICATION
+ 802: 1468+7	0241' 3E00    		MVI	A,0		;2ND BYTE (IMMEDIATE ARG) IS TMPUSR
+ 803: 1475+5	0243' 5F      		MOV	E,A		;PLACE IN E
+ 804:     -	0244' 18      		DB	18H
+ 804:     -	0000'         		IF (SETUSR-$-1 GT 7FH) AND (SETUSR-$-1 LT 0FF80H)
+ 804:					ELSE
+ 804:     -	0245' 02      		DB	SETUSR-$-1
+ 804:					ENDIF
+ 804:     -	0246'         		ENDM
+ 804:     -	0245' 02      		@GENDD	SETUSR-$-1
+ 804:     -	0246'         		ENDM
+ 804:     -	0244' 1802    		JR	SETUSR		;THEN GO SET USER
+ 805:     -	0246'         	GETUSR:
+ 806: 1480+7	0246' 1EFF    		MVI	E,0FFH		;GET CURRENT USER NUMBER
+ 807:     -	0248'         	SETUSR:
+ 808: 1487+7	0248' 0E20    		MVI	C,20H		;SET USER NUMBER TO VALUE IN E (GET IF E=FFH)
+ 809:     -	024A' 18      		DB	18H
+ 809:     -	0000'         		IF (BDOSJP-$-1 GT 7FH) AND (BDOSJP-$-1 LT 0FF80H)
+ 809:					ELSE
+ 809:     -	024B' C1      		DB	BDOSJP-$-1
+ 809:					ENDIF
+ 809:     -	024C'         		ENDM
+ 809:     -	024B' C1      		@GENDD	BDOSJP-$-1
+ 809:     -	024C'         		ENDM
+ 809:     -	024A' 18C1    		JR	BDOSJP		;MORE SPACE SAVING
+ 810:				;
+ 811:				; END OF BDOS FUNCTIONS
+ 812:				;
+ 813:				;
+ 814:				;**** Section 4 ****
+ 815:				; CPR UTILITIES
+ 816:				;
+ 817:				; SET USER/DISK FLAG TO CURRENT USER AND DEFAULT DISK
+ 818:				;
+ 819:     -	024C'         	SETUD:
+ 820: 1494+17	024C' CD4602  		CALL	GETUSR		;GET NUMBER OF CURRENT USER
+ 821: 1511+4	024F' 87      		ADD	A		;PLACE IT IN HIGH NYBBLE
+ 822: 1515+4	0250' 87      		ADD	A
+ 823: 1519+4	0251' 87      		ADD	A
+ 824: 1523+4	0252' 87      		ADD	A
+ 825: 1527+10	0253' 215C02  		LXI	H,TDRIVE	;MASK IN DEFAULT DRIVE NUMBER (LOW NYBBLE)
+ 826: 1537+7	0256' B6      		ORA	M		;MASK IN
+ 827: 1544+13	0257' 320400  		STA	UDFLAG		;SET USER/DISK NUMBER
+ 828: 1557+10	025A' C9      		RET
+ 829:				;
+ 830:				; SET USER/DISK FLAG TO USER 0 AND DEFAULT DISK
+ 831:				;
+ 832:     -	025B'         	SETU0D:
+ 833:     -	025C'         	TDRIVE	EQU	$+1		;POINTER FOR IN-THE-CODE MODIFICATION
+ 834: 1567+7	025B' 3E00    		MVI	A,0		;2ND BYTE (IMMEDIATE ARG) IS TDRIVE
+ 835: 1574+13	025D' 320400  		STA	UDFLAG		;SET USER/DISK NUMBER
+ 836: 1587+10	0260' C9      		RET
+ 837:				;
+ 838:				; CONVERT CHAR IN A TO UPPER CASE
+ 839:				;
+ 840:     -	0261'         	UCASE:
+ 841: 1597+7	0261' FE61    		CPI	61H		;LOWER-CASE A
+ 842: 1604+5+6	0263' D8      		RC
+ 843: 1609+7	0264' FE7B    		CPI	7BH		;GREATER THAN LOWER-CASE Z?
+ 844: 1616+5+6	0266' D0      		RNC
+ 845: 1621+7	0267' E65F    		ANI	5FH		;CAPITALIZE
+ 846: 1628+10	0269' C9      		RET
+ 847:				;
+ 848:				; INPUT NEXT COMMAND TO CPR
+ 849:				;	This routine determines if a SUBMIT file is being processed
+ 850:				; and extracts the command line from it if so or from the user's console
+ 851:				;
+ 852:     -	026A'         	REDBUF:
+ 853: 1638+13	026A' 3A2A01  		LDA	RNGSUB		;SUBMIT FILE CURRENTLY IN EXECUTION?
+ 854: 1651+4	026D' B7      		ORA	A		;0=NO
+ 855:     -	026E' 28      		DB	28H
+ 855:     -	0000'         		IF (RB1-$-1 GT 7FH) AND (RB1-$-1 LT 0FF80H)
+ 855:					ELSE
+ 855:     -	026F' 45      		DB	RB1-$-1
+ 855:					ENDIF
+ 855:     -	0270'         		ENDM
+ 855:     -	026F' 45      		@GENDD	RB1-$-1
+ 855:     -	0270'         		ENDM
+ 855:     -	026E' 2845    		JRZ	RB1		;GET LINE FROM CONSOLE IF NOT
+ 856: 1655+10	0270' 117A00  		LXI	D,SUBFCB	;OPEN $$$.SUB
+ 857: 1665+11	0273' D5      		PUSH	D		;SAVE DE
+ 858: 1676+17	0274' CD1C02  		CALL	OPEN
+ 859: 1693+10	0277' D1      		POP	D		;RESTORE DE
+ 860:     -	0278' 28      		DB	28H
+ 860:     -	0000'         		IF (RB1-$-1 GT 7FH) AND (RB1-$-1 LT 0FF80H)
+ 860:					ELSE
+ 860:     -	0279' 3B      		DB	RB1-$-1
+ 860:					ENDIF
+ 860:     -	027A'         		ENDM
+ 860:     -	0279' 3B      		@GENDD	RB1-$-1
+ 860:     -	027A'         		ENDM
+ 860:     -	0278' 283B    		JRZ	RB1		;ERASE $$$.SUB IF END OF FILE AND GET CMND
+ 861: 1703+13	027A' 3A8900  		LDA	SUBFRC		;GET VALUE OF LAST RECORD IN FILE
+ 862: 1716+5	027D' 3D      		DCR	A		;PT TO NEXT TO LAST RECORD
+ 863: 1721+13	027E' 329A00  		STA	SUBFCR		;SAVE NEW VALUE OF LAST RECORD IN $$$.SUB
+ 864: 1734+17	0281' CDDF01  		CALL	READ		;DE=SUBFCB
+ 865:     -	0284' 20      		DB	20H
+ 865:     -	0000'         		IF (RB1-$-1 GT 7FH) AND (RB1-$-1 LT 0FF80H)
+ 865:					ELSE
+ 865:     -	0285' 2F      		DB	RB1-$-1
+ 865:					ENDIF
+ 865:     -	0286'         		ENDM
+ 865:     -	0285' 2F      		@GENDD	RB1-$-1
+ 865:     -	0286'         		ENDM
+ 865:     -	0284' 202F    		JRNZ	RB1		;ABORT $$$.SUB IF ERROR IN READING LAST REC
+ 866: 1751+10	0286' 110700  		LXI	D,CBUFF 	;COPY LAST RECORD (NEXT SUBMIT CMND) TO CBUFF
+ 867: 1761+10	0289' 218000  		LXI	H,TBUFF 	;  FROM TBUFF
+ 868: 1771+10	028C' 015000  		LXI	B,BUFLEN	;NUMBER OF BYTES
+ 869:     -	028F' EDB0    		DB	0EDH,0B0H
+ 869:     -	0291'         		ENDM
+ 869:     -	028F' EDB0    		LDIR
+ 870: 1781+10	0291' 218800  		LXI	H,SUBFS2	;PT TO S2 OF $$$.SUB FCB
+ 871: 1791+10	0294' 3600    		MVI	M,0		;SET S2 TO ZERO
+ 872: 1801+5	0296' 23      		INX	H		;PT TO RECORD COUNT
+ 873: 1806+10	0297' 35      		DCR	M		;DECREMENT RECORD COUNT OF $$$.SUB
+ 874: 1816+10	0298' 117A00  		LXI	D,SUBFCB	;CLOSE $$$.SUB
+ 875: 1826+17	029B' CD2302  		CALL	CLOSE
+ 876:     -	029E' 28      		DB	28H
+ 876:     -	0000'         		IF (RB1-$-1 GT 7FH) AND (RB1-$-1 LT 0FF80H)
+ 876:					ELSE
+ 876:     -	029F' 15      		DB	RB1-$-1
+ 876:					ENDIF
+ 876:     -	02A0'         		ENDM
+ 876:     -	029F' 15      		@GENDD	RB1-$-1
+ 876:     -	02A0'         		ENDM
+ 876:     -	029E' 2815    		JRZ	RB1		;ABORT $$$.SUB IF ERROR
+ 877: 1843+7	02A0' 3E24    		MVI	A,SPRMPT	;PRINT SUBMIT PROMPT
+ 878: 1850+17	02A2' CDB101  		CALL	CONOUT
+ 879: 1867+10	02A5' 210800  		LXI	H,CIBUFF	;PRINT COMMAND LINE FROM $$$.SUB
+ 880: 1877+17	02A8' CDF501  		CALL	PRIN1
+ 881: 1894+17	02AB' CDE102  		CALL	BREAK		;CHECK FOR ABORT (ANY CHAR)
+ 882:				;
+ 883:     -	FFFF'         		IF	CLEVEL3		;IF THIRD COMMAND LEVEL IS PERMITTED
+ 884: 1911+5+6	02AE' C8      		RZ			;IF <NULL> (NO ABORT), RETURN TO CALLER AND RUN
+ 885:					ENDIF
+ 886:				;
+ 887:     -	0000'         		IF	NOT CLEVEL3	;IF THIRD COMMAND LEVEL IS NOT PERMITTED
+ 889:					ENDIF
+ 890:				;
+ 891: 1916+17	02AF' CD3202  		CALL	SUBKIL		;KILL $$$.SUB IF ABORT
+ 892: 1933+10	02B2' C33A01  		JMP	RESTRT		;RESTART CPR
+ 893:				;
+ 894:				; INPUT COMMAND LINE FROM USER CONSOLE
+ 895:				;
+ 896:     -	02B5'         	RB1:
+ 897: 1943+17	02B5' CD3202  		CALL	SUBKIL		;ERASE $$$.SUB IF PRESENT
+ 898: 1960+17	02B8' CD4C02  		CALL	SETUD		;SET USER AND DISK
+ 899: 1977+7	02BB' 3E3E    		MVI	A,CPRMPT	;PRINT PROMPT
+ 900: 1984+17	02BD' CDB101  		CALL	CONOUT
+ 901: 2001+7	02C0' 0E0A    		MVI	C,0AH		;READ COMMAND LINE FROM USER
+ 902: 2008+10	02C2' 110600  		LXI	D,MBUFF
+ 903: 2018+17	02C5' CD0500  		CALL	BDOS
+ 904:				;
+ 905:     -	FFFF'         		IF	CLEVEL3		;IF THIRD COMMAND LEVEL IS PERMITTED
+ 906: 2035+10	02C8' C35B02  		JMP	SETU0D		;SET CURRENT DISK NUMBER IN LOWER PARAMS
+ 907:					ENDIF
+ 908:				;
+ 909:     -	0000'         		IF	NOT CLEVEL3	;IF THIRD COMMAND LEVEL IS NOT PERMITTED
+ 912:					ENDIF
+ 913:				;
+ 914:				; CAPITALIZE STRING (ENDING IN 0) IN CBUFF AND SET PTR FOR PARSING
+ 915:				;
+ 916:     -	02CB'         	CNVBUF:
+ 917: 2045+10	02CB' 210700  		LXI	H,CBUFF 	;PT TO USER'S COMMAND
+ 918: 2055+7	02CE' 46      		MOV	B,M		;CHAR COUNT IN B
+ 919: 2062+5	02CF' 04      		INR	B		;ADD 1 IN CASE OF ZERO
+ 920:     -	02D0'         	CB1:
+ 921: 2067+5	02D0' 23      		INX	H		;PT TO 1ST VALID CHAR
+ 922: 2072+7	02D1' 7E      		MOV	A,M		;CAPITALIZE COMMAND CHAR
+ 923: 2079+17	02D2' CD6102  		CALL	UCASE
+ 924: 2096+7	02D5' 77      		MOV	M,A
+ 925:     -	02D6' 10      		DB	10H
+ 925:     -	0000'         		IF (CB1-$-1 GT 7FH) AND (CB1-$-1 LT 0FF80H)
+ 925:					ELSE
+ 925:     -	02D7' F8      		DB	CB1-$-1
+ 925:					ENDIF
+ 925:     -	02D8'         		ENDM
+ 925:     -	02D7' F8      		@GENDD	CB1-$-1
+ 925:     -	02D8'         		ENDM
+ 925:     -	02D6' 10F8    		DJNZ	CB1		;CONTINUE TO END OF COMMAND LINE
+ 926:     -	02D8'         	CB2:
+ 927: 2103+10	02D8' 3600    		MVI	M,0		;STORE ENDING <NULL>
+ 928: 2113+10	02DA' 210800  		LXI	H,CIBUFF	;SET COMMAND LINE PTR TO 1ST CHAR
+ 929: 2123+16	02DD' 225900  		SHLD	CIBPTR
+ 930: 2139+10	02E0' C9      		RET
+ 931:				;
+ 932:				; CHECK FOR ANY CHAR FROM USER CONSOLE;RET W/ZERO SET IF NONE
+ 933:				;
+ 934:     -	02E1'         	BREAK:
+ 935: 2149+11	02E1' D5      		PUSH	D		;SAVE DE
+ 936: 2160+7	02E2' 0E0B    		MVI	C,11		;CSTS CHECK
+ 937: 2167+17	02E4' CDE101  		CALL	BDOSB
+ 938: 2184+11+6	02E7' C4BC01  		CNZ	CONIN		;GET INPUT CHAR
+ 939:     -	02EA'         	BRKBK:
+ 940: 2195+10	02EA' D1      		POP	D
+ 941: 2205+10	02EB' C9      		RET
+ 942:				;
+ 943:				; GET THE REQUESTED USER NUMBER FROM THE COMMAND LINE AND VALIDATE IT.
+ 944:				;
+ 945:     -	02EC'         	USRNUM:
+ 946: 2215+17	02EC' CD3E03  		CALL	NUMBER
+ 947: 2232+7	02EF' FE10    		CPI	MAXUSR+1
+ 948: 2239+5+6	02F1' D8      		RC
+ 949:				;
+ 950:				; INVALID COMMAND -- PRINT IT
+ 951:				;
+ 952:     -	02F2'         	ERROR:
+ 953: 2244+17	02F2' CDAA01  		CALL	CRLF		;NEW LINE
+ 954: 2261+16	02F5' 2A5B00  		LHLD	CIPTR		;PT TO BEGINNING OF COMMAND LINE
+ 955:     -	02F8'         	ERR2:
+ 956: 2277+7	02F8' 7E      		MOV	A,M		;GET CHAR
+ 957: 2284+7	02F9' FE21    		CPI	' '+1		;SIMPLE '?' IF <SP> OR LESS
+ 958:     -	02FB' 38      		DB	38H
+ 958:     -	0000'         		IF (ERR1-$-1 GT 7FH) AND (ERR1-$-1 LT 0FF80H)
+ 958:					ELSE
+ 958:     -	02FC' 08      		DB	ERR1-$-1
+ 958:					ENDIF
+ 958:     -	02FD'         		ENDM
+ 958:     -	02FC' 08      		@GENDD	ERR1-$-1
+ 958:     -	02FD'         		ENDM
+ 958:     -	02FB' 3808    		JRC	ERR1
+ 959: 2291+11	02FD' E5      		PUSH	H		;SAVE PTR TO ERROR COMMAND CHAR
+ 960: 2302+17	02FE' CDB101  		CALL	CONOUT		;PRINT COMMAND CHAR
+ 961: 2319+10	0301' E1      		POP	H		;GET PTR
+ 962: 2329+5	0302' 23      		INX	H		;PT TO NEXT
+ 963:     -	0303' 18      		DB	18H
+ 963:     -	0000'         		IF (ERR2-$-1 GT 7FH) AND (ERR2-$-1 LT 0FF80H)
+ 963:					ELSE
+ 963:     -	0304' F3      		DB	ERR2-$-1
+ 963:					ENDIF
+ 963:     -	0305'         		ENDM
+ 963:     -	0304' F3      		@GENDD	ERR2-$-1
+ 963:     -	0305'         		ENDM
+ 963:     -	0303' 18F3    		JR	ERR2		;CONTINUE
+ 964:     -	0305'         	ERR1:
+ 965: 2334+17	0305' CDED01  		CALL	PRINT		;PRINT '?'
+ 966:     -	0308' BF      		DB	'?'+80H
+ 967: 2351+17	0309' CD3202  		CALL	SUBKIL		;TERMINATE ACTIVE $$$.SUB IF ANY
+ 968: 2368+10	030C' C33A01  		JMP	RESTRT		;RESTART CPR
+ 969:				;
+ 970:				; CHECK TO SEE IF DE PTS TO DELIMITER; IF SO, RET W/ZERO FLAG SET
+ 971:				;
+ 972:     -	030F'         	SDELM:
+ 973: 2378+7	030F' 1A      		LDAX	D
+ 974: 2385+4	0310' B7      		ORA	A		;0=DELIMITER
+ 975: 2389+5+6	0311' C8      		RZ
+ 976: 2394+7	0312' FE20    		CPI	' '		;ERROR IF < <SP>
+ 977:     -	0314' 38      		DB	38H
+ 977:     -	0000'         		IF (ERROR-$-1 GT 7FH) AND (ERROR-$-1 LT 0FF80H)
+ 977:					ELSE
+ 977:     -	0315' DC      		DB	ERROR-$-1
+ 977:					ENDIF
+ 977:     -	0316'         		ENDM
+ 977:     -	0315' DC      		@GENDD	ERROR-$-1
+ 977:     -	0316'         		ENDM
+ 977:     -	0314' 38DC    		JRC	ERROR
+ 978: 2401+5+6	0316' C8      		RZ			;<SP>=DELIMITER
+ 979: 2406+7	0317' FE3D    		CPI	'='		;'='=DELIMITER
+ 980: 2413+5+6	0319' C8      		RZ
+ 981: 2418+7	031A' FE5F    		CPI	5FH		;UNDERSCORE=DELIMITER
+ 982: 2425+5+6	031C' C8      		RZ
+ 983: 2430+7	031D' FE2E    		CPI	'.'		;'.'=DELIMITER
+ 984: 2437+5+6	031F' C8      		RZ
+ 985: 2442+7	0320' FE3A    		CPI	':'		;':'=DELIMITER
+ 986: 2449+5+6	0322' C8      		RZ
+ 987: 2454+7	0323' FE3B    		CPI	';'		;';'=DELIMITER
+ 988: 2461+5+6	0325' C8      		RZ
+ 989: 2466+7	0326' FE3C    		CPI	'<'		;'<'=DELIMITER
+ 990: 2473+5+6	0328' C8      		RZ
+ 991: 2478+7	0329' FE3E    		CPI	'>'		;'>'=DELIMITER
+ 992: 2485+10	032B' C9      		RET
+ 993:				;
+ 994:				; ADVANCE INPUT PTR TO FIRST NON-BLANK AND FALL THROUGH TO SBLANK
+ 995:				;
+ 996:     -	032C'         	ADVAN:
+ 997:     -	032C' ED5B    		DB	0EDH,05BH
+ 997:     -	032E' 5900    		DW	CIBPTR
+ 997:     -	0330'         		ENDM
+ 997:     -	032C' ED5B5900		LDED	CIBPTR
+ 998:				;
+ 999:				; SKIP STRING PTED TO BY DE (STRING ENDS IN 0) UNTIL END OF STRING
+1000:				;   OR NON-BLANK ENCOUNTERED (BEGINNING OF TOKEN)
+1001:				;
+1002:     -	0330'         	SBLANK:
+1003: 2495+7	0330' 1A      		LDAX	D
+1004: 2502+4	0331' B7      		ORA	A
+1005: 2506+5+6	0332' C8      		RZ
+1006: 2511+7	0333' FE20    		CPI	' '
+1007: 2518+5+6	0335' C0      		RNZ
+1008: 2523+5	0336' 13      		INX	D
+1009:     -	0337' 18      		DB	18H
+1009:     -	0000'         		IF (SBLANK-$-1 GT 7FH) AND (SBLANK-$-1 LT 0FF80H)
+1009:					ELSE
+1009:     -	0338' F7      		DB	SBLANK-$-1
+1009:					ENDIF
+1009:     -	0339'         		ENDM
+1009:     -	0338' F7      		@GENDD	SBLANK-$-1
+1009:     -	0339'         		ENDM
+1009:     -	0337' 18F7    		JR	SBLANK
+1010:				;
+1011:				; ADD A TO HL (HL=HL+A)
+1012:				;
+1013:     -	0339'         	ADDAH:
+1014: 2528+4	0339' 85      		ADD	L
+1015: 2532+5	033A' 6F      		MOV	L,A
+1016: 2537+5+6	033B' D0      		RNC
+1017: 2542+5	033C' 24      		INR	H
+1018: 2547+10	033D' C9      		RET
+1019:				;
+1020:				; EXTRACT DECIMAL NUMBER FROM COMMAND LINE
+1021:				;   RETURN WITH VALUE IN REG A;ALL REGISTERS MAY BE AFFECTED
+1022:				;
+1023:     -	033E'         	NUMBER:
+1024: 2557+17	033E' CDE303  		CALL	SCANER		;PARSE NUMBER AND PLACE IN FCBFN
+1025: 2574+10	0341' 21A600  		LXI	H,FCBFN+10 	;PT TO END OF TOKEN FOR CONVERSION
+1026: 2584+7	0344' 060B    		MVI	B,11		;11 CHARS MAX
+1027:				;
+1028:				; CHECK FOR SUFFIX FOR HEXADECIMAL NUMBER
+1029:				;
+1030:     -	0346'         	NUMS:
+1031: 2591+7	0346' 7E      		MOV	A,M		;GET CHARS FROM END, SEARCHING FOR SUFFIX
+1032: 2598+5	0347' 2B      		DCX	H		;BACK UP
+1033: 2603+7	0348' FE20    		CPI	' '		;SPACE?
+1034:     -	034A' 20      		DB	20H
+1034:     -	0000'         		IF (NUMS1-$-1 GT 7FH) AND (NUMS1-$-1 LT 0FF80H)
+1034:					ELSE
+1034:     -	034B' 04      		DB	NUMS1-$-1
+1034:					ENDIF
+1034:     -	034C'         		ENDM
+1034:     -	034B' 04      		@GENDD	NUMS1-$-1
+1034:     -	034C'         		ENDM
+1034:     -	034A' 2004    		JRNZ	NUMS1		;CHECK FOR SUFFIX
+1035:     -	034C' 10      		DB	10H
+1035:     -	0000'         		IF (NUMS-$-1 GT 7FH) AND (NUMS-$-1 LT 0FF80H)
+1035:					ELSE
+1035:     -	034D' F8      		DB	NUMS-$-1
+1035:					ENDIF
+1035:     -	034E'         		ENDM
+1035:     -	034D' F8      		@GENDD	NUMS-$-1
+1035:     -	034E'         		ENDM
+1035:     -	034C' 10F8    		DJNZ	NUMS		;COUNT DOWN
+1036:     -	034E' 18      		DB	18H
+1036:     -	0000'         		IF (NUM0-$-1 GT 7FH) AND (NUM0-$-1 LT 0FF80H)
+1036:					ELSE
+1036:     -	034F' 04      		DB	NUM0-$-1
+1036:					ENDIF
+1036:     -	0350'         		ENDM
+1036:     -	034F' 04      		@GENDD	NUM0-$-1
+1036:     -	0350'         		ENDM
+1036:     -	034E' 1804    		JR	NUM0		;BY DEFAULT, PROCESS
+1037:     -	0350'         	NUMS1:
+1038: 2610+7	0350' FE48    		CPI	NUMBASE		;CHECK AGAINST BASE SWITCH FLAG
+1039:     -	0352' 28      		DB	28H
+1039:     -	0000'         		IF (HNUM0-$-1 GT 7FH) AND (HNUM0-$-1 LT 0FF80H)
+1039:					ELSE
+1039:     -	0353' 2B      		DB	HNUM0-$-1
+1039:					ENDIF
+1039:     -	0354'         		ENDM
+1039:     -	0353' 2B      		@GENDD	HNUM0-$-1
+1039:     -	0354'         		ENDM
+1039:     -	0352' 282B    		JRZ	HNUM0
+1040:				;
+1041:				; PROCESS DECIMAL NUMBER
+1042:				;
+1043:     -	0354'         	NUM0:
+1044: 2617+10	0354' 219C00  		LXI	H,FCBFN		;PT TO BEGINNING OF TOKEN
+1045: 2627+10	0357' 010011  		LXI	B,1100H		;C=ACCUMULATED VALUE, B=CHAR COUNT
+1046:								; (C=0, B=11)
+1047:     -	035A'         	NUM1:
+1048: 2637+7	035A' 7E      		MOV	A,M		;GET CHAR
+1049: 2644+7	035B' FE20    		CPI	' '		;DONE IF <SP>
+1050:     -	035D' 28      		DB	28H
+1050:     -	0000'         		IF (NUM2-$-1 GT 7FH) AND (NUM2-$-1 LT 0FF80H)
+1050:					ELSE
+1050:     -	035E' 18      		DB	NUM2-$-1
+1050:					ENDIF
+1050:     -	035F'         		ENDM
+1050:     -	035E' 18      		@GENDD	NUM2-$-1
+1050:     -	035F'         		ENDM
+1050:     -	035D' 2818    		JRZ	NUM2
+1051: 2651+5	035F' 23      		INX	H		;PT TO NEXT CHAR
+1052: 2656+7	0360' D630    		SUI	'0'		;CONVERT TO BINARY (ASCII 0-9 TO BINARY)
+1053: 2663+7	0362' FE0A    		CPI	10		;ERROR IF >= 10
+1054:     -	0364' 30      		DB	30H
+1054:     -	0000'         		IF (NUMERR-$-1 GT 7FH) AND (NUMERR-$-1 LT 0FF80H)
+1054:					ELSE
+1054:     -	0365' 13      		DB	NUMERR-$-1
+1054:					ENDIF
+1054:     -	0366'         		ENDM
+1054:     -	0365' 13      		@GENDD	NUMERR-$-1
+1054:     -	0366'         		ENDM
+1054:     -	0364' 3013    		JRNC	NUMERR
+1055: 2670+5	0366' 57      		MOV	D,A		;DIGIT IN D
+1056: 2675+5	0367' 79      		MOV	A,C		;NEW VALUE = OLD VALUE * 10
+1057: 2680+4	0368' 07      		RLC
+1058: 2684+4	0369' 07      		RLC
+1059: 2688+4	036A' 07      		RLC
+1060: 2692+4	036B' 81      		ADD	C		;CHECK FOR RANGE ERROR
+1061:     -	036C' 38      		DB	38H
+1061:     -	0000'         		IF (NUMERR-$-1 GT 7FH) AND (NUMERR-$-1 LT 0FF80H)
+1061:					ELSE
+1061:     -	036D' 0B      		DB	NUMERR-$-1
+1061:					ENDIF
+1061:     -	036E'         		ENDM
+1061:     -	036D' 0B      		@GENDD	NUMERR-$-1
+1061:     -	036E'         		ENDM
+1061:     -	036C' 380B    		JRC	NUMERR
+1062: 2696+4	036E' 81      		ADD	C		;CHECK FOR RANGE ERROR
+1063:     -	036F' 38      		DB	38H
+1063:     -	0000'         		IF (NUMERR-$-1 GT 7FH) AND (NUMERR-$-1 LT 0FF80H)
+1063:					ELSE
+1063:     -	0370' 08      		DB	NUMERR-$-1
+1063:					ENDIF
+1063:     -	0371'         		ENDM
+1063:     -	0370' 08      		@GENDD	NUMERR-$-1
+1063:     -	0371'         		ENDM
+1063:     -	036F' 3808    		JRC	NUMERR
+1064: 2700+4	0371' 82      		ADD	D		;NEW VALUE = OLD VALUE * 10 + DIGIT
+1065:     -	0372' 38      		DB	38H
+1065:     -	0000'         		IF (NUMERR-$-1 GT 7FH) AND (NUMERR-$-1 LT 0FF80H)
+1065:					ELSE
+1065:     -	0373' 05      		DB	NUMERR-$-1
+1065:					ENDIF
+1065:     -	0374'         		ENDM
+1065:     -	0373' 05      		@GENDD	NUMERR-$-1
+1065:     -	0374'         		ENDM
+1065:     -	0372' 3805    		JRC	NUMERR		;CHECK FOR RANGE ERROR
+1066: 2704+5	0374' 4F      		MOV	C,A		;SET NEW VALUE
+1067:     -	0375' 10      		DB	10H
+1067:     -	0000'         		IF (NUM1-$-1 GT 7FH) AND (NUM1-$-1 LT 0FF80H)
+1067:					ELSE
+1067:     -	0376' E3      		DB	NUM1-$-1
+1067:					ENDIF
+1067:     -	0377'         		ENDM
+1067:     -	0376' E3      		@GENDD	NUM1-$-1
+1067:     -	0377'         		ENDM
+1067:     -	0375' 10E3    		DJNZ	NUM1		;COUNT DOWN
+1068:				;
+1069:				; RETURN FROM NUMBER
+1070:				;
+1071:     -	0377'         	NUM2:
+1072: 2709+5	0377' 79      		MOV	A,C		;GET ACCUMULATED VALUE
+1073: 2714+10	0378' C9      		RET
+1074:				;
+1075:				; NUMBER ERROR ROUTINE FOR SPACE CONSERVATION
+1076:				;
+1077:     -	0379'         	NUMERR:
+1078: 2724+10	0379' C3F202  		JMP	ERROR		;USE ERROR ROUTINE - THIS IS RELATIVE PT
+1079:				;
+1080:				; EXTRACT HEXADECIMAL NUMBER FROM COMMAND LINE
+1081:				;   RETURN WITH VALUE IN REG A; ALL REGISTERS MAY BE AFFECTED
+1082:				;
+1083:     -	037C'         	HEXNUM:
+1084: 2734+17	037C' CDE303  		CALL	SCANER		;PARSE NUMBER AND PLACE IN FCBFN
+1085:     -	037F'         	HNUM0:
+1086: 2751+10	037F' 219C00  		LXI	H,FCBFN		;PT TO TOKEN FOR CONVERSION
+1087: 2761+10	0382' 110000  		LXI	D,0		;DE=ACCUMULATED VALUE
+1088: 2771+7	0385' 060B    		MVI	B,11		;B=CHAR COUNT
+1089:     -	0387'         	HNUM1:
+1090: 2778+7	0387' 7E      		MOV	A,M		;GET CHAR
+1091: 2785+7	0388' FE20    		CPI	' '		;DONE?
+1092:     -	038A' 28      		DB	28H
+1092:     -	0000'         		IF (HNUM3-$-1 GT 7FH) AND (HNUM3-$-1 LT 0FF80H)
+1092:					ELSE
+1092:     -	038B' 2D      		DB	HNUM3-$-1
+1092:					ENDIF
+1092:     -	038C'         		ENDM
+1092:     -	038B' 2D      		@GENDD	HNUM3-$-1
+1092:     -	038C'         		ENDM
+1092:     -	038A' 282D    		JRZ	HNUM3		;RETURN IF SO
+1093: 2792+7	038C' FE48    		CPI	NUMBASE		;DONE IF NUMBASE SUFFIX
+1094:     -	038E' 28      		DB	28H
+1094:     -	0000'         		IF (HNUM3-$-1 GT 7FH) AND (HNUM3-$-1 LT 0FF80H)
+1094:					ELSE
+1094:     -	038F' 29      		DB	HNUM3-$-1
+1094:					ENDIF
+1094:     -	0390'         		ENDM
+1094:     -	038F' 29      		@GENDD	HNUM3-$-1
+1094:     -	0390'         		ENDM
+1094:     -	038E' 2829    		JRZ	HNUM3
+1095: 2799+7	0390' D630    		SUI	'0'		;CONVERT TO BINARY
+1096:     -	0392' 38      		DB	38H
+1096:     -	0000'         		IF (NUMERR-$-1 GT 7FH) AND (NUMERR-$-1 LT 0FF80H)
+1096:					ELSE
+1096:     -	0393' E5      		DB	NUMERR-$-1
+1096:					ENDIF
+1096:     -	0394'         		ENDM
+1096:     -	0393' E5      		@GENDD	NUMERR-$-1
+1096:     -	0394'         		ENDM
+1096:     -	0392' 38E5    		JRC	NUMERR		;RETURN AND DONE IF ERROR
+1097: 2806+7	0394' FE0A    		CPI	10		;0-9?
+1098:     -	0396' 38      		DB	38H
+1098:     -	0000'         		IF (HNUM2-$-1 GT 7FH) AND (HNUM2-$-1 LT 0FF80H)
+1098:					ELSE
+1098:     -	0397' 06      		DB	HNUM2-$-1
+1098:					ENDIF
+1098:     -	0398'         		ENDM
+1098:     -	0397' 06      		@GENDD	HNUM2-$-1
+1098:     -	0398'         		ENDM
+1098:     -	0396' 3806    		JRC	HNUM2
+1099: 2813+7	0398' D607    		SUI	7		;A-F?
+1100: 2820+7	039A' FE10    		CPI	10H		;ERROR?
+1101:     -	039C' 30      		DB	30H
+1101:     -	0000'         		IF (NUMERR-$-1 GT 7FH) AND (NUMERR-$-1 LT 0FF80H)
+1101:					ELSE
+1101:     -	039D' DB      		DB	NUMERR-$-1
+1101:					ENDIF
+1101:     -	039E'         		ENDM
+1101:     -	039D' DB      		@GENDD	NUMERR-$-1
+1101:     -	039E'         		ENDM
+1101:     -	039C' 30DB    		JRNC	NUMERR
+1102:     -	039E'         	HNUM2:
+1103: 2827+5	039E' 23      		INX	H		;PT TO NEXT CHAR
+1104: 2832+5	039F' 4F      		MOV	C,A		;DIGIT IN C
+1105: 2837+5	03A0' 7A      		MOV	A,D		;GET ACCUMULATED VALUE
+1106: 2842+4	03A1' 07      		RLC			;EXCHANGE NYBBLES
+1107: 2846+4	03A2' 07      		RLC
+1108: 2850+4	03A3' 07      		RLC
+1109: 2854+4	03A4' 07      		RLC
+1110: 2858+7	03A5' E6F0    		ANI	0F0H		;MASK OUT LOW NYBBLE
+1111: 2865+5	03A7' 57      		MOV	D,A
+1112: 2870+5	03A8' 7B      		MOV	A,E		;SWITCH LOW-ORDER NYBBLES
+1113: 2875+4	03A9' 07      		RLC
+1114: 2879+4	03AA' 07      		RLC
+1115: 2883+4	03AB' 07      		RLC
+1116: 2887+4	03AC' 07      		RLC
+1117: 2891+5	03AD' 5F      		MOV	E,A		;HIGH NYBBLE OF E=NEW HIGH OF E,
+1118:								;  LOW NYBBLE OF E=NEW LOW OF D
+1119: 2896+7	03AE' E60F    		ANI	0FH		;GET NEW LOW OF D
+1120: 2903+4	03B0' B2      		ORA	D		;MASK IN HIGH OF D
+1121: 2907+5	03B1' 57      		MOV	D,A		;NEW HIGH BYTE IN D
+1122: 2912+5	03B2' 7B      		MOV	A,E
+1123: 2917+7	03B3' E6F0    		ANI	0F0H		;MASK OUT LOW OF E
+1124: 2924+4	03B5' B1      		ORA	C		;MASK IN NEW LOW
+1125: 2928+5	03B6' 5F      		MOV	E,A		;NEW LOW BYTE IN E
+1126:     -	03B7' 10      		DB	10H
+1126:     -	0000'         		IF (HNUM1-$-1 GT 7FH) AND (HNUM1-$-1 LT 0FF80H)
+1126:					ELSE
+1126:     -	03B8' CE      		DB	HNUM1-$-1
+1126:					ENDIF
+1126:     -	03B9'         		ENDM
+1126:     -	03B8' CE      		@GENDD	HNUM1-$-1
+1126:     -	03B9'         		ENDM
+1126:     -	03B7' 10CE    		DJNZ	HNUM1		;COUNT DOWN
+1127:				;
+1128:				; RETURN FROM HEXNUM
+1129:				;
+1130:     -	03B9'         	HNUM3:
+1131: 2933+4	03B9' EB      		XCHG			;RETURNED VALUE IN HL
+1132: 2937+5	03BA' 7D      		MOV	A,L		;LOW-ORDER BYTE IN A
+1133: 2942+10	03BB' C9      		RET
+1134:				;
+1135:				; PT TO DIRECTORY ENTRY IN TBUFF WHOSE OFFSET IS SPECIFIED BY A AND C
+1136:				;
+1137:     -	03BC'         	DIRPTR:
+1138: 2952+10	03BC' 218000  		LXI	H,TBUFF 	;PT TO TEMP BUFFER
+1139: 2962+4	03BF' 81      		ADD	C		;PT TO 1ST BYTE OF DIR ENTRY
+1140: 2966+17	03C0' CD3903  		CALL	ADDAH		;PT TO DESIRED BYTE IN DIR ENTRY
+1141: 2983+7	03C3' 7E      		MOV	A,M		;GET DESIRED BYTE
+1142: 2990+10	03C4' C9      		RET
+1143:				;
+1144:				; CHECK FOR SPECIFIED DRIVE AND LOG IT IN IF NOT DEFAULT
+1145:				;
+1146:     -	03C5'         	SLOGIN:
+1147: 3000+4	03C5' AF      		XRA	A		;SET FCBDN FOR DEFAULT DRIVE
+1148: 3004+13	03C6' 329B00  		STA	FCBDN
+1149: 3017+17	03C9' CDD903  		CALL	COMLOG		;CHECK DRIVE
+1150: 3034+5+6	03CC' C8      		RZ
+1151:     -	03CD' 18      		DB	18H
+1151:     -	0000'         		IF (DLOG5-$-1 GT 7FH) AND (DLOG5-$-1 LT 0FF80H)
+1151:					ELSE
+1151:     -	03CE' 07      		DB	DLOG5-$-1
+1151:					ENDIF
+1151:     -	03CF'         		ENDM
+1151:     -	03CE' 07      		@GENDD	DLOG5-$-1
+1151:     -	03CF'         		ENDM
+1151:     -	03CD' 1807    		JR	DLOG5		;DO LOGIN OTHERWISE
+1152:				;
+1153:				; CHECK FOR SPECIFIED DRIVE AND LOG IN DEFAULT DRIVE IF SPECIFIED<>DEFAULT
+1154:				;
+1155:     -	03CF'         	DLOGIN:
+1156: 3039+17	03CF' CDD903  		CALL	COMLOG		;CHECK DRIVE
+1157: 3056+5+6	03D2' C8      		RZ			;ABORT IF SAME
+1158: 3061+13	03D3' 3A5C02  		LDA	TDRIVE		;LOG IN DEFAULT DRIVE
+1159:				;
+1160: 3074+10	03D6' C31002  	DLOG5:	JMP	LOGIN
+1161:				;
+1162:				; ROUTINE COMMON TO BOTH LOGIN ROUTINES; ON EXIT, Z SET MEANS ABORT
+1163:				;
+1164:     -	03D9'         	COMLOG:
+1165:     -	03DA'         	TEMPDR	EQU	$+1		;POINTER FOR IN-THE-CODE MODIFICATION
+1166: 3084+7	03D9' 3E00    		MVI	A,0		;2ND BYTE (IMMEDIATE ARG) IS TEMPDR
+1167: 3091+4	03DB' B7      		ORA	A		;0=NO
+1168: 3095+5+6	03DC' C8      		RZ
+1169: 3100+5	03DD' 3D      		DCR	A		;COMPARE IT AGAINST DEFAULT
+1170: 3105+10	03DE' 215C02  		LXI	H,TDRIVE
+1171: 3115+7	03E1' BE      		CMP	M
+1172: 3122+10	03E2' C9      		RET			;ABORT IF SAME
+1173:				;
+1174:				; EXTRACT TOKEN FROM COMMAND LINE AND PLACE IT INTO FCBDN;
+1175:				;   FORMAT FCBDN FCB IF TOKEN RESEMBLES FILE NAME AND TYPE (FILENAME.TYP);
+1176:				;   ON INPUT, CIBPTR PTS TO CHAR AT WHICH TO START SCAN;
+1177:				;   ON OUTPUT, CIBPTR PTS TO CHAR AT WHICH TO CONTINUE AND ZERO FLAG IS RESET
+1178:				;     IF '?' IS IN TOKEN
+1179:				;
+1180:				; ENTRY POINTS:
+1181:				;	SCANER - LOAD TOKEN INTO FIRST FCB
+1182:				;	SCANX - LOAD TOKEN INTO FCB PTED TO BY HL
+1183:				;
+1184:     -	03E3'         	SCANER:
+1185: 3132+10	03E3' 219B00  		LXI	H,FCBDN 	;POINT TO FCBDN
+1186:     -	03E6'         	SCANX:
+1187: 3142+4	03E6' AF      		XRA	A		;SET TEMPORARY DRIVE NUMBER TO DEFAULT
+1188: 3146+13	03E7' 32DA03  		STA	TEMPDR
+1189: 3159+17	03EA' CD2C03  		CALL	ADVAN		;SKIP TO NON-BLANK OR END OF LINE
+1190:     -	03ED' ED53    		DB	0EDH,53H
+1190:     -	03EF' 5B00    		DW	CIPTR
+1190:     -	03F1'         		ENDM
+1190:     -	03ED' ED535B00		SDED	CIPTR		;SET PTR TO NON-BLANK OR END OF LINE
+1191: 3176+7	03F1' 1A      		LDAX	D		;END OF LINE?
+1192: 3183+4	03F2' B7      		ORA	A		;0=YES
+1193:     -	03F3' 28      		DB	28H
+1193:     -	0000'         		IF (SCAN2-$-1 GT 7FH) AND (SCAN2-$-1 LT 0FF80H)
+1193:					ELSE
+1193:     -	03F4' 0A      		DB	SCAN2-$-1
+1193:					ENDIF
+1193:     -	03F5'         		ENDM
+1193:     -	03F4' 0A      		@GENDD	SCAN2-$-1
+1193:     -	03F5'         		ENDM
+1193:     -	03F3' 280A    		JRZ	SCAN2
+1194: 3187+7	03F5' DE40    		SBI	'A'-1		;CONVERT POSSIBLE DRIVE SPEC TO NUMBER
+1195: 3194+5	03F7' 47      		MOV	B,A		;STORE NUMBER (A:=0, B:=1, ETC) IN B
+1196: 3199+5	03F8' 13      		INX	D		;PT TO NEXT CHAR
+1197: 3204+7	03F9' 1A      		LDAX	D		;SEE IF IT IS A COLON (:)
+1198: 3211+7	03FA' FE3A    		CPI	':'
+1199:     -	03FC' 28      		DB	28H
+1199:     -	0000'         		IF (SCAN3-$-1 GT 7FH) AND (SCAN3-$-1 LT 0FF80H)
+1199:					ELSE
+1199:     -	03FD' 07      		DB	SCAN3-$-1
+1199:					ENDIF
+1199:     -	03FE'         		ENDM
+1199:     -	03FD' 07      		@GENDD	SCAN3-$-1
+1199:     -	03FE'         		ENDM
+1199:     -	03FC' 2807    		JRZ	SCAN3		;YES, WE HAVE A DRIVE SPEC
+1200: 3218+5	03FE' 1B      		DCX	D		;NO, BACK UP PTR TO FIRST NON-BLANK CHAR
+1201:     -	03FF'         	SCAN2:
+1202: 3223+13	03FF' 3A5C02  		LDA	TDRIVE		;SET 1ST BYTE OF FCBDN AS DEFAULT DRIVE
+1203: 3236+7	0402' 77      		MOV	M,A
+1204:     -	0403' 18      		DB	18H
+1204:     -	0000'         		IF (SCAN4-$-1 GT 7FH) AND (SCAN4-$-1 LT 0FF80H)
+1204:					ELSE
+1204:     -	0404' 06      		DB	SCAN4-$-1
+1204:					ENDIF
+1204:     -	0405'         		ENDM
+1204:     -	0404' 06      		@GENDD	SCAN4-$-1
+1204:     -	0405'         		ENDM
+1204:     -	0403' 1806    		JR	SCAN4
+1205:     -	0405'         	SCAN3:
+1206: 3243+5	0405' 78      		MOV	A,B		;WE HAVE A DRIVE SPEC
+1207: 3248+13	0406' 32DA03  		STA	TEMPDR		;SET TEMPORARY DRIVE
+1208: 3261+7	0409' 70      		MOV	M,B		;SET 1ST BYTE OF FCBDN AS SPECIFIED DRIVE
+1209: 3268+5	040A' 13      		INX	D		;PT TO BYTE AFTER ':'
+1210:				;
+1211:				; EXTRACT FILENAME FROM POSSIBLE FILENAME.TYP
+1212:				;
+1213:     -	040B'         	SCAN4:
+1214: 3273+4	040B' AF      		XRA	A		;A=0
+1215: 3277+13	040C' 32BE00  		STA	QMCNT		;INIT COUNT OF NUMBER OF QUESTION MARKS IN FCB
+1216: 3290+7	040F' 0608    		MVI	B,8		;MAX OF 8 CHARS IN FILE NAME
+1217: 3297+17	0411' CD3304  		CALL	SCANF		;FILL FCB FILE NAME
+1218:				;
+1219:				; EXTRACT FILE TYPE FROM POSSIBLE FILENAME.TYP
+1220:				;
+1221: 3314+7	0414' 0603    		MVI	B,3		;PREPARE TO EXTRACT TYPE
+1222: 3321+7	0416' FE2E    		CPI	'.'		;IF (DE) DELIMITER IS A '.', WE HAVE A TYPE
+1223:     -	0418' 20      		DB	20H
+1223:     -	0000'         		IF (SCAN15-$-1 GT 7FH) AND (SCAN15-$-1 LT 0FF80H)
+1223:					ELSE
+1223:     -	0419' 06      		DB	SCAN15-$-1
+1223:					ENDIF
+1223:     -	041A'         		ENDM
+1223:     -	0419' 06      		@GENDD	SCAN15-$-1
+1223:     -	041A'         		ENDM
+1223:     -	0418' 2006    		JRNZ	SCAN15		;FILL FILE TYPE BYTES WITH <SP>
+1224: 3328+5	041A' 13      		INX	D		;PT TO CHAR IN COMMAND LINE AFTER '.'
+1225: 3333+17	041B' CD3304  		CALL	SCANF		;FILL FCB FILE TYPE
+1226:     -	041E' 18      		DB	18H
+1226:     -	0000'         		IF (SCAN16-$-1 GT 7FH) AND (SCAN16-$-1 LT 0FF80H)
+1226:					ELSE
+1226:     -	041F' 03      		DB	SCAN16-$-1
+1226:					ENDIF
+1226:     -	0420'         		ENDM
+1226:     -	041F' 03      		@GENDD	SCAN16-$-1
+1226:     -	0420'         		ENDM
+1226:     -	041E' 1803    		JR	SCAN16		;SKIP TO NEXT PROCESSING
+1227:     -	0420'         	SCAN15:
+1228: 3350+17	0420' CD5404  		CALL	SCANF4		;SPACE FILL
+1229:				;
+1230:				; FILL IN EX, S1, S2, AND RC WITH ZEROES
+1231:				;
+1232:     -	0423'         	SCAN16:
+1233: 3367+7	0423' 0604    		MVI	B,4		;4 BYTES
+1234:     -	0425'         	SCAN17:
+1235: 3374+5	0425' 23      		INX	H		;PT TO NEXT BYTE IN FCBDN
+1236: 3379+10	0426' 3600    		MVI	M,0
+1237:     -	0428' 10      		DB	10H
+1237:     -	0000'         		IF (SCAN17-$-1 GT 7FH) AND (SCAN17-$-1 LT 0FF80H)
+1237:					ELSE
+1237:     -	0429' FB      		DB	SCAN17-$-1
+1237:					ENDIF
+1237:     -	042A'         		ENDM
+1237:     -	0429' FB      		@GENDD	SCAN17-$-1
+1237:     -	042A'         		ENDM
+1237:     -	0428' 10FB    		DJNZ	SCAN17
+1238:				;
+1239:				; SCAN COMPLETE -- DE PTS TO DELIMITER BYTE AFTER TOKEN
+1240:				;
+1241:     -	042A' ED53    		DB	0EDH,53H
+1241:     -	042C' 5900    		DW	CIBPTR
+1241:     -	042E'         		ENDM
+1241:     -	042A' ED535900		SDED	CIBPTR
+1242:				;
+1243:				; SET ZERO FLAG TO INDICATE PRESENCE OF '?' IN FILENAME.TYP
+1244:				;
+1245: 3389+13	042E' 3ABE00  		LDA	QMCNT		;GET NUMBER OF QUESTION MARKS
+1246: 3402+4	0431' B7      		ORA	A		;SET ZERO FLAG TO INDICATE ANY '?'
+1247: 3406+10	0432' C9      		RET
+1248:				;
+1249:				;  SCANF -- SCAN TOKEN PTED TO BY DE FOR A MAX OF B BYTES; PLACE IT INTO
+1250:				;    FILE NAME FIELD PTED TO BY HL; EXPAND AND INTERPRET WILD CARDS OF
+1251:				;    '*' AND '?'; ON EXIT, DE PTS TO TERMINATING DELIMITER
+1252:				;
+1253:     -	0433'         	SCANF:
+1254: 3416+17	0433' CD0F03  		CALL	SDELM		;DONE IF DELIMITER ENCOUNTERED - <SP> FILL
+1255:     -	0436' 28      		DB	28H
+1255:     -	0000'         		IF (SCANF4-$-1 GT 7FH) AND (SCANF4-$-1 LT 0FF80H)
+1255:					ELSE
+1255:     -	0437' 1C      		DB	SCANF4-$-1
+1255:					ENDIF
+1255:     -	0438'         		ENDM
+1255:     -	0437' 1C      		@GENDD	SCANF4-$-1
+1255:     -	0438'         		ENDM
+1255:     -	0436' 281C    		JRZ	SCANF4
+1256: 3433+5	0438' 23      		INX	H		;PT TO NEXT BYTE IN FCBDN
+1257: 3438+7	0439' FE2A    		CPI	'*'		;IS (DE) A WILD CARD?
+1258:     -	043B' 20      		DB	20H
+1258:     -	0000'         		IF (SCANF1-$-1 GT 7FH) AND (SCANF1-$-1 LT 0FF80H)
+1258:					ELSE
+1258:     -	043C' 07      		DB	SCANF1-$-1
+1258:					ENDIF
+1258:     -	043D'         		ENDM
+1258:     -	043C' 07      		@GENDD	SCANF1-$-1
+1258:     -	043D'         		ENDM
+1258:     -	043B' 2007    		JRNZ	SCANF1		;CONTINUE IF NOT
+1259: 3445+10	043D' 363F    		MVI	M,'?'		;PLACE '?' IN FCBDN AND DON'T ADVANCE DE IF SO
+1260: 3455+17	043F' CD5A04  		CALL	SCQ		;SCANNER COUNT QUESTION MARKS
+1261:     -	0442' 18      		DB	18H
+1261:     -	0000'         		IF (SCANF2-$-1 GT 7FH) AND (SCANF2-$-1 LT 0FF80H)
+1261:					ELSE
+1261:     -	0443' 07      		DB	SCANF2-$-1
+1261:					ENDIF
+1261:     -	0444'         		ENDM
+1261:     -	0443' 07      		@GENDD	SCANF2-$-1
+1261:     -	0444'         		ENDM
+1261:     -	0442' 1807    		JR	SCANF2
+1262:     -	0444'         	SCANF1:
+1263: 3472+7	0444' 77      		MOV	M,A		;STORE FILENAME CHAR IN FCBDN
+1264: 3479+5	0445' 13      		INX	D		;PT TO NEXT CHAR IN COMMAND LINE
+1265: 3484+7	0446' FE3F    		CPI	'?'		;CHECK FOR QUESTION MARK (WILD)
+1266: 3491+11+6	0448' CC5A04  		CZ	SCQ		;SCANNER COUNT QUESTION MARKS
+1267:     -	044B'         	SCANF2:
+1268:     -	044B' 10      		DB	10H
+1268:     -	0000'         		IF (SCANF-$-1 GT 7FH) AND (SCANF-$-1 LT 0FF80H)
+1268:					ELSE
+1268:     -	044C' E6      		DB	SCANF-$-1
+1268:					ENDIF
+1268:     -	044D'         		ENDM
+1268:     -	044C' E6      		@GENDD	SCANF-$-1
+1268:     -	044D'         		ENDM
+1268:     -	044B' 10E6    		DJNZ	SCANF		;DECREMENT CHAR COUNT UNTIL 8 ELAPSED
+1269:     -	044D'         	SCANF3:
+1270: 3502+17	044D' CD0F03  		CALL	SDELM		;8 CHARS OR MORE - SKIP UNTIL DELIMITER
+1271: 3519+5+6	0450' C8      		RZ			;ZERO FLAG SET IF DELIMITER FOUND
+1272: 3524+5	0451' 13      		INX	D		;PT TO NEXT CHAR IN COMMAND LINE
+1273:     -	0452' 18      		DB	18H
+1273:     -	0000'         		IF (SCANF3-$-1 GT 7FH) AND (SCANF3-$-1 LT 0FF80H)
+1273:					ELSE
+1273:     -	0453' F9      		DB	SCANF3-$-1
+1273:					ENDIF
+1273:     -	0454'         		ENDM
+1273:     -	0453' F9      		@GENDD	SCANF3-$-1
+1273:     -	0454'         		ENDM
+1273:     -	0452' 18F9    		JR	SCANF3
+1274:				;
+1275:				;  FILL MEMORY POINTED TO BY HL WITH SPACES FOR B BYTES
+1276:				;
+1277:     -	0454'         	SCANF4:
+1278: 3529+5	0454' 23      		INX	H		;PT TO NEXT BYTE IN FCBDN
+1279: 3534+10	0455' 3620    		MVI	M,' '		;FILL FILENAME PART WITH <SP>
+1280:     -	0457' 10      		DB	10H
+1280:     -	0000'         		IF (SCANF4-$-1 GT 7FH) AND (SCANF4-$-1 LT 0FF80H)
+1280:					ELSE
+1280:     -	0458' FB      		DB	SCANF4-$-1
+1280:					ENDIF
+1280:     -	0459'         		ENDM
+1280:     -	0458' FB      		@GENDD	SCANF4-$-1
+1280:     -	0459'         		ENDM
+1280:     -	0457' 10FB    		DJNZ	SCANF4
+1281: 3544+10	0459' C9      		RET
+1282:				;
+1283:				;  INCREMENT QUESTION MARK COUNT FOR SCANNER
+1284:				;    THIS ROUTINE INCREMENTS THE COUNT OF THE NUMBER OF QUESTION MARKS IN
+1285:				;    THE CURRENT FCB ENTRY
+1286:				;
+1287:     -	045A'         	SCQ:
+1288: 3554+13	045A' 3ABE00  		LDA	QMCNT		;GET COUNT
+1289: 3567+5	045D' 3C      		INR	A		;INCREMENT
+1290: 3572+13	045E' 32BE00  		STA	QMCNT		;PUT COUNT
+1291: 3585+10	0461' C9      		RET
+1292:				;
+1293:				; CMDTBL (COMMAND TABLE) SCANNER
+1294:				;   ON RETURN, HL PTS TO ADDRESS OF COMMAND IF CPR-RESIDENT
+1295:				;   ON RETURN, ZERO FLAG SET MEANS CPR-RESIDENT COMMAND
+1296:				;
+1297:     -	0462'         	CMDSER:
+1298: 3595+10	0462' 21BF00  		LXI	H,CMDTBL	;PT TO COMMAND TABLE
+1299: 3605+7	0465' 0E0B    		MVI	C,NCMNDS	;SET COMMAND COUNTER
+1300:     -	0467'         	CMS1:
+1301: 3612+10	0467' 119C00  		LXI	D,FCBFN 	;PT TO STORED COMMAND NAME
+1302: 3622+7	046A' 0604    		MVI	B,NCHARS	;NUMBER OF CHARS/COMMAND (8 MAX)
+1303:     -	046C'         	CMS2:
+1304: 3629+7	046C' 1A      		LDAX	D		;COMPARE AGAINST TABLE ENTRY
+1305: 3636+7	046D' BE      		CMP	M
+1306:     -	046E' 20      		DB	20H
+1306:     -	0000'         		IF (CMS3-$-1 GT 7FH) AND (CMS3-$-1 LT 0FF80H)
+1306:					ELSE
+1306:     -	046F' 0A      		DB	CMS3-$-1
+1306:					ENDIF
+1306:     -	0470'         		ENDM
+1306:     -	046F' 0A      		@GENDD	CMS3-$-1
+1306:     -	0470'         		ENDM
+1306:     -	046E' 200A    		JRNZ	CMS3		;NO MATCH
+1307: 3643+5	0470' 13      		INX	D		;PT TO NEXT CHAR
+1308: 3648+5	0471' 23      		INX	H
+1309:     -	0472' 10      		DB	10H
+1309:     -	0000'         		IF (CMS2-$-1 GT 7FH) AND (CMS2-$-1 LT 0FF80H)
+1309:					ELSE
+1309:     -	0473' F8      		DB	CMS2-$-1
+1309:					ENDIF
+1309:     -	0474'         		ENDM
+1309:     -	0473' F8      		@GENDD	CMS2-$-1
+1309:     -	0474'         		ENDM
+1309:     -	0472' 10F8    		DJNZ	CMS2		;COUNT DOWN
+1310: 3653+7	0474' 1A      		LDAX	D		;NEXT CHAR IN INPUT COMMAND MUST BE <SP>
+1311: 3660+7	0475' FE20    		CPI	' '
+1312:     -	0477' 20      		DB	20H
+1312:     -	0000'         		IF (CMS4-$-1 GT 7FH) AND (CMS4-$-1 LT 0FF80H)
+1312:					ELSE
+1312:     -	0478' 04      		DB	CMS4-$-1
+1312:					ENDIF
+1312:     -	0479'         		ENDM
+1312:     -	0478' 04      		@GENDD	CMS4-$-1
+1312:     -	0479'         		ENDM
+1312:     -	0477' 2004    		JRNZ	CMS4
+1313: 3667+10	0479' C9      		RET			;COMMAND IS CPR-RESIDENT (ZERO FLAG SET)
+1314:     -	047A'         	CMS3:
+1315: 3677+5	047A' 23      		INX	H		;SKIP TO NEXT COMMAND TABLE ENTRY
+1316:     -	047B' 10      		DB	10H
+1316:     -	0000'         		IF (CMS3-$-1 GT 7FH) AND (CMS3-$-1 LT 0FF80H)
+1316:					ELSE
+1316:     -	047C' FD      		DB	CMS3-$-1
+1316:					ENDIF
+1316:     -	047D'         		ENDM
+1316:     -	047C' FD      		@GENDD	CMS3-$-1
+1316:     -	047D'         		ENDM
+1316:     -	047B' 10FD    		DJNZ	CMS3
+1317:     -	047D'         	CMS4:
+1318: 3682+5	047D' 23      		INX	H		;SKIP ADDRESS
+1319: 3687+5	047E' 23      		INX	H
+1320: 3692+5	047F' 0D      		DCR	C		;DECREMENT TABLE ENTRY NUMBER
+1321:     -	0480' 20      		DB	20H
+1321:     -	0000'         		IF (CMS1-$-1 GT 7FH) AND (CMS1-$-1 LT 0FF80H)
+1321:					ELSE
+1321:     -	0481' E5      		DB	CMS1-$-1
+1321:					ENDIF
+1321:     -	0482'         		ENDM
+1321:     -	0481' E5      		@GENDD	CMS1-$-1
+1321:     -	0482'         		ENDM
+1321:     -	0480' 20E5    		JRNZ	CMS1
+1322: 3697+5	0482' 0C      		INR	C		;CLEAR ZERO FLAG
+1323: 3702+10	0483' C9      		RET			;COMMAND IS DISK-RESIDENT (ZERO FLAG CLEAR)
+1324:				;
+1325:				;**** Section 5 ****
+1326:				; CPR-Resident Commands
+1327:				;
+1328:				;
+1329:				;Section 5A
+1330:				;Command: DIR
+1331:				;Function:  To display a directory of the files on disk
+1332:				;Forms:
+1333:				;	DIR <afn>	Displays the DIR files
+1334:				;	DIR <afn> S	Displays the SYS files
+1335:				;	DIR <afn> A	Display both DIR and SYS files
+1336:				;
+1337:     -	0484'         	DIR:
+1338: 3712+7	0484' 3E80    		MVI	A,80H		;SET SYSTEM BIT EXAMINATION
+1339: 3719+11	0486' F5      		PUSH	PSW
+1340: 3730+17	0487' CDE303  		CALL	SCANER		;EXTRACT POSSIBLE D:FILENAME.TYP TOKEN
+1341: 3747+17	048A' CDC503  		CALL	SLOGIN		;LOG IN DRIVE IF NECESSARY
+1342: 3764+10	048D' 219C00  		LXI	H,FCBFN 	;MAKE FCB WILD (ALL '?') IF NO FILENAME.TYP
+1343: 3774+7	0490' 7E      		MOV	A,M		;GET FIRST CHAR OF FILENAME.TYP
+1344: 3781+7	0491' FE20    		CPI	' '		;IF <SP>, ALL WILD
+1345: 3788+11+6	0493' CC2D05  		CZ	FILLQ
+1346: 3799+17	0496' CD2C03  		CALL	ADVAN		;LOOK AT NEXT INPUT CHAR
+1347: 3816+7	0499' 0600    		MVI	B,0		;SYS TOKEN DEFAULT
+1348:     -	049B' 28      		DB	28H
+1348:     -	0000'         		IF (DIR2-$-1 GT 7FH) AND (DIR2-$-1 LT 0FF80H)
+1348:					ELSE
+1348:     -	049C' 16      		DB	DIR2-$-1
+1348:					ENDIF
+1348:     -	049D'         		ENDM
+1348:     -	049C' 16      		@GENDD	DIR2-$-1
+1348:     -	049D'         		ENDM
+1348:     -	049B' 2816    		JRZ	DIR2		;JUMP; THERE ISN'T ONE
+1349: 3823+7	049D' FE41    		CPI	SYSFLG		;SYSTEM FLAG SPECIFIER?
+1350:     -	049F' 28      		DB	28H
+1350:     -	0000'         		IF (GOTSYS-$-1 GT 7FH) AND (GOTSYS-$-1 LT 0FF80H)
+1350:					ELSE
+1350:     -	04A0' 06      		DB	GOTSYS-$-1
+1350:					ENDIF
+1350:     -	04A1'         		ENDM
+1350:     -	04A0' 06      		@GENDD	GOTSYS-$-1
+1350:     -	04A1'         		ENDM
+1350:     -	049F' 2806    		JRZ	GOTSYS		;GOT SYSTEM SPECIFIER
+1351: 3830+7	04A1' FE53    		CPI	SOFLG		;SYS ONLY?
+1352:     -	04A3' 20      		DB	20H
+1352:     -	0000'         		IF (DIR2-$-1 GT 7FH) AND (DIR2-$-1 LT 0FF80H)
+1352:					ELSE
+1352:     -	04A4' 0E      		DB	DIR2-$-1
+1352:					ENDIF
+1352:     -	04A5'         		ENDM
+1352:     -	04A4' 0E      		@GENDD	DIR2-$-1
+1352:     -	04A5'         		ENDM
+1352:     -	04A3' 200E    		JRNZ	DIR2
+1353: 3837+7	04A5' 0680    		MVI	B,80H		;FLAG SYS ONLY
+1354:     -	04A7'         	GOTSYS:
+1355: 3844+5	04A7' 13      		INX	D
+1356:     -	04A8' ED53    		DB	0EDH,53H
+1356:     -	04AA' 5900    		DW	CIBPTR
+1356:     -	04AC'         		ENDM
+1356:     -	04A8' ED535900		SDED	CIBPTR
+1357: 3849+7	04AC' FE53    		CPI	SOFLG		;SYS ONLY SPEC?
+1358:     -	04AE' 28      		DB	28H
+1358:     -	0000'         		IF (DIR2-$-1 GT 7FH) AND (DIR2-$-1 LT 0FF80H)
+1358:					ELSE
+1358:     -	04AF' 03      		DB	DIR2-$-1
+1358:					ENDIF
+1358:     -	04B0'         		ENDM
+1358:     -	04AF' 03      		@GENDD	DIR2-$-1
+1358:     -	04B0'         		ENDM
+1358:     -	04AE' 2803    		JRZ	DIR2		;THEN LEAVE BIT SPEC UNCHAGNED
+1359: 3856+10	04B0' F1      		POP	PSW		;GET FLAG
+1360: 3866+4	04B1' AF      		XRA	A		;SET NO SYSTEM BIT EXAMINATION
+1361: 3870+11	04B2' F5      		PUSH	PSW 
+1362:     -	04B3'         	DIR2:
+1363: 3881+10	04B3' F1      		POP	PSW		;GET FLAG
+1364:     -	04B4'         	DIR2A:
+1365:								;DROP INTO DIRPR TO PRINT DIRECTORY
+1366:								; THEN RESTART CPR
+1367:				;
+1368:				; DIRECTORY PRINT ROUTINE; ON ENTRY, MSB OF A IS 1 (80H) IF SYSTEM FILES EXCL
+1369:				;
+1370:     -	04B4'         	DIRPR:
+1371: 3891+5	04B4' 57      		MOV	D,A		;STORE SYSTEM FLAG IN D
+1372: 3896+7	04B5' 1E00    		MVI	E,0		;SET COLUMN COUNTER TO ZERO
+1373: 3903+11	04B7' D5      		PUSH	D		;SAVE COLUMN COUNTER (E) AND SYSTEM FLAG (D)
+1374: 3914+5	04B8' 78      		MOV	A,B		;SYS ONLY SPECIFIER
+1375: 3919+13	04B9' 32D404  		STA	SYSTST
+1376: 3932+17	04BC' CD2702  		CALL	SEARF		;SEARCH FOR SPECIFIED FILE (FIRST OCCURRANCE)
+1377: 3949+11+6	04BF' CC9F01  		CZ	PRNNF		;PRINT NO FILE MSG;REG A NOT CHANGED
+1378:				;
+1379:				; ENTRY SELECTION LOOP; ON ENTRY, A=OFFSET FROM SEARF OR SEARN
+1380:				;
+1381:     -	04C2'         	DIR3:
+1382:     -	04C2' 28      		DB	28H
+1382:     -	0000'         		IF (DIR11-$-1 GT 7FH) AND (DIR11-$-1 LT 0FF80H)
+1382:					ELSE
+1382:     -	04C3' 67      		DB	DIR11-$-1
+1382:					ENDIF
+1382:     -	04C4'         		ENDM
+1382:     -	04C3' 67      		@GENDD	DIR11-$-1
+1382:     -	04C4'         		ENDM
+1382:     -	04C2' 2867    		JRZ	DIR11		;DONE IF ZERO FLAG SET
+1383: 3960+5	04C4' 3D      		DCR	A		;ADJUST TO RETURNED VALUE
+1384: 3965+4	04C5' 0F      		RRC			;CONVERT NUMBER TO OFFSET INTO TBUFF
+1385: 3969+4	04C6' 0F      		RRC
+1386: 3973+4	04C7' 0F      		RRC
+1387: 3977+7	04C8' E660    		ANI	60H
+1388: 3984+5	04CA' 4F      		MOV	C,A		;OFFSET INTO TBUFF IN C (C=OFFSET TO ENTRY)
+1389: 3989+7	04CB' 3E0A    		MVI	A,10		;ADD 10 TO PT TO SYSTEM FILE ATTRIBUTE BIT
+1390: 3996+17	04CD' CDBC03  		CALL	DIRPTR
+1391: 4013+10	04D0' D1      		POP	D		;GET SYSTEM BIT MASK FROM D
+1392: 4023+11	04D1' D5      		PUSH	D
+1393: 4034+4	04D2' A2      		ANA	D		;MASK FOR SYSTEM BIT
+1394:     -	04D4'         	SYSTST	EQU	$+1		;POINTER TO IN-THE-CODE BUFFER SYSTST
+1395: 4038+7	04D3' FE00    		CPI	0
+1396:     -	04D5' 20      		DB	20H
+1396:     -	0000'         		IF (DIR10-$-1 GT 7FH) AND (DIR10-$-1 LT 0FF80H)
+1396:					ELSE
+1396:     -	04D6' 4A      		DB	DIR10-$-1
+1396:					ENDIF
+1396:     -	04D7'         		ENDM
+1396:     -	04D6' 4A      		@GENDD	DIR10-$-1
+1396:     -	04D7'         		ENDM
+1396:     -	04D5' 204A    		JRNZ	DIR10
+1397: 4045+10	04D7' D1      		POP	D		;GET ENTRY COUNT (=<CR> COUNTER)
+1398: 4055+5	04D8' 7B      		MOV	A,E		;ADD 1 TO IT
+1399: 4060+5	04D9' 1C      		INR	E
+1400: 4065+11	04DA' D5      		PUSH	D		;SAVE IT
+1401: 4076+7	04DB' E603    		ANI	03H		;OUTPUT <CRLF> IF 4 ENTRIES PRINTED IN LINE
+1402: 4083+11	04DD' F5      		PUSH	PSW
+1403:     -	04DE' 20      		DB	20H
+1403:     -	0000'         		IF (DIR4-$-1 GT 7FH) AND (DIR4-$-1 LT 0FF80H)
+1403:					ELSE
+1403:     -	04DF' 05      		DB	DIR4-$-1
+1403:					ENDIF
+1403:     -	04E0'         		ENDM
+1403:     -	04DF' 05      		@GENDD	DIR4-$-1
+1403:     -	04E0'         		ENDM
+1403:     -	04DE' 2005    		JRNZ	DIR4
+1404: 4094+17	04E0' CDAA01  		CALL	CRLF		;NEW LINE
+1405:     -	04E3' 18      		DB	18H
+1405:     -	0000'         		IF (DIR5-$-1 GT 7FH) AND (DIR5-$-1 LT 0FF80H)
+1405:					ELSE
+1405:     -	04E4' 08      		DB	DIR5-$-1
+1405:					ENDIF
+1405:     -	04E5'         		ENDM
+1405:     -	04E4' 08      		@GENDD	DIR5-$-1
+1405:     -	04E5'         		ENDM
+1405:     -	04E3' 1808    		JR	DIR5
+1406:     -	04E5'         	DIR4:
+1407: 4111+17	04E5' CDED01  		CALL	PRINT
+1408:				;
+1409:     -	FFFF'         		IF	WIDE
+1410:     -	04E8' 2020    		DB	'  '		;2 SPACES
+1411:     -	04EA' 7C      		DB	FENCE		;THEN FENCE CHAR
+1412:     -	04EB' 20A0    		DB	' ',' '+80H	;THEN 2 MORE SPACES
+1413:					ENDIF
+1414:				;
+1415:     -	0000'         		IF	NOT WIDE
+1419:					ENDIF
+1420:				;
+1421:     -	04ED'         	DIR5:
+1422: 4128+7	04ED' 0601    		MVI	B,01H		;PT TO 1ST BYTE OF FILE NAME
+1423:     -	04EF'         	DIR6:
+1424: 4135+5	04EF' 78      		MOV	A,B		;A=OFFSET
+1425: 4140+17	04F0' CDBC03  		CALL	DIRPTR		;HL NOW PTS TO 1ST BYTE OF FILE NAME
+1426: 4157+7	04F3' E67F    		ANI	7FH		;MASK OUT MSB
+1427: 4164+7	04F5' FE20    		CPI	' '		;NO FILE NAME?
+1428:     -	04F7' 20      		DB	20H
+1428:     -	0000'         		IF (DIR8-$-1 GT 7FH) AND (DIR8-$-1 LT 0FF80H)
+1428:					ELSE
+1428:     -	04F8' 13      		DB	DIR8-$-1
+1428:					ENDIF
+1428:     -	04F9'         		ENDM
+1428:     -	04F8' 13      		@GENDD	DIR8-$-1
+1428:     -	04F9'         		ENDM
+1428:     -	04F7' 2013    		JRNZ	DIR8		;PRINT FILE NAME IF PRESENT
+1429: 4171+10	04F9' F1      		POP	PSW
+1430: 4181+11	04FA' F5      		PUSH	PSW
+1431: 4192+7	04FB' FE03    		CPI	03H
+1432:     -	04FD' 20      		DB	20H
+1432:     -	0000'         		IF (DIR7-$-1 GT 7FH) AND (DIR7-$-1 LT 0FF80H)
+1432:					ELSE
+1432:     -	04FE' 0B      		DB	DIR7-$-1
+1432:					ENDIF
+1432:     -	04FF'         		ENDM
+1432:     -	04FE' 0B      		@GENDD	DIR7-$-1
+1432:     -	04FF'         		ENDM
+1432:     -	04FD' 200B    		JRNZ	DIR7
+1433: 4199+7	04FF' 3E09    		MVI	A,09H		;PT TO 1ST BYTE OF FILE TYPE
+1434: 4206+17	0501' CDBC03  		CALL	DIRPTR		;HL NOW PTS TO 1ST BYTE OF FILE TYPE
+1435: 4223+7	0504' E67F    		ANI	7FH		;MASK OUT MSB
+1436: 4230+7	0506' FE20    		CPI	' '		;NO FILE TYPE?
+1437:     -	0508' 28      		DB	28H
+1437:     -	0000'         		IF (DIR9-$-1 GT 7FH) AND (DIR9-$-1 LT 0FF80H)
+1437:					ELSE
+1437:     -	0509' 16      		DB	DIR9-$-1
+1437:					ENDIF
+1437:     -	050A'         		ENDM
+1437:     -	0509' 16      		@GENDD	DIR9-$-1
+1437:     -	050A'         		ENDM
+1437:     -	0508' 2816    		JRZ	DIR9		;CONTINUE IF SO
+1438:     -	050A'         	DIR7:
+1439: 4237+7	050A' 3E20    		MVI	A,' '		;OUTPUT <SP>
+1440:     -	050C'         	DIR8:
+1441: 4244+17	050C' CDB101  		CALL	CONOUT		;PRINT CHAR
+1442: 4261+5	050F' 04      		INR	B		;INCR CHAR COUNT
+1443: 4266+5	0510' 78      		MOV	A,B
+1444: 4271+7	0511' FE0C    		CPI	12		;END OF FILENAME.TYP?
+1445:     -	0513' 30      		DB	30H
+1445:     -	0000'         		IF (DIR9-$-1 GT 7FH) AND (DIR9-$-1 LT 0FF80H)
+1445:					ELSE
+1445:     -	0514' 0B      		DB	DIR9-$-1
+1445:					ENDIF
+1445:     -	0515'         		ENDM
+1445:     -	0514' 0B      		@GENDD	DIR9-$-1
+1445:     -	0515'         		ENDM
+1445:     -	0513' 300B    		JRNC	DIR9		;CONTINUE IF SO
+1446: 4278+7	0515' FE09    		CPI	09H		;END IF FILENAME ONLY?
+1447:     -	0517' 20      		DB	20H
+1447:     -	0000'         		IF (DIR6-$-1 GT 7FH) AND (DIR6-$-1 LT 0FF80H)
+1447:					ELSE
+1447:     -	0518' D6      		DB	DIR6-$-1
+1447:					ENDIF
+1447:     -	0519'         		ENDM
+1447:     -	0518' D6      		@GENDD	DIR6-$-1
+1447:     -	0519'         		ENDM
+1447:     -	0517' 20D6    		JRNZ	DIR6		;PRINT TYP IF SO
+1448: 4285+7	0519' 3E2E    		MVI	A,'.'		;PRINT DOT BETWEEN FILE NAME AND TYPE
+1449: 4292+17	051B' CDB101  		CALL	CONOUT
+1450:     -	051E' 18      		DB	18H
+1450:     -	0000'         		IF (DIR6-$-1 GT 7FH) AND (DIR6-$-1 LT 0FF80H)
+1450:					ELSE
+1450:     -	051F' CF      		DB	DIR6-$-1
+1450:					ENDIF
+1450:     -	0520'         		ENDM
+1450:     -	051F' CF      		@GENDD	DIR6-$-1
+1450:     -	0520'         		ENDM
+1450:     -	051E' 18CF    		JR	DIR6
+1451:     -	0520'         	DIR9:
+1452: 4309+10	0520' F1      		POP	PSW
+1453:     -	0521'         	DIR10:
+1454: 4319+17	0521' CDE102  		CALL	BREAK		;CHECK FOR ABORT
+1455:     -	0524' 20      		DB	20H
+1455:     -	0000'         		IF (DIR11-$-1 GT 7FH) AND (DIR11-$-1 LT 0FF80H)
+1455:					ELSE
+1455:     -	0525' 05      		DB	DIR11-$-1
+1455:					ENDIF
+1455:     -	0526'         		ENDM
+1455:     -	0525' 05      		@GENDD	DIR11-$-1
+1455:     -	0526'         		ENDM
+1455:     -	0524' 2005    		JRNZ	DIR11
+1456: 4336+17	0526' CD2E02  		CALL	SEARN		;SEARCH FOR NEXT FILE
+1457:     -	0529' 18      		DB	18H
+1457:     -	0000'         		IF (DIR3-$-1 GT 7FH) AND (DIR3-$-1 LT 0FF80H)
+1457:					ELSE
+1457:     -	052A' 97      		DB	DIR3-$-1
+1457:					ENDIF
+1457:     -	052B'         		ENDM
+1457:     -	052A' 97      		@GENDD	DIR3-$-1
+1457:     -	052B'         		ENDM
+1457:     -	0529' 1897    		JR	DIR3		;CONTINUE
+1458:     -	052B'         	DIR11:
+1459: 4353+10	052B' D1      		POP	D		;RESTORE STACK
+1460: 4363+10	052C' C9      		RET
+1461:				;
+1462:				; FILL FCB @HL WITH '?'
+1463:				;
+1464:     -	052D'         	FILLQ:
+1465: 4373+7	052D' 060B    		MVI	B,11		;NUMBER OF CHARS IN FN & FT
+1466:     -	052F'         	FQLP:
+1467: 4380+10	052F' 363F    		MVI	M,'?'		;STORE '?'
+1468: 4390+5	0531' 23      		INX	H
+1469:     -	0532' 10      		DB	10H
+1469:     -	0000'         		IF (FQLP-$-1 GT 7FH) AND (FQLP-$-1 LT 0FF80H)
+1469:					ELSE
+1469:     -	0533' FB      		DB	FQLP-$-1
+1469:					ENDIF
+1469:     -	0534'         		ENDM
+1469:     -	0533' FB      		@GENDD	FQLP-$-1
+1469:     -	0534'         		ENDM
+1469:     -	0532' 10FB    		DJNZ	FQLP
+1470: 4395+10	0534' C9      		RET
+1471:				;
+1472:				;Section 5B
+1473:				;Command: ERA
+1474:				;Function:  Erase files
+1475:				;Forms:
+1476:				;	ERA <afn>	Erase Specified files and print their names
+1477:				;
+1478:     -	FFFF'         		IF	NOT RAS		;NOT FOR REMOTE-ACCESS SYSTEM
+1479:				;
+1480:     -	0535'         	ERA:
+1481: 4405+17	0535' CDE303  		CALL	SCANER		;PARSE FILE SPECIFICATION
+1482: 4422+7	0538' FE0B    		CPI	11		;ALL WILD (ALL FILES = 11 '?')?
+1483:     -	053A' 20      		DB	20H
+1483:     -	0000'         		IF (ERA1-$-1 GT 7FH) AND (ERA1-$-1 LT 0FF80H)
+1483:					ELSE
+1483:     -	053B' 12      		DB	ERA1-$-1
+1483:					ENDIF
+1483:     -	053C'         		ENDM
+1483:     -	053B' 12      		@GENDD	ERA1-$-1
+1483:     -	053C'         		ENDM
+1483:     -	053A' 2012    		JRNZ	ERA1		;IF NOT, THEN DO ERASES
+1484: 4429+17	053C' CDE801  		CALL	PRINTC
+1485:     -	053F' 416C6CBF		DB	'All','?'+80H
+1486: 4446+17	0543' CDBC01  		CALL	CONIN		;GET REPLY
+1487: 4463+7	0546' FE59    		CPI	'Y'		;YES?
+1488: 4470+10	0548' C23A01  		JNZ	RESTRT		;RESTART CPR IF NOT
+1489: 4480+17	054B' CDAA01  		CALL	CRLF		;NEW LINE
+1490:     -	054E'         	ERA1:
+1491: 4497+17	054E' CDC503  		CALL	SLOGIN		;LOG IN SELECTED DISK IF ANY
+1492: 4514+4	0551' AF      		XRA	A		;PRINT ALL FILES (EXAMINE SYSTEM BIT)
+1493: 4518+5	0552' 47      		MOV	B,A		;NO SYS-ONLY OPT TO DIRPR
+1494: 4523+17	0553' CDB404  		CALL	DIRPR		;PRINT DIRECTORY OF ERASED FILES
+1495: 4540+10	0556' 119B00  		LXI	D,FCBDN 	;DELETE FILE SPECIFIED
+1496: 4550+17	0559' CD3D02  		CALL	DELETE
+1497: 4567+10	055C' C9      		RET			;REENTER CPR
+1498:				;
+1499:					ENDIF			;RAS
+1500:				;
+1501:				;Section 5C
+1502:				;Command: LIST
+1503:				;Function:  Print out specified file on the LST: Device
+1504:				;Forms:
+1505:				;	LIST <ufn>	Print file (NO Paging)
+1506:				;
+1507:     -	055D'         	LIST:
+1508: 4577+7	055D' 3EFF    		MVI	A,0FFH		;TURN ON PRINTER FLAG
+1509:     -	055F' 18      		DB	18H
+1509:     -	0000'         		IF (TYPE0-$-1 GT 7FH) AND (TYPE0-$-1 LT 0FF80H)
+1509:					ELSE
+1509:     -	0560' 01      		DB	TYPE0-$-1
+1509:					ENDIF
+1509:     -	0561'         		ENDM
+1509:     -	0560' 01      		@GENDD	TYPE0-$-1
+1509:     -	0561'         		ENDM
+1509:     -	055F' 1801    		JR	TYPE0
+1510:				;
+1511:				;Section 5D
+1512:				;Command: TYPE
+1513:				;Function:  Print out specified file on the CON: Device
+1514:				;Forms:
+1515:				;	TYPE <ufn>	Print file
+1516:				;	TYPE <ufn> P	Print file with paging flag	
+1517:				;
+1518:     -	0561'         	TYPE:
+1519: 4584+4	0561' AF      		XRA	A		;TURN OFF PRINTER FLAG
+1520:				;
+1521:				; ENTRY POINT FOR CPR LIST FUNCTION (LIST)
+1522:				;
+1523:     -	0562'         	TYPE0:
+1524: 4588+13	0562' 32C601  		STA	PRFLG		;SET FLAG
+1525: 4601+17	0565' CDE303  		CALL	SCANER		;EXTRACT FILENAME.TYP TOKEN
+1526: 4618+10	0568' C2F202  		JNZ	ERROR		;ERROR IF ANY QUESTION MARKS
+1527: 4628+17	056B' CD2C03  		CALL	ADVAN		;GET PGDFLG IF IT'S THERE
+1528: 4645+13	056E' 32EB05  		STA	PGFLG		;SAVE IT AS A FLAG
+1529:     -	0571' 28      		DB	28H
+1529:     -	0000'         		IF (NOSLAS-$-1 GT 7FH) AND (NOSLAS-$-1 LT 0FF80H)
+1529:					ELSE
+1529:     -	0572' 05      		DB	NOSLAS-$-1
+1529:					ENDIF
+1529:     -	0573'         		ENDM
+1529:     -	0572' 05      		@GENDD	NOSLAS-$-1
+1529:     -	0573'         		ENDM
+1529:     -	0571' 2805    		JRZ	NOSLAS		;JUMP IF INPUT ENDED
+1530: 4658+5	0573' 13      		INX	D		;PUT NEW BUF POINTER
+1531: 4663+4	0574' EB      		XCHG
+1532: 4667+16	0575' 225900  		SHLD	CIBPTR
+1533:     -	0578'         	NOSLAS:
+1534: 4683+17	0578' CDC503  		CALL	SLOGIN		;LOG IN SELECTED DISK IF ANY
+1535: 4700+17	057B' CD1502  		CALL	OPENF		;OPEN SELECTED FILE
+1536: 4717+10	057E' CADE05  		JZ	TYPE4		;ABORT IF ERROR
+1537: 4727+17	0581' CDAA01  		CALL	CRLF		;NEW LINE
+1538: 4744+7	0584' 3E17    		MVI	A,NLINES-1	;SET LINE COUNT
+1539: 4751+13	0586' 32BC00  		STA	PAGCNT
+1540: 4764+10	0589' 21BD00  		LXI	H,CHRCNT	;SET CHAR POSITION/COUNT
+1541: 4774+10	058C' 36FF    		MVI	M,0FFH		;EMPTY LINE
+1542: 4784+7	058E' 0600    		MVI	B,0		;SET TAB CHAR COUNTER
+1543:     -	0590'         	TYPE1:
+1544: 4791+10	0590' 21BD00  		LXI	H,CHRCNT	;PT TO CHAR POSITION/COUNT
+1545: 4801+7	0593' 7E      		MOV	A,M		;END OF BUFFER?
+1546: 4808+7	0594' FE80    		CPI	80H
+1547:     -	0596' 38      		DB	38H
+1547:     -	0000'         		IF (TYPE2-$-1 GT 7FH) AND (TYPE2-$-1 LT 0FF80H)
+1547:					ELSE
+1547:     -	0597' 09      		DB	TYPE2-$-1
+1547:					ENDIF
+1547:     -	0598'         		ENDM
+1547:     -	0597' 09      		@GENDD	TYPE2-$-1
+1547:     -	0598'         		ENDM
+1547:     -	0596' 3809    		JRC	TYPE2
+1548: 4815+11	0598' E5      		PUSH	H		;READ NEXT BLOCK
+1549: 4826+17	0599' CDDC01  		CALL	READF
+1550: 4843+10	059C' E1      		POP	H
+1551:     -	059D' 20      		DB	20H
+1551:     -	0000'         		IF (TYPE3-$-1 GT 7FH) AND (TYPE3-$-1 LT 0FF80H)
+1551:					ELSE
+1551:     -	059E' 3D      		DB	TYPE3-$-1
+1551:					ENDIF
+1551:     -	059F'         		ENDM
+1551:     -	059E' 3D      		@GENDD	TYPE3-$-1
+1551:     -	059F'         		ENDM
+1551:     -	059D' 203D    		JRNZ	TYPE3		;ERROR?
+1552: 4853+4	059F' AF      		XRA	A		;RESET COUNT
+1553: 4857+7	05A0' 77      		MOV	M,A
+1554:     -	05A1'         	TYPE2:
+1555: 4864+10	05A1' 34      		INR	M		;INCREMENT CHAR COUNT
+1556: 4874+10	05A2' 218000  		LXI	H,TBUFF 	;PT TO BUFFER
+1557: 4884+17	05A5' CD3903  		CALL	ADDAH		;COMPUTE ADDRESS OF NEXT CHAR FROM OFFSET
+1558: 4901+7	05A8' 7E      		MOV	A,M		;GET NEXT CHAR
+1559: 4908+7	05A9' E67F    		ANI	7FH		;MASK OUT MSB
+1560: 4915+7	05AB' FE1A    		CPI	1AH		;END OF FILE (^Z)?
+1561: 4922+5+6	05AD' C8      		RZ			;RESTART CPR IF SO
+1562:				;
+1563:				; OUTPUT CHAR TO CON: OR LST: DEVICE WITH TABULATION
+1564:				;
+1565: 4927+7	05AE' FE0D    		CPI	CR		;RESET TAB COUNT?
+1566:     -	05B0' 28      		DB	28H
+1566:     -	0000'         		IF (TABRST-$-1 GT 7FH) AND (TABRST-$-1 LT 0FF80H)
+1566:					ELSE
+1566:     -	05B1' 0E      		DB	TABRST-$-1
+1566:					ENDIF
+1566:     -	05B2'         		ENDM
+1566:     -	05B1' 0E      		@GENDD	TABRST-$-1
+1566:     -	05B2'         		ENDM
+1566:     -	05B0' 280E    		JRZ	TABRST
+1567: 4934+7	05B2' FE0A    		CPI	LF		;RESET TAB COUNT?
+1568:     -	05B4' 28      		DB	28H
+1568:     -	0000'         		IF (TABRST-$-1 GT 7FH) AND (TABRST-$-1 LT 0FF80H)
+1568:					ELSE
+1568:     -	05B5' 0A      		DB	TABRST-$-1
+1568:					ENDIF
+1568:     -	05B6'         		ENDM
+1568:     -	05B5' 0A      		@GENDD	TABRST-$-1
+1568:     -	05B6'         		ENDM
+1568:     -	05B4' 280A    		JRZ	TABRST
+1569: 4941+7	05B6' FE09    		CPI	TAB		;TAB?
+1570:     -	05B8' 28      		DB	28H
+1570:     -	0000'         		IF (LTAB-$-1 GT 7FH) AND (LTAB-$-1 LT 0FF80H)
+1570:					ELSE
+1570:     -	05B9' 0D      		DB	LTAB-$-1
+1570:					ENDIF
+1570:     -	05BA'         		ENDM
+1570:     -	05B9' 0D      		@GENDD	LTAB-$-1
+1570:     -	05BA'         		ENDM
+1570:     -	05B8' 280D    		JRZ	LTAB
+1571: 4948+17	05BA' CDC401  		CALL	LCOUT		;OUTPUT CHAR
+1572: 4965+5	05BD' 04      		INR	B		;INCREMENT CHAR COUNT
+1573:     -	05BE' 18      		DB	18H
+1573:     -	0000'         		IF (TYPE2L-$-1 GT 7FH) AND (TYPE2L-$-1 LT 0FF80H)
+1573:					ELSE
+1573:     -	05BF' 12      		DB	TYPE2L-$-1
+1573:					ENDIF
+1573:     -	05C0'         		ENDM
+1573:     -	05BF' 12      		@GENDD	TYPE2L-$-1
+1573:     -	05C0'         		ENDM
+1573:     -	05BE' 1812    		JR	TYPE2L
+1574:     -	05C0'         	TABRST:
+1575: 4970+17	05C0' CDC401  		CALL	LCOUT		;OUTPUT <CR> OR <LF>
+1576: 4987+7	05C3' 0600    		MVI	B,0		;RESET TAB COUNTER
+1577:     -	05C5' 18      		DB	18H
+1577:     -	0000'         		IF (TYPE2L-$-1 GT 7FH) AND (TYPE2L-$-1 LT 0FF80H)
+1577:					ELSE
+1577:     -	05C6' 0B      		DB	TYPE2L-$-1
+1577:					ENDIF
+1577:     -	05C7'         		ENDM
+1577:     -	05C6' 0B      		@GENDD	TYPE2L-$-1
+1577:     -	05C7'         		ENDM
+1577:     -	05C5' 180B    		JR	TYPE2L
+1578:     -	05C7'         	LTAB:
+1579: 4994+7	05C7' 3E20    		MVI	A,' '		;<SP>
+1580: 5001+17	05C9' CDC401  		CALL	LCOUT
+1581: 5018+5	05CC' 04      		INR	B		;INCR POS COUNT
+1582: 5023+5	05CD' 78      		MOV	A,B
+1583: 5028+7	05CE' E607    		ANI	7
+1584:     -	05D0' 20      		DB	20H
+1584:     -	0000'         		IF (LTAB-$-1 GT 7FH) AND (LTAB-$-1 LT 0FF80H)
+1584:					ELSE
+1584:     -	05D1' F5      		DB	LTAB-$-1
+1584:					ENDIF
+1584:     -	05D2'         		ENDM
+1584:     -	05D1' F5      		@GENDD	LTAB-$-1
+1584:     -	05D2'         		ENDM
+1584:     -	05D0' 20F5    		JRNZ	LTAB
+1585:				;
+1586:				; CONTINUE PROCESSING
+1587:				;
+1588:     -	05D2'         	TYPE2L:
+1589: 5035+17	05D2' CDE102  		CALL	BREAK		;CHECK FOR ABORT
+1590:     -	05D5' 28      		DB	28H
+1590:     -	0000'         		IF (TYPE1-$-1 GT 7FH) AND (TYPE1-$-1 LT 0FF80H)
+1590:					ELSE
+1590:     -	05D6' B9      		DB	TYPE1-$-1
+1590:					ENDIF
+1590:     -	05D7'         		ENDM
+1590:     -	05D6' B9      		@GENDD	TYPE1-$-1
+1590:     -	05D7'         		ENDM
+1590:     -	05D5' 28B9    		JRZ	TYPE1		;CONTINUE IF NO CHAR
+1591: 5052+7	05D7' FE03    		CPI	'C'-'@' 	;^C?
+1592: 5059+5+6	05D9' C8      		RZ			;RESTART IF SO
+1593:     -	05DA' 18      		DB	18H
+1593:     -	0000'         		IF (TYPE1-$-1 GT 7FH) AND (TYPE1-$-1 LT 0FF80H)
+1593:					ELSE
+1593:     -	05DB' B4      		DB	TYPE1-$-1
+1593:					ENDIF
+1593:     -	05DC'         		ENDM
+1593:     -	05DB' B4      		@GENDD	TYPE1-$-1
+1593:     -	05DC'         		ENDM
+1593:     -	05DA' 18B4    		JR	TYPE1
+1594:     -	05DC'         	TYPE3:
+1595: 5064+5	05DC' 3D      		DCR	A		;NO ERROR?
+1596: 5069+5+6	05DD' C8      		RZ			;RESTART CPR
+1597:     -	05DE'         	TYPE4:
+1598: 5074+10	05DE' C37B07  		JMP	ERRLOG
+1599:				;
+1600:				; PAGING ROUTINES
+1601:				;   PAGER COUNTS DOWN LINES AND PAUSES FOR INPUT (DIRECT) IF COUNT EXPIRES
+1602:				;   PAGSET SETS LINES/PAGE COUNT
+1603:				;
+1604:     -	05E1'         	PAGER:
+1605: 5084+11	05E1' E5      		PUSH	H
+1606: 5095+10	05E2' 21BC00  		LXI	H,PAGCNT	;COUNT DOWN
+1607: 5105+10	05E5' 35      		DCR	M
+1608:     -	05E6' 20      		DB	20H
+1608:     -	0000'         		IF (PGBAK-$-1 GT 7FH) AND (PGBAK-$-1 LT 0FF80H)
+1608:					ELSE
+1608:     -	05E7' 10      		DB	PGBAK-$-1
+1608:					ENDIF
+1608:     -	05E8'         		ENDM
+1608:     -	05E7' 10      		@GENDD	PGBAK-$-1
+1608:     -	05E8'         		ENDM
+1608:     -	05E6' 2010    		JRNZ	PGBAK		;JUMP IF NOT END OF PAGE
+1609: 5115+10	05E8' 3616    		MVI	M,NLINES-2	;REFILL COUNTER
+1610:				;
+1611:     -	05EB'         	PGFLG	EQU	$+1		;POINTER TO IN-THE-CODE BUFFER PGFLG
+1612: 5125+7	05EA' 3E00    		MVI	A,0		;0 MAY BE CHANGED BY PGFLG EQUATE
+1613: 5132+7	05EC' FE50    		CPI	PGDFLG		;PAGE DEFAULT OVERRIDE OPTION WANTED?
+1614:				;
+1615:     -	FFFF'         		IF	PGDFLT		;IF PAGING IS DEFAULT
+1616:     -	05EE' 28      		DB	28H
+1616:     -	0000'         		IF (PGBAK-$-1 GT 7FH) AND (PGBAK-$-1 LT 0FF80H)
+1616:					ELSE
+1616:     -	05EF' 08      		DB	PGBAK-$-1
+1616:					ENDIF
+1616:     -	05F0'         		ENDM
+1616:     -	05EF' 08      		@GENDD	PGBAK-$-1
+1616:     -	05F0'         		ENDM
+1616:     -	05EE' 2808    		JRZ	PGBAK		;  PGDFLG MEANS NO PAGING, PLEASE
+1617:					ELSE			;IF PAGING NOT DEFAULT
+1619:					ENDIF
+1620:				;
+1621: 5139+17	05F0' CDBC01  		CALL	CONIN		;GET CHAR TO CONTINUE
+1622: 5156+7	05F3' FE03    		CPI	'C'-'@' 	;^C
+1623: 5163+10	05F5' CA8B01  		JZ	RSTCPR		;RESTART CPR
+1624:     -	05F8'         	PGBAK:
+1625: 5173+10	05F8' E1      		POP	H		;RESTORE HL
+1626: 5183+10	05F9' C9      		RET
+1627:				;
+1628:				;Section 5E
+1629:				;Command: SAVE
+1630:				;Function:  To save the contents of the TPA onto disk as a file
+1631:				;Forms:
+1632:				;	SAVE <Number of Pages> <ufn>
+1633:				;				Save specified number of pages (start at 100H)
+1634:				;				from TPA into specified file; <Number of
+1635:				;				Pages> is in DEC
+1636:				;	SAVE <Number of Sectors> <ufn> S
+1637:				;				Like SAVE above, but numeric argument specifies
+1638:				;				number of sectors rather than pages
+1639:				;
+1640:     -	FFFF'         		IF	NOT RAS		;NOT FOR REMOTE-ACCESS SYSTEM
+1641:				;
+1642:     -	05FA'         	SAVE:
+1643: 5193+17	05FA' CD3E03  		CALL	NUMBER		;EXTRACT NUMBER FROM COMMAND LINE
+1644: 5210+5	05FD' 6F      		MOV	L,A		;HL=PAGE COUNT
+1645: 5215+7	05FE' 2600    		MVI	H,0
+1646: 5222+11	0600' E5      		PUSH	H		;SAVE PAGE COUNT
+1647: 5233+17	0601' CD4D06  		CALL	EXTEST		;TEST FOR EXISTENCE OF FILE AND ABORT IF SO
+1648: 5250+7	0604' 0E16    		MVI	C,16H		;BDOS MAKE FILE
+1649: 5257+17	0606' CD1E02  		CALL	GRBDOS
+1650: 5274+10	0609' E1      		POP	H		;GET PAGE COUNT
+1651:     -	060A' 28      		DB	28H
+1651:     -	0000'         		IF (SAVE3-$-1 GT 7FH) AND (SAVE3-$-1 LT 0FF80H)
+1651:					ELSE
+1651:     -	060B' 3A      		DB	SAVE3-$-1
+1651:					ENDIF
+1651:     -	060C'         		ENDM
+1651:     -	060B' 3A      		@GENDD	SAVE3-$-1
+1651:     -	060C'         		ENDM
+1651:     -	060A' 283A    		JRZ	SAVE3		;ERROR?
+1652: 5284+4	060C' AF      		XRA	A		;SET RECORD COUNT FIELD OF NEW FILE'S FCB
+1653: 5288+13	060D' 32BB00  		STA	FCBCR
+1654: 5301+17	0610' CD2C03  		CALL	ADVAN		;LOOK FOR 'S' FOR SECTOR OPTION
+1655: 5318+5	0613' 13      		INX	D		;PT TO AFTER 'S' TOKEN
+1656: 5323+7	0614' FE53    		CPI	SECTFLG
+1657:     -	0616' 28      		DB	28H
+1657:     -	0000'         		IF (SAVE0-$-1 GT 7FH) AND (SAVE0-$-1 LT 0FF80H)
+1657:					ELSE
+1657:     -	0617' 02      		DB	SAVE0-$-1
+1657:					ENDIF
+1657:     -	0618'         		ENDM
+1657:     -	0617' 02      		@GENDD	SAVE0-$-1
+1657:     -	0618'         		ENDM
+1657:     -	0616' 2802    		JRZ	SAVE0
+1658: 5330+5	0618' 1B      		DCX	D		;NO 'S' TOKEN, SO BACK UP
+1659: 5335+10	0619' 29      		DAD	H		;DOUBLE IT FOR HL=SECTOR (128 BYTES) COUNT
+1660:     -	061A'         	SAVE0:
+1661:     -	061A' ED53    		DB	0EDH,53H
+1661:     -	061C' 5900    		DW	CIBPTR
+1661:     -	061E'         		ENDM
+1661:     -	061A' ED535900		SDED	CIBPTR		;SET PTR TO BAD TOKEN OR AFTER GOOD TOKEN
+1662: 5345+10	061E' 110001  		LXI	D,TPA		;PT TO START OF SAVE AREA (TPA)
+1663:     -	0621'         	SAVE1:
+1664: 5355+5	0621' 7C      		MOV	A,H		;DONE WITH SAVE?
+1665: 5360+4	0622' B5      		ORA	L		;HL=0 IF SO
+1666:     -	0623' 28      		DB	28H
+1666:     -	0000'         		IF (SAVE2-$-1 GT 7FH) AND (SAVE2-$-1 LT 0FF80H)
+1666:					ELSE
+1666:     -	0624' 18      		DB	SAVE2-$-1
+1666:					ENDIF
+1666:     -	0625'         		ENDM
+1666:     -	0624' 18      		@GENDD	SAVE2-$-1
+1666:     -	0625'         		ENDM
+1666:     -	0623' 2818    		JRZ	SAVE2
+1667: 5364+5	0625' 2B      		DCX	H		;COUNT DOWN ON SECTORS
+1668: 5369+11	0626' E5      		PUSH	H		;SAVE PTR TO BLOCK TO SAVE
+1669: 5380+10	0627' 218000  		LXI	H,128		;128 BYTES PER SECTOR
+1670: 5390+10	062A' 19      		DAD	D		;PT TO NEXT SECTOR
+1671: 5400+11	062B' E5      		PUSH	H		;SAVE ON STACK
+1672: 5411+17	062C' CD0702  		CALL	DMASET		;SET DMA ADDRESS FOR WRITE (ADDRESS IN DE)
+1673: 5428+10	062F' 119B00  		LXI	D,FCBDN 	;WRITE SECTOR
+1674: 5438+7	0632' 0E15    		MVI	C,15H		;BDOS WRITE SECTOR
+1675: 5445+17	0634' CDE101  		CALL	BDOSB		;SAVE BC
+1676: 5462+10	0637' D1      		POP	D		;GET PTR TO NEXT SECTOR IN DE
+1677: 5472+10	0638' E1      		POP	H		;GET SECTOR COUNT
+1678:     -	0639' 20      		DB	20H
+1678:     -	0000'         		IF (SAVE3-$-1 GT 7FH) AND (SAVE3-$-1 LT 0FF80H)
+1678:					ELSE
+1678:     -	063A' 0B      		DB	SAVE3-$-1
+1678:					ENDIF
+1678:     -	063B'         		ENDM
+1678:     -	063A' 0B      		@GENDD	SAVE3-$-1
+1678:     -	063B'         		ENDM
+1678:     -	0639' 200B    		JRNZ	SAVE3		;WRITE ERROR?
+1679:     -	063B' 18      		DB	18H
+1679:     -	0000'         		IF (SAVE1-$-1 GT 7FH) AND (SAVE1-$-1 LT 0FF80H)
+1679:					ELSE
+1679:     -	063C' E4      		DB	SAVE1-$-1
+1679:					ENDIF
+1679:     -	063D'         		ENDM
+1679:     -	063C' E4      		@GENDD	SAVE1-$-1
+1679:     -	063D'         		ENDM
+1679:     -	063B' 18E4    		JR	SAVE1		;CONTINUE
+1680:     -	063D'         	SAVE2:
+1681: 5482+10	063D' 119B00  		LXI	D,FCBDN 	;CLOSE SAVED FILE
+1682: 5492+17	0640' CD2302  		CALL	CLOSE
+1683: 5509+5	0643' 3C      		INR	A		;ERROR?
+1684:     -	0644' 20      		DB	20H
+1684:     -	0000'         		IF (SAVE4-$-1 GT 7FH) AND (SAVE4-$-1 LT 0FF80H)
+1684:					ELSE
+1684:     -	0645' 03      		DB	SAVE4-$-1
+1684:					ENDIF
+1684:     -	0646'         		ENDM
+1684:     -	0645' 03      		@GENDD	SAVE4-$-1
+1684:     -	0646'         		ENDM
+1684:     -	0644' 2003    		JRNZ	SAVE4
+1685:     -	0646'         	SAVE3:
+1686: 5514+17	0646' CDE107  		CALL	PRNLE		;PRINT 'NO SPACE' ERROR
+1687:     -	0649'         	SAVE4:
+1688: 5531+17	0649' CD0402  		CALL	DEFDMA		;SET DMA TO 0080
+1689: 5548+10	064C' C9      		RET			;RESTART CPR
+1690:				;
+1691:				; Test File in FCB for existence, ask user to delete if so, and abort if he
+1692:				;  choses not to
+1693:				;
+1694:     -	064D'         	EXTEST:
+1695: 5558+17	064D' CDE303  		CALL	SCANER		;EXTRACT FILE NAME
+1696: 5575+10	0650' C2F202  		JNZ	ERROR		;'?' IS NOT PERMITTED
+1697: 5585+17	0653' CDC503  		CALL	SLOGIN		;LOG IN SELECTED DISK
+1698: 5602+17	0656' CD2702  		CALL	SEARF		;LOOK FOR SPECIFIED FILE
+1699: 5619+10	0659' 119B00  		LXI	D,FCBDN		;PT TO FILE FCB
+1700: 5629+5+6	065C' C8      		RZ			;OK IF NOT FOUND
+1701: 5634+11	065D' D5      		PUSH	D		;SAVE PTR TO FCB
+1702: 5645+17	065E' CDE801  		CALL	PRINTC
+1703:     -	0661' 44656C65		DB	'Delete File','?'+80H
+	              74652046
+	              696C65BF
+1704: 5662+17	066D' CDBC01  		CALL	CONIN		;GET RESPONSE
+1705: 5679+10	0670' D1      		POP	D		;GET PTR TO FCB
+1706: 5689+7	0671' FE59    		CPI	'Y'		;KEY ON YES
+1707: 5696+10	0673' C28B01  		JNZ	RSTCPR		;RESTART IF NO
+1708: 5706+11	0676' D5      		PUSH	D		;SAVE PTR TO FCB
+1709: 5717+17	0677' CD3D02  		CALL	DELETE		;DELETE FILE
+1710: 5734+10	067A' D1      		POP	D		;GET PTR TO FCB
+1711: 5744+10	067B' C9      		RET
+1712:				;
+1713:					ENDIF			;RAS
+1714:				;
+1715:				;Section 5F
+1716:				;Command: REN
+1717:				;Function:  To change the name of an existing file
+1718:				;Forms:
+1719:				;	REN <New ufn>=<Old ufn>	Perform function
+1720:				;
+1721:     -	FFFF'         		IF	NOT RAS		;NOT FOR REMOTE-ACCESS SYSTEM
+1722:				;
+1723:     -	067C'         	REN:
+1724: 5754+17	067C' CD4D06  		CALL	EXTEST		;TEST FOR FILE EXISTENCE AND RETURN
+1725:								; IF FILE DOESN'T EXIST; ABORT IF IT DOES
+1726: 5771+13	067F' 3ADA03  		LDA	TEMPDR		;SAVE CURRENT DEFAULT DISK
+1727: 5784+11	0682' F5      		PUSH	PSW		;SAVE ON STACK
+1728:     -	0683'         	REN0:
+1729: 5795+10	0683' 219B00  		LXI	H,FCBDN 	;SAVE NEW FILE NAME
+1730: 5805+10	0686' 11AB00  		LXI	D,FCBDM
+1731: 5815+10	0689' 011000  		LXI	B,16		;16 BYTES
+1732:     -	068C' EDB0    		DB	0EDH,0B0H
+1732:     -	068E'         		ENDM
+1732:     -	068C' EDB0    		LDIR
+1733: 5825+17	068E' CD2C03  		CALL	ADVAN		;ADVANCE CIBPTR
+1734: 5842+7	0691' FE3D    		CPI	'='		;'=' OK
+1735:     -	0693' 20      		DB	20H
+1735:     -	0000'         		IF (REN4-$-1 GT 7FH) AND (REN4-$-1 LT 0FF80H)
+1735:					ELSE
+1735:     -	0694' 28      		DB	REN4-$-1
+1735:					ENDIF
+1735:     -	0695'         		ENDM
+1735:     -	0694' 28      		@GENDD	REN4-$-1
+1735:     -	0695'         		ENDM
+1735:     -	0693' 2028    		JRNZ	REN4
+1736:     -	0695'         	REN1:
+1737: 5849+4	0695' EB      		XCHG			;PT TO CHAR AFTER '=' IN HL
+1738: 5853+5	0696' 23      		INX	H
+1739: 5858+16	0697' 225900  		SHLD	CIBPTR		;SAVE PTR TO OLD FILE NAME
+1740: 5874+17	069A' CDE303  		CALL	SCANER		;EXTRACT FILENAME.TYP TOKEN
+1741:     -	069D' 20      		DB	20H
+1741:     -	0000'         		IF (REN4-$-1 GT 7FH) AND (REN4-$-1 LT 0FF80H)
+1741:					ELSE
+1741:     -	069E' 1E      		DB	REN4-$-1
+1741:					ENDIF
+1741:     -	069F'         		ENDM
+1741:     -	069E' 1E      		@GENDD	REN4-$-1
+1741:     -	069F'         		ENDM
+1741:     -	069D' 201E    		JRNZ	REN4		;ERROR IF ANY '?'
+1742: 5891+10	069F' F1      		POP	PSW		;GET OLD DEFAULT DRIVE
+1743: 5901+5	06A0' 47      		MOV	B,A		;SAVE IT
+1744: 5906+10	06A1' 21DA03  		LXI	H,TEMPDR	;COMPARE IT AGAINST CURRENT DEFAULT DRIVE
+1745: 5916+7	06A4' 7E      		MOV	A,M		;MATCH?
+1746: 5923+4	06A5' B7      		ORA	A
+1747:     -	06A6' 28      		DB	28H
+1747:     -	0000'         		IF (REN2-$-1 GT 7FH) AND (REN2-$-1 LT 0FF80H)
+1747:					ELSE
+1747:     -	06A7' 04      		DB	REN2-$-1
+1747:					ENDIF
+1747:     -	06A8'         		ENDM
+1747:     -	06A7' 04      		@GENDD	REN2-$-1
+1747:     -	06A8'         		ENDM
+1747:     -	06A6' 2804    		JRZ	REN2
+1748: 5927+4	06A8' B8      		CMP	B		;CHECK FOR DRIVE ERROR
+1749: 5931+7	06A9' 70      		MOV	M,B
+1750:     -	06AA' 20      		DB	20H
+1750:     -	0000'         		IF (REN4-$-1 GT 7FH) AND (REN4-$-1 LT 0FF80H)
+1750:					ELSE
+1750:     -	06AB' 11      		DB	REN4-$-1
+1750:					ENDIF
+1750:     -	06AC'         		ENDM
+1750:     -	06AB' 11      		@GENDD	REN4-$-1
+1750:     -	06AC'         		ENDM
+1750:     -	06AA' 2011    		JRNZ	REN4
+1751:     -	06AC'         	REN2:
+1752: 5938+7	06AC' 70      		MOV	M,B
+1753: 5945+4	06AD' AF      		XRA	A
+1754: 5949+13	06AE' 329B00  		STA	FCBDN		;SET DEFAULT DRIVE
+1755: 5962+10	06B1' 119B00  		LXI	D,FCBDN 	;RENAME FILE
+1756: 5972+7	06B4' 0E17    		MVI	C,17H		;BDOS RENAME FCT
+1757: 5979+17	06B6' CD1E02  		CALL	GRBDOS
+1758: 5996+5+6	06B9' C0      		RNZ
+1759:     -	06BA'         	REN3:
+1760: 6001+17	06BA' CD9F01  		CALL	PRNNF		;PRINT NO FILE MSG
+1761:     -	06BD'         	REN4:
+1762: 6018+10	06BD' C37B07  		JMP	ERRLOG
+1763:				;
+1764:					ENDIF			;RAS
+1765:				;
+1766:				;Section 5G
+1767:				;Command: USER
+1768:				;Function:  Change current USER number
+1769:				;Forms:
+1770:				;	USER <unum>	Select specified user number;<unum> is in DEC
+1771:				;
+1772:     -	06C0'         	USER:
+1773: 6028+17	06C0' CDEC02  		CALL	USRNUM		;EXTRACT USER NUMBER FROM COMMAND LINE
+1774: 6045+5	06C3' 5F      		MOV	E,A		;PLACE USER NUMBER IN E
+1775: 6050+17	06C4' CD4802  		CALL	SETUSR		;SET SPECIFIED USER
+1776:     -	06C7'         	RSTJMP:
+1777: 6067+10	06C7' C38E01  		JMP	RCPRNL		;RESTART CPR
+1778:				;
+1779:				;Section 5H
+1780:				;Command: DFU
+1781:				;Function:  Set the Default User Number for the command/file scanner
+1782:				;	     (MEMLOAD)
+1783:				;Forms:
+1784:				;	DFU <unum>	Select Default User Number;<unum> is in DEC
+1785:				;
+1786:     -	06CA'         	DFU:
+1787: 6077+17	06CA' CDEC02  		CALL	USRNUM		;GET USER NUMBER
+1788: 6094+13	06CD' 32A907  		STA	DFUSR		;PUT IT AWAY
+1789:     -	06D0' 18      		DB	18H
+1789:     -	0000'         		IF (RSTJMP-$-1 GT 7FH) AND (RSTJMP-$-1 LT 0FF80H)
+1789:					ELSE
+1789:     -	06D1' F5      		DB	RSTJMP-$-1
+1789:					ENDIF
+1789:     -	06D2'         		ENDM
+1789:     -	06D1' F5      		@GENDD	RSTJMP-$-1
+1789:     -	06D2'         		ENDM
+1789:     -	06D0' 18F5    		JR	RSTJMP		;RESTART CPR (NO DEFAULT LOGIN)
+1790:				;
+1791:				;Section 5I
+1792:				;Command: JUMP
+1793:				;Function:  To Call the program (subroutine) at the specified address
+1794:				;	     without loading from disk
+1795:				;Forms:
+1796:				;	JUMP <adr>		Call at <adr>;<adr> is in HEX
+1797:				;
+1798:     -	FFFF'         		IF	NOT RAS		;NOT FOR REMOTE-ACCESS SYSTEM
+1799:				;
+1800:     -	06D2'         	JUMP:
+1801: 6107+17	06D2' CD7C03  		CALL	HEXNUM		;GET LOAD ADDRESS IN HL
+1802:     -	06D5' 18      		DB	18H
+1802:     -	0000'         		IF (CALLPROG-$-1 GT 7FH) AND (CALLPROG-$-1 LT 0FF80H)
+1802:					ELSE
+1802:     -	06D6' 3C      		DB	CALLPROG-$-1
+1802:					ENDIF
+1802:     -	06D7'         		ENDM
+1802:     -	06D6' 3C      		@GENDD	CALLPROG-$-1
+1802:     -	06D7'         		ENDM
+1802:     -	06D5' 183C    		JR	CALLPROG	;PERFORM CALL
+1803:				;
+1804:					ENDIF			;RAS
+1805:				;
+1806:				;Section 5J
+1807:				;Command: GO
+1808:				;Function:  To Call the program in the TPA without loading
+1809:				;	     loading from disk. Same as JUMP 100H, but much
+1810:				;	     more convenient, especially when used with
+1811:				;	     parameters for programs like STAT. Also can be
+1812:				;	     allowed on remote-access systems with no problems.
+1813:				;
+1814:				;Form:
+1815:				;	GO <parameters like for COMMAND>
+1816:				;
+1817:     -	FFFF'         		IF	NOT RAS		;ONLY IF RAS
+1818:				;
+1819: 6124+10	06D7' 210001  	GO:	LXI	H,TPA		;Always to TPA
+1820:     -	06DA' 18      		DB	18H
+1820:     -	0000'         		IF (CALLPROG-$-1 GT 7FH) AND (CALLPROG-$-1 LT 0FF80H)
+1820:					ELSE
+1820:     -	06DB' 37      		DB	CALLPROG-$-1
+1820:					ENDIF
+1820:     -	06DC'         		ENDM
+1820:     -	06DB' 37      		@GENDD	CALLPROG-$-1
+1820:     -	06DC'         		ENDM
+1820:     -	06DA' 1837    		JR	CALLPROG	;Perform call
+1821:				;
+1822:					ENDIF			;END OF GO FOR RAS
+1823:				;
+1824:				;Section 5K
+1825:				;Command: COM file processing
+1826:				;Function:  To load the specified COM file from disk and execute it
+1827:				;Forms:
+1828:				;	<command>
+1829:				;
+1830:     -	06DC'         	COM:
+1831: 6134+13	06DC' 3A9C00  		LDA	FCBFN		;ANY COMMAND?
+1832: 6147+7	06DF' FE20    		CPI	' '		;' ' MEANS COMMAND WAS 'D:' TO SWITCH
+1833:     -	06E1' 20      		DB	20H
+1833:     -	0000'         		IF (COM1-$-1 GT 7FH) AND (COM1-$-1 LT 0FF80H)
+1833:					ELSE
+1833:     -	06E2' 14      		DB	COM1-$-1
+1833:					ENDIF
+1833:     -	06E3'         		ENDM
+1833:     -	06E2' 14      		@GENDD	COM1-$-1
+1833:     -	06E3'         		ENDM
+1833:     -	06E1' 2014    		JRNZ	COM1		;NOT <SP>, SO MUST BE TRANSIENT OR ERROR
+1834: 6154+13	06E3' 3ADA03  		LDA	TEMPDR		;LOOK FOR DRIVE SPEC
+1835: 6167+4	06E6' B7      		ORA	A		;IF ZERO, JUST BLANK
+1836: 6171+10	06E7' CA8E01  		JZ	RCPRNL
+1837: 6181+5	06EA' 3D      		DCR	A		;ADJUST FOR LOG IN
+1838: 6186+13	06EB' 325C02  		STA	TDRIVE		;SET DEFAULT DRIVE
+1839: 6199+17	06EE' CD5B02  		CALL	SETU0D		;SET DRIVE WITH USER 0
+1840: 6216+17	06F1' CD1002  		CALL	LOGIN		;LOG IN DRIVE
+1841: 6233+10	06F4' C38E01  		JMP	RCPRNL		;RESTART CPR
+1842:     -	06F7'         	COM1:
+1843: 6243+13	06F7' 3AA400  		LDA	FCBFT		;FILE TYPE MUST BE BLANK
+1844: 6256+7	06FA' FE20    		CPI	' '
+1845: 6263+10	06FC' C2F202  		JNZ	ERROR
+1846: 6273+10	06FF' 217700  		LXI	H,COMMSG	;PLACE DEFAULT FILE TYPE (COM) INTO FCB
+1847: 6283+10	0702' 11A400  		LXI	D,FCBFT		;COPY INTO FILE TYPE
+1848: 6293+10	0705' 010300  		LXI	B,3		;3 BYTES
+1849:     -	0708' EDB0    		DB	0EDH,0B0H
+1849:     -	070A'         		ENDM
+1849:     -	0708' EDB0    		LDIR
+1850: 6303+10	070A' 210001  		LXI	H,TPA		;SET EXECUTION/LOAD ADDRESS
+1851: 6313+11	070D' E5      		PUSH	H		;SAVE FOR EXECUTION
+1852: 6324+17	070E' CD8B07  		CALL	MEMLOAD		;LOAD MEMORY WITH FILE SPECIFIED IN CMD LINE
+1853: 6341+10	0711' E1      		POP	H		;GET EXECUTION ADDRESS
+1854: 6351+5+6	0712' C0      		RNZ			;RETURN (ABORT) IF LOAD ERROR
+1855:				;
+1856:				; CALLPROG IS THE ENTRY POINT FOR THE EXECUTION OF THE LOADED
+1857:				;   PROGRAM;ON ENTRY TO THIS ROUTINE, HL MUST CONTAIN THE EXECUTION
+1858:				;   ADDRESS OF THE PROGRAM (SUBROUTINE) TO EXECUTE
+1859:				;
+1860:     -	0713'         	CALLPROG:
+1861: 6356+16	0713' 226907  		SHLD	EXECADR		;PERFORM IN-LINE CODE MODIFICATION
+1862: 6372+17	0716' CDCF03  		CALL	DLOGIN		;LOG IN DEFAULT DRIVE
+1863: 6389+17	0719' CDE303  		CALL	SCANER		;SEARCH COMMAND LINE FOR NEXT TOKEN
+1864: 6406+10	071C' 21DA03  		LXI	H,TEMPDR	;SAVE PTR TO DRIVE SPEC
+1865: 6416+11	071F' E5      		PUSH	H
+1866: 6427+7	0720' 7E      		MOV	A,M		;SET DRIVE SPEC
+1867: 6434+13	0721' 329B00  		STA	FCBDN
+1868: 6447+10	0724' 21AB00  		LXI	H,FCBDN+10H	;PT TO 2ND FILE NAME
+1869: 6457+17	0727' CDE603  		CALL	SCANX		;SCAN FOR IT AND LOAD IT INTO FCBDN+16
+1870: 6474+10	072A' E1      		POP	H		;SET UP DRIVE SPECS
+1871: 6484+7	072B' 7E      		MOV	A,M
+1872: 6491+13	072C' 32AB00  		STA	FCBDM
+1873: 6504+4	072F' AF      		XRA	A
+1874: 6508+13	0730' 32BB00  		STA	FCBCR
+1875: 6521+10	0733' 115C00  		LXI	D,TFCB		;COPY TO DEFAULT FCB
+1876: 6531+10	0736' 219B00  		LXI	H,FCBDN 	;FROM FCBDN
+1877: 6541+10	0739' 012100  		LXI	B,33		;SET UP DEFAULT FCB
+1878:     -	073C' EDB0    		DB	0EDH,0B0H
+1878:     -	073E'         		ENDM
+1878:     -	073C' EDB0    		LDIR
+1879: 6551+10	073E' 210800  		LXI	H,CIBUFF
+1880:     -	0741'         	COM4:
+1881: 6561+7	0741' 7E      		MOV	A,M		;SKIP TO END OF 2ND FILE NAME
+1882: 6568+4	0742' B7      		ORA	A		;END OF LINE?
+1883:     -	0743' 28      		DB	28H
+1883:     -	0000'         		IF (COM5-$-1 GT 7FH) AND (COM5-$-1 LT 0FF80H)
+1883:					ELSE
+1883:     -	0744' 07      		DB	COM5-$-1
+1883:					ENDIF
+1883:     -	0745'         		ENDM
+1883:     -	0744' 07      		@GENDD	COM5-$-1
+1883:     -	0745'         		ENDM
+1883:     -	0743' 2807    		JRZ	COM5
+1884: 6572+7	0745' FE20    		CPI	' '		;END OF TOKEN?
+1885:     -	0747' 28      		DB	28H
+1885:     -	0000'         		IF (COM5-$-1 GT 7FH) AND (COM5-$-1 LT 0FF80H)
+1885:					ELSE
+1885:     -	0748' 03      		DB	COM5-$-1
+1885:					ENDIF
+1885:     -	0749'         		ENDM
+1885:     -	0748' 03      		@GENDD	COM5-$-1
+1885:     -	0749'         		ENDM
+1885:     -	0747' 2803    		JRZ	COM5
+1886: 6579+5	0749' 23      		INX	H
+1887:     -	074A' 18      		DB	18H
+1887:     -	0000'         		IF (COM4-$-1 GT 7FH) AND (COM4-$-1 LT 0FF80H)
+1887:					ELSE
+1887:     -	074B' F5      		DB	COM4-$-1
+1887:					ENDIF
+1887:     -	074C'         		ENDM
+1887:     -	074B' F5      		@GENDD	COM4-$-1
+1887:     -	074C'         		ENDM
+1887:     -	074A' 18F5    		JR	COM4
+1888:				;
+1889:				; LOAD COMMAND LINE INTO TBUFF
+1890:				;
+1891:     -	074C'         	COM5:
+1892: 6584+7	074C' 0600    		MVI	B,0		;SET CHAR COUNT
+1893: 6591+10	074E' 118100  		LXI	D,TBUFF+1	;PT TO CHAR POS
+1894:     -	0751'         	COM6:
+1895: 6601+7	0751' 7E      		MOV	A,M		;COPY COMMAND LINE TO TBUFF
+1896: 6608+7	0752' 12      		STAX	D
+1897: 6615+4	0753' B7      		ORA	A		;DONE IF ZERO
+1898:     -	0754' 28      		DB	28H
+1898:     -	0000'         		IF (COM7-$-1 GT 7FH) AND (COM7-$-1 LT 0FF80H)
+1898:					ELSE
+1898:     -	0755' 05      		DB	COM7-$-1
+1898:					ENDIF
+1898:     -	0756'         		ENDM
+1898:     -	0755' 05      		@GENDD	COM7-$-1
+1898:     -	0756'         		ENDM
+1898:     -	0754' 2805    		JRZ	COM7
+1899: 6619+5	0756' 04      		INR	B		;INCR CHAR COUNT
+1900: 6624+5	0757' 23      		INX	H		;PT TO NEXT
+1901: 6629+5	0758' 13      		INX	D
+1902:     -	0759' 18      		DB	18H
+1902:     -	0000'         		IF (COM6-$-1 GT 7FH) AND (COM6-$-1 LT 0FF80H)
+1902:					ELSE
+1902:     -	075A' F6      		DB	COM6-$-1
+1902:					ENDIF
+1902:     -	075B'         		ENDM
+1902:     -	075A' F6      		@GENDD	COM6-$-1
+1902:     -	075B'         		ENDM
+1902:     -	0759' 18F6    		JR	COM6
+1903:				;
+1904:				; RUN LOADED TRANSIENT PROGRAM
+1905:				;
+1906:     -	075B'         	COM7:
+1907: 6634+5	075B' 78      		MOV	A,B		;SAVE CHAR COUNT
+1908: 6639+13	075C' 328000  		STA	TBUFF
+1909: 6652+17	075F' CDAA01  		CALL	CRLF		;NEW LINE
+1910: 6669+17	0762' CD0402  		CALL	DEFDMA		;SET DMA TO 0080
+1911: 6686+17	0765' CD4C02  		CALL	SETUD		;SET USER/DISK
+1912:				;
+1913:				; EXECUTION (CALL) OF PROGRAM (SUBROUTINE) OCCURS HERE
+1914:				;
+1915:     -	0769'         	EXECADR	EQU	$+1		;CHANGE ADDRESS FOR IN-LINE CODE MODIFICATION
+1916: 6703+17	0768' CD0001  		CALL	TPA		;CALL TRANSIENT
+1917: 6720+17	076B' CD0402  		CALL	DEFDMA		;SET DMA TO 0080, IN CASE
+1918:								;PROG CHANGED IT ON US
+1919: 6737+17	076E' CD5B02  		CALL	SETU0D		;SET USER 0/DISK
+1920: 6754+17	0771' CD1002  		CALL	LOGIN		;LOGIN DISK
+1921: 6771+10	0774' C33A01  		JMP	RESTRT		;RESTART CPR
+1922:				;
+1923:				; TRANSIENT LOAD ERROR
+1924:				;
+1925:     -	0777'         	COM8:
+1926: 6781+10	0777' E1      		POP	H		;CLEAR RETURN ADDRESS
+1927: 6791+17	0778' CD4102  		CALL	RESETUSR	;RESET CURRENT USER NUMBER
+1928:								;  RESET MUST BE DONE BEFORE LOGIN
+1929:     -	077B'         	ERRLOG:
+1930: 6808+17	077B' CDCF03  		CALL	DLOGIN		;LOG IN DEFAULT DISK
+1931:     -	077E'         	ERRJMP:
+1932: 6825+10	077E' C3F202  		JMP	ERROR
+1933:				;
+1934:				;Section 5L
+1935:				;Command: GET
+1936:				;Function:  To load the specified file from disk to the specified address
+1937:				;Forms:
+1938:				;	GET <adr> <ufn>	Load the specified file at the specified page;
+1939:				;			<adr> is in HEX
+1940:				;
+1941:     -	FFFF'         		IF	NOT RAS		;NOT FOR REMOTE-ACCESS SYSTEM
+1942:				;
+1943:     -	0781'         	GET:
+1944: 6835+17	0781' CD7C03  		CALL	HEXNUM		;GET LOAD ADDRESS IN HL
+1945: 6852+11	0784' E5      		PUSH	H		;SAVE ADDRESS
+1946: 6863+17	0785' CDE303  		CALL	SCANER		;GET FILE NAME
+1947: 6880+10	0788' E1      		POP	H		;RESTORE ADDRESS
+1948:     -	0789' 20      		DB	20H
+1948:     -	0000'         		IF (ERRJMP-$-1 GT 7FH) AND (ERRJMP-$-1 LT 0FF80H)
+1948:					ELSE
+1948:     -	078A' F3      		DB	ERRJMP-$-1
+1948:					ENDIF
+1948:     -	078B'         		ENDM
+1948:     -	078A' F3      		@GENDD	ERRJMP-$-1
+1948:     -	078B'         		ENDM
+1948:     -	0789' 20F3    		JRNZ	ERRJMP		;MUST BE UNAMBIGUOUS
+1949:				;
+1950:				; FALL THRU TO MEMLOAD
+1951:				;
+1952:					ENDIF			;RAS
+1953:				;
+1954:				; LOAD MEMORY WITH THE FILE WHOSE NAME IS SPECIFIED IN THE COMMAND LINE
+1955:				;   ON INPUT, HL CONTAINS STARTING ADDRESS TO LOAD
+1956:				;
+1957:     -	078B'         	MEMLOAD:
+1958: 6890+17	078B' CD9407  		CALL	MLOAD		;USER MEMORY LOAD SUBROUTINE
+1959: 6907+11	078E' F5      		PUSH	PSW		;SAVE RETURN STATUS
+1960: 6918+17	078F' CD4102  		CALL	RESETUSR	;RESET USER NUMBER
+1961: 6935+10	0792' F1      		POP	PSW		;GET RETURN STATUS
+1962: 6945+10	0793' C9      		RET
+1963:				
+1964:				;
+1965:				;  MEMORY LOAD SUBROUTINE
+1966:				;	EXIT POINTS ARE A SIMPLE RETURN WITH THE ZERO FLAG SET IF NO ERROR,
+1967:				; A SIMPLE RETURN WITH THE ZERO FLAG RESET (NZ) IF MEMORY FULL, OR A JMP TO
+1968:				; COM8 IF COM FILE NOT FOUND
+1969:				;
+1970:     -	0794'         	MLOAD:
+1971: 6955+16	0794' 22C407  		SHLD	LOADADR		;SET LOAD ADDRESS
+1972: 6971+17	0797' CD4602  		CALL	GETUSR		;GET CURRENT USER NUMBER
+1973: 6988+13	079A' 324202  		STA	TMPUSR		;SAVE IT FOR LATER
+1974: 7001+13	079D' 32AB07  		STA	TSELUSR 	;TEMP USER TO SELECT
+1975:				;
+1976:				;   MLA is a reentry point for a non-standard CP/M Modification
+1977:				; This is the return point for when the .COM (or GET) file is not found the
+1978:				; first time, Drive A: is selected for a second attempt
+1979:				;
+1980:     -	07A0'         	MLA:
+1981: 7014+17	07A0' CDC503  		CALL	SLOGIN		;LOG IN SPECIFIED DRIVE IF ANY
+1982: 7031+17	07A3' CD1502  		CALL	OPENF		;OPEN COMMAND.COM FILE
+1983:     -	07A6' 20      		DB	20H
+1983:     -	0000'         		IF (MLA1-$-1 GT 7FH) AND (MLA1-$-1 LT 0FF80H)
+1983:					ELSE
+1983:     -	07A7' 1B      		DB	MLA1-$-1
+1983:					ENDIF
+1983:     -	07A8'         		ENDM
+1983:     -	07A7' 1B      		@GENDD	MLA1-$-1
+1983:     -	07A8'         		ENDM
+1983:     -	07A6' 201B    		JRNZ	MLA1		;FILE FOUND - LOAD IT
+1984:				;
+1985:				; ERROR ROUTINE TO SELECT USER 0 IF ALL ELSE FAILS
+1986:				;
+1987:     -	07A9'         	DFUSR	EQU	$+1		;MARK IN-THE-CODE VARIABLE
+1988: 7048+7	07A8' 3E00    		MVI	A,DEFUSR	;GET DEFAULT USER
+1989:     -	07AB'         	TSELUSR	EQU	$+1		;MARK IN-THE-CODE VARIABLE
+1990: 7055+7	07AA' FE00    		CPI	DEFUSR		;SAME?
+1991:     -	07AC' 28      		DB	28H
+1991:     -	0000'         		IF (MLA0-$-1 GT 7FH) AND (MLA0-$-1 LT 0FF80H)
+1991:					ELSE
+1991:     -	07AD' 09      		DB	MLA0-$-1
+1991:					ENDIF
+1991:     -	07AE'         		ENDM
+1991:     -	07AD' 09      		@GENDD	MLA0-$-1
+1991:     -	07AE'         		ENDM
+1991:     -	07AC' 2809    		JRZ	MLA0		;JUMP IF
+1992: 7062+13	07AE' 32AB07  		STA	TSELUSR		;ELSE PUT DOWN NEW ONE
+1993: 7075+5	07B1' 5F      		MOV	E,A
+1994: 7080+17	07B2' CD4802  		CALL	SETUSR		;GO SET NEW USER NUMBER
+1995:     -	07B5' 18      		DB	18H
+1995:     -	0000'         		IF (MLA-$-1 GT 7FH) AND (MLA-$-1 LT 0FF80H)
+1995:					ELSE
+1995:     -	07B6' E9      		DB	MLA-$-1
+1995:					ENDIF
+1995:     -	07B7'         		ENDM
+1995:     -	07B6' E9      		@GENDD	MLA-$-1
+1995:     -	07B7'         		ENDM
+1995:     -	07B5' 18E9    		JR	MLA		;AND TRY AGAIN
+1996:				;
+1997:				; ERROR ROUTINE TO SELECT DRIVE A: IF DEFAULT WAS ORIGINALLY SELECTED
+1998:				;
+1999:     -	07B7'         	MLA0:
+2000: 7097+10	07B7' 21DA03  		LXI	H,TEMPDR	;GET DRIVE FROM CURRENT COMMAND
+2001: 7107+4	07BA' AF      		XRA	A		;A=0
+2002: 7111+7	07BB' B6      		ORA	M
+2003: 7118+10	07BC' C27707  		JNZ	COM8		;ERROR IF ALREADY DISK A:
+2004: 7128+10	07BF' 3601    		MVI	M,1		;SELECT DRIVE A:
+2005:     -	07C1' 18      		DB	18H
+2005:     -	0000'         		IF (MLA-$-1 GT 7FH) AND (MLA-$-1 LT 0FF80H)
+2005:					ELSE
+2005:     -	07C2' DD      		DB	MLA-$-1
+2005:					ENDIF
+2005:     -	07C3'         		ENDM
+2005:     -	07C2' DD      		@GENDD	MLA-$-1
+2005:     -	07C3'         		ENDM
+2005:     -	07C1' 18DD    		JR	MLA
+2006:				;
+2007:				; FILE FOUND -- PROCEED WITH LOAD
+2008:				;
+2009:     -	07C3'         	MLA1:
+2010:     -	07C4'         	LOADADR	EQU	$+1		;MEMORY LOAD ADDRESS (IN-LINE CODE MOD)
+2011: 7138+10	07C3' 210001  		LXI	H,TPA		;SET START ADDRESS OF MEMORY LOAD
+2012:     -	07C6'         	ML2:
+2013: 7148+7	07C6' 3EFF    		MVI	A,ENTRY/256-1	;GET HIGH-ORDER ADR OF JUST BELOW CPR
+2014: 7155+4	07C8' BC      		CMP	H		;ARE WE GOING TO OVERWRITE THE CPR?
+2015:     -	07C9' 38      		DB	38H
+2015:     -	0000'         		IF (PRNLE-$-1 GT 7FH) AND (PRNLE-$-1 LT 0FF80H)
+2015:					ELSE
+2015:     -	07CA' 16      		DB	PRNLE-$-1
+2015:					ENDIF
+2015:     -	07CB'         		ENDM
+2015:     -	07CA' 16      		@GENDD	PRNLE-$-1
+2015:     -	07CB'         		ENDM
+2015:     -	07C9' 3816    		JRC	PRNLE		;ERROR IF SO
+2016: 7159+11	07CB' E5      		PUSH	H		;SAVE ADDRESS OF NEXT SECTOR
+2017: 7170+4	07CC' EB      		XCHG			;... IN DE
+2018: 7174+17	07CD' CD0702  		CALL	DMASET		;SET DMA ADDRESS FOR LOAD
+2019: 7191+10	07D0' 119B00  		LXI	D,FCBDN 	;READ NEXT SECTOR
+2020: 7201+17	07D3' CDDF01  		CALL	READ
+2021: 7218+10	07D6' E1      		POP	H		;GET ADDRESS OF NEXT SECTOR
+2022:     -	07D7' 20      		DB	20H
+2022:     -	0000'         		IF (ML3-$-1 GT 7FH) AND (ML3-$-1 LT 0FF80H)
+2022:					ELSE
+2022:     -	07D8' 06      		DB	ML3-$-1
+2022:					ENDIF
+2022:     -	07D9'         		ENDM
+2022:     -	07D8' 06      		@GENDD	ML3-$-1
+2022:     -	07D9'         		ENDM
+2022:     -	07D7' 2006    		JRNZ	ML3		;READ ERROR OR EOF?
+2023: 7228+10	07D9' 118000  		LXI	D,128		;MOVE 128 BYTES PER SECTOR
+2024: 7238+10	07DC' 19      		DAD	D		;PT TO NEXT SECTOR IN HL
+2025:     -	07DD' 18      		DB	18H
+2025:     -	0000'         		IF (ML2-$-1 GT 7FH) AND (ML2-$-1 LT 0FF80H)
+2025:					ELSE
+2025:     -	07DE' E7      		DB	ML2-$-1
+2025:					ENDIF
+2025:     -	07DF'         		ENDM
+2025:     -	07DE' E7      		@GENDD	ML2-$-1
+2025:     -	07DF'         		ENDM
+2025:     -	07DD' 18E7    		JR	ML2
+2026:				;
+2027:     -	07DF'         	ML3:
+2028: 7248+5	07DF' 3D      		DCR	A		;LOAD COMPLETE
+2029: 7253+5+6	07E0' C8      		RZ			;OK IF ZERO, ELSE FALL THRU TO PRNLE
+2030:				;
+2031:				; LOAD ERROR
+2032:				;
+2033:     -	07E1'         	PRNLE:
+2034: 7258+17	07E1' CDE801  		CALL	PRINTC
+2035:     -	07E4' 46756CEC		DB	'Ful','l'+80H
+2036: 7275+7	07E8' 3E01    		MVI	A,1		;SET NON-ZERO TO INDICATE ERROR
+2037: 7282+4	07EA' B7      		ORA	A		;SET FLAG
+2038: 7286+10	07EB' C9      		RET
+2039:				;
+2040:     -	07EC'         		END
+
+
+
+Error + Warning report:
+
+     0 errors
+    11 warnings
+    11 W -- General warnings
+
+     4	passes
+     0	jr promotions
+   231	symbols
+  1885	bytes
+
+   247	macro calls
+   424	macro bytes
+     0	invented symbols
+
+
+
+Symbol Table:
+
+ADDAH            339'     825
+ADVAN            32C'     812
+BASE           =00        0
+BDOS           =05        5
+BDOSB            1E1'     481
+BDOSJP           20D'     525
+BREAK            2E1'     737
+BRKBK            2EA'     746
+BUFLEN         =50        80
+CALLPROG         713'     1811
+CB1              2D0'     720
+CB2              2D8'     728
+CBASE           00'       0 (public)
+CBUFF           07'       7
+CHRCNT          BD'       189
+CIBPTR          59'       89
+CIBUF           17'       23
+CIBUFF          08'       8
+CIPTR           5B'       91
+CLEVEL3        =FFFFFFFF  -1
+CLOSE            223'     547
+CMDSER           462'     1122
+CMDTBL          BF'       191
+CMS1             467'     1127
+CMS2             46C'     1132
+CMS3             47A'     1146
+CMS4             47D'     1149
+CNVBUF           2CB'     715
+COM              6DC'     1756
+COM1             6F7'     1783
+COM4             741'     1857
+COM5             74C'     1868
+COM6             751'     1873
+COM7             75B'     1883
+COM8             777'     1911
+COMLOG           3D9'     985
+COMMSG          77'       119
+CONIN            1BC'     444
+CONOUT           1B1'     433
+CPR              105'     261
+CPR1             101'     257
+CPRLOC         =00        0
+CPRMPT         =3E        62
+CR             =0D        13
+CRLF             1AA'     426
+DEFDMA           204'     516
+DEFUSR         =00        0
+DELETE           23D'     573
+DFU              6CA'     1738
+DFUSR          = 7A9'     1961
+DIR              484'     1156
+DIR10            521'     1313
+DIR11            52B'     1323
+DIR2             4B3'     1203
+DIR2A            4B4'     1204
+DIR3             4C2'     1218
+DIR4             4E5'     1253
+DIR5             4ED'     1261
+DIR6             4EF'     1263
+DIR7             50A'     1290
+DIR8             50C'     1292
+DIR9             520'     1312
+DIRPR            4B4'     1204
+DIRPTR           3BC'     956
+DLOG5            3D6'     982
+DLOGIN           3CF'     975
+DMASET           207'     519
+ENTRY           00'       0
+ERA              535'     1333
+ERA1             54E'     1358
+ERR1             305'     773
+ERR2             2F8'     760
+ERRJMP           77E'     1918
+ERRLOG           77B'     1915
+ERROR            2F2'     754
+EXECADR        = 769'     1897
+EXTEST           64D'     1613
+FALSE          =00        0
+FCBCR           BB'       187
+FCBDM           AB'       171
+FCBDN           9B'       155
+FCBFN           9C'       156
+FCBFT           A4'       164
+FENCE          =7C        124
+FILLQ            52D'     1325
+FQLP             52F'     1327
+GET              781'     1921
+GETDRV           200'     512
+GETUSR           246'     582
+GO               6D7'     1751
+GOTSYS           4A7'     1191
+GRBDOS           21E'     542
+HEXNUM           37C'     892
+HNUM0            37F'     895
+HNUM1            387'     903
+HNUM2            39E'     926
+HNUM3            3B9'     953
+JUMP             6D2'     1746
+LC1              1D0'     464
+LCOUT            1C4'     452
+LF             =0A        10
+LIST             55D'     1373
+LOADADR        = 7C4'     1988
+LOGIN            210'     528
+LSTOUT           1CB'     459
+LTAB             5C7'     1479
+MAXUSR         =0F        15
+MBUFF           06'       6
+MEMLOAD          78B'     1931
+ML2              7C6'     1990
+ML3              7DF'     2015
+MLA              7A0'     1952
+MLA0             7B7'     1975
+MLA1             7C3'     1987
+MLOAD            794'     1940
+NCHARS         =04        4
+NCMNDS         =0B        11
+NLINES         =18        24
+NOLOG            126'     294
+NOSLAS           578'     1400
+NUM0             354'     852
+NUM1             35A'     858
+NUM2             377'     887
+NUMBASE        =48        72
+NUMBER           33E'     830
+NUMERR           379'     889
+NUMS             346'     838
+NUMS1            350'     848
+OPEN             21C'     540
+OPENF            215'     533
+OUTPUT           1B4'     436
+PAGCNT          BC'       188
+PAGER            5E1'     1505
+PGBAK            5F8'     1528
+PGDFLG         =50        80
+PGDFLT         =FFFFFFFF  -1
+PGFLG          = 5EB'     1515
+PRFLG          = 1C6'     454
+PRIN1            1F5'     501
+PRINT            1ED'     493
+PRINTC           1E8'     488
+PRNLE            7E1'     2017
+PRNNF            19F'     415
+QMCNT           BE'       190
+RAS            =00        0
+RB1              2B5'     693
+RCPRNL           18E'     398
+READ             1DF'     479
+READF            1DC'     476
+REDBUF           26A'     618
+REL            =FFFFFFFF  -1
+REN              67C'     1660
+REN0             683'     1667
+REN1             695'     1685
+REN2             6AC'     1708
+REN3             6BA'     1722
+REN4             6BD'     1725
+RESET            20B'     523
+RESETUSR         241'     577
+RESTRT           13A'     314
+RNGSUB         = 12A'     298
+RS00             15B'     347
+RS000            160'     352
+RS1              163'     355
+RSTCPR           18B'     395
+RSTJMP           6C7'     1735
+SAVE             5FA'     1530
+SAVE0            61A'     1562
+SAVE1            621'     1569
+SAVE2            63D'     1597
+SAVE3            646'     1606
+SAVE4            649'     1609
+SBLANK           330'     816
+SCAN15           420'     1056
+SCAN16           423'     1059
+SCAN17           425'     1061
+SCAN2            3FF'     1023
+SCAN3            405'     1029
+SCAN4            40B'     1035
+SCANER           3E3'     995
+SCANF            433'     1075
+SCANF1           444'     1092
+SCANF2           44B'     1099
+SCANF3           44D'     1101
+SCANF4           454'     1108
+SCANX            3E6'     998
+SCQ              45A'     1114
+SDELM            30F'     783
+SEAR1            22A'     554
+SEARF            227'     551
+SEARN            22E'     558
+SECTFLG        =53        83
+SETU0D           25B'     603
+SETUD            24C'     588
+SETUSR           248'     584
+SLOGIN           3C5'     965
+SOFLG          =53        83
+SPRMPT         =24        36
+STACK          =77'       119
+SUBA           =FFFFFFFF  -1
+SUBFCB          7A'       122
+SUBFCR          9A'       154
+SUBFRC          89'       137
+SUBFS2          88'       136
+SUBKIL           232'     562
+SUPRES         =FFFFFFFF  -1
+SYSFLG         =41        65
+SYSTST         = 4D4'     1236
+TAB            =09        9
+TABRST           5C0'     1472
+TBUFF          =80        128
+TDRIVE         = 25C'     604
+TEMPDR         = 3DA'     986
+TFCB           =5C        92
+TMPUSR         = 242'     578
+TPA            = 100      256
+TRUE           =FFFFFFFF  -1
+TSELUSR        = 7AB'     1963
+TYPE             561'     1377
+TYPE0            562'     1378
+TYPE1            590'     1424
+TYPE2            5A1'     1441
+TYPE2L           5D2'     1490
+TYPE3            5DC'     1500
+TYPE4            5DE'     1502
+UCASE            261'     609
+UDFLAG         =04        4
+USER             6C0'     1728
+USRNUM           2EC'     748
+WBOOT          =00        0
+WIDE           =FFFFFFFF  -1

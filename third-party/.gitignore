@@ -1,0 +1,9 @@
+*.o
+ld80/ld80
+zmac/zmac
+zmac/doc
+zmac/doc.inl
+zcpr1/zcpr.rel
+zcpr1/zcpr.lst
+zcpr1/zcpr.mem
+zcpr1/zcpr.bin
