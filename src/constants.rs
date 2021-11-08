@@ -22,5 +22,5 @@ pub enum ExecutionResult {
     WarmBoot,
     ColdBoot,
     Stop,
-    StopConfirm
+    StopConfirm,
 }

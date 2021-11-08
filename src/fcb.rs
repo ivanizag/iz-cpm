@@ -6,6 +6,9 @@ File Control Block
 See: http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch5.htm
 
 Fields:
+*/
+const FCB_DRIVE_OFFSET: u16 = 0;
+/*
     dr: drive code (0-16)
             0 = use default drive for file
             1 = auto disk select drive A,
@@ -110,6 +113,7 @@ impl Fcb {
     }
 
     pub fn set_name_direct(&mut self, machine: &mut dyn Machine, name: String) {
+        machine.poke(self.address + FCB_DRIVE_OFFSET, 1 /* drive A: */);
         let bytes = name.as_bytes();
         for i in 0..8 {
             machine.poke(self.address + i + FCB_NAME_OFFSET, 0x7F & bytes[i as usize]);

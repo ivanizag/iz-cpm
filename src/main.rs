@@ -219,6 +219,8 @@ fn main() {
         // the number of characters, with the characters themselves following
         // the character count. The characters are translated to upper-case
         // ASCII with uninitialized memory following the last valid character. 
+        Fcb::new(FCB1_ADDRESS).set_name_direct(&mut machine, "        .   ".to_string());
+        Fcb::new(FCB2_ADDRESS).set_name_direct(&mut machine, "        .   ".to_string());
         match params {
             None => machine.poke(SYSTEM_PARAMS_ADDRESS, 0),
             Some(p) => {
@@ -249,8 +251,6 @@ fn main() {
                 // you can proceed to use FCBI straight away, not caring that
                 // FCB2 will be overwritten.
                 // Both are initialized with spaces.
-                Fcb::new(FCB1_ADDRESS).set_name_direct(&mut machine, "        .   ".to_string());
-                Fcb::new(FCB2_ADDRESS).set_name_direct(&mut machine, "        .   ".to_string());
                 let mut parts = p.split_ascii_whitespace();
                 if let Some(arg1) = parts.next() {
                     if let Some(file1) = name_to_8_3(arg1) {
