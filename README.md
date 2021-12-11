@@ -14,7 +14,7 @@ Note that iz-cpm is a very basic implementation, mostly for educational purposes
 Extract the [latest zip](https://github.com/ivanizag/iz-cpm/releases) for Linux, MacOS or Windows. Optionally run `download.sh` or `download.bat`  to download the CP/M 2.2 system disk, Microsoft Basic, Turbo Pascal, Lisp and some games.
 
 ## Build from source
-To build from source, install the latest Rust compiler, clone the repo and run `cargo rust --release`. To cross compile to Windows, install the target with `rustup` and run `cargo build --release --target x86_64-pc-windows-gnu`.
+To build from source, install the latest Rust compiler, clone the repo and run `cargo build --release`. To cross compile to Windows, install the target with `rustup` and run `cargo build --release --target x86_64-pc-windows-gnu`.
 
 ## Usage examples
 
