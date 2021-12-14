@@ -261,7 +261,7 @@ pub fn read_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // directory and is visible in DIR requests. The selected record number is
     // then stored in the random record field (r0, r1), and the BDOS is called
     // to read the record.
-    // Upon return from the call, register A either contains an error ºcode, as
+    // Upon return from the call, register A either contains an error code, as
     // listed below, or the value 00, indicating the operation was successful.
     // In the latter case, the current DMA address contains the randomly
     // accessed record. Note that contrary to the sequential read operation,
@@ -543,7 +543,7 @@ fn read_record_in_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16) -> i
     let mut os_file = fs::File::open(&paths[0])?;
 
     let file_offset = record as u64 * RECORD_SIZE as u64;
-    if file_offset >= os_file.metadata()?.len() {
+    if file_offset > os_file.metadata()?.len() {
         return Ok(1); // End of file
     }
 
