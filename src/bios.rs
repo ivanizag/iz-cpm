@@ -12,11 +12,11 @@ pub struct Bios{
     ctrl_c_count: u8
 }
 
-const BIOS_COMMAND_NAMES: [&'static str; 16] = [
+const BIOS_COMMAND_NAMES: [&'static str; 17] = [
     "BOOT", "WBOOT", "CONST", "CONIN", "CONOUT",
-    "LIST", "PUNCH", "READER", "SELDSK", "SETTRK",
-    "SETSEC", "SETDMA", "READ", "WRITE", "LISTST",
-    "SECTRAN"];
+    "LIST", "PUNCH", "READER", "HOME", "SELDSK",
+    "SETTRK", "SETSEC", "SETDMA", "READ", "WRITE",
+    "LISTST", "SECTRAN"];
 
 const BIOS_ENTRY_POINT_COUNT: usize = 30;
 const BIOS_RET_TRAP_START: u16 = BIOS_BASE_ADDRESS + 0x80;
@@ -98,18 +98,18 @@ impl Bios {
             2  CONST: Console status
             3  CONIN: Console input
             4  CONOUT: Console output
-
             5  LIST: Printer output
             6  PUNCH: Paper tape punch output
             7  READER: Paper tape reader input
-            8  SELDSK: Select disc drive
-            9  SETTRK: Set track number
-            10 SETSEC: Set sector number
-            11 SETDMA: Set DMA address
-            12 READ: Read a sector
-            13 WRITE: Write a sector
-            14 LISTST: Status of list device
-            15 SECTRAN: Sector translation for skewing
+            8  HOME: Go to track 0
+            9  SELDSK: Select disc drive
+            10  SETTRK: Set track number
+            11 SETSEC: Set sector number
+            12 SETDMA: Set DMA address
+            13 READ: Read a sector
+            14 WRITE: Write a sector
+            15 LISTST: Status of list device
+            16 SECTRAN: Sector translation for skewing
             */
             match command {
                 0 => { // BOOT: Cold Start Routine
