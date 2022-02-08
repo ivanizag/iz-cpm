@@ -128,7 +128,7 @@ impl Fcb {
         let mut name = String::new();
         for i in 0..8 {
             let ch = self.get_byte(env, i + FCB_NAME_OFFSET) & 0x7F;
-            if ch == ' ' as u8 {
+            if ch == b' ' {
                 break;
             }
             name.push(ch as char)
@@ -136,7 +136,7 @@ impl Fcb {
         name.push('.');
         for i in 0..3 {
             let ch = self.get_byte(env, i + FCB_EXTENSION_OFFSET) & 0x7F;
-            if ch == ' ' as u8 {
+            if ch == b' '{
                 break;
             }
             name.push(ch as char)
@@ -149,7 +149,7 @@ impl Fcb {
         if drive == 0 {
             self.get_name_host(env)
         } else {
-            format!("{}:{}", ('A' as u8 - 1 + drive) as char, self.get_name_host(env))
+            format!("{}:{}", (b'A' - 1 + drive) as char, self.get_name_host(env))
         }
     }
 
@@ -238,7 +238,7 @@ pub fn name_to_8_3(os_name: &str) -> Option<String> {
 pub fn name_from_8_3(cpm_name: &str) -> String {
     let name = cpm_name[0..8].trim_end();
     let extension = cpm_name[9..12].trim_end();
-    if extension.len() == 0 {
+    if extension.is_empty() {
         name.to_string()
     } else {
         format!("{}.{}", name, extension)

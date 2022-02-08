@@ -12,7 +12,7 @@ pub struct Bios{
     ctrl_c_count: u8
 }
 
-const BIOS_COMMAND_NAMES: [&'static str; 17] = [
+const BIOS_COMMAND_NAMES: [&str; 17] = [
     "BOOT", "WBOOT", "CONST", "CONIN", "CONOUT",
     "LIST", "PUNCH", "READER", "HOME", "SELDSK",
     "SETTRK", "SETSEC", "SETDMA", "READ", "WRITE",

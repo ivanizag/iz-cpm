@@ -20,7 +20,7 @@ impl Console {
         let initial_termios = Termios::from_fd(STDIN_FD).ok();
 
         let c = Console {
-            initial_termios: initial_termios,
+            initial_termios,
             next_char: None,
             translator: Adm3aToAnsi::new(),
         };
@@ -30,13 +30,12 @@ impl Console {
     }
 
     fn setup_host_terminal(&self, blocking: bool) {
-        if let Some(initial) = self.initial_termios {
-            let mut new_term = initial.clone();
-            new_term.c_iflag &= !(IXON | ICRNL);
-            new_term.c_lflag &= !(ISIG | ECHO | ICANON | IEXTEN);
-            new_term.c_cc[VMIN] = if blocking {1} else {0};
-            new_term.c_cc[VTIME] = 0;
-            tcsetattr(STDIN_FD, TCSANOW, &new_term).unwrap();
+        if let Some(mut initial) = self.initial_termios {
+            initial.c_iflag &= !(IXON | ICRNL);
+            initial.c_lflag &= !(ISIG | ECHO | ICANON | IEXTEN);
+            initial.c_cc[VMIN] = if blocking {1} else {0};
+            initial.c_cc[VTIME] = 0;
+            tcsetattr(STDIN_FD, TCSANOW, &initial).unwrap();
         }
     }
 
@@ -68,7 +67,7 @@ impl Console {
                 // Blocks waiting for char
                 self.setup_host_terminal(true);
                 let mut buf = [0];
-                stdin().read(&mut buf).unwrap();
+                stdin().read_exact(&mut buf).unwrap();
                 self.setup_host_terminal(false);
                 buf[0]
             }

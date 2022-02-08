@@ -8,8 +8,8 @@ pub const RECORD_SIZE: usize = 128;
 pub const DEFAULT_DMA: u16 = 0x0080;
 
 // Messages from http://www.gaby.de/cpm/manuals/archive/cpm22htm/axi.htm
-pub const ERR_BAD_SECTOR: &'static str = "Bad Sector";
-pub const ERR_DRIVE_READ_ONLY: &'static str = "R/O";
+pub const ERR_BAD_SECTOR: &str = "Bad Sector";
+pub const ERR_DRIVE_READ_ONLY: &str = "R/O";
 
 pub struct BdosState {
     pub user: u8,
@@ -70,7 +70,7 @@ impl <'a> BdosEnvironment<'_> {
             bios: &'a mut Bios,
             machine: &'a mut CpmMachine,
             call_trace: bool) -> BdosEnvironment<'a> {
-        BdosEnvironment { state, bios: bios, machine, call_trace}
+        BdosEnvironment {state, bios, machine, call_trace}
     }
 
     pub fn iobyte(&self) -> u8 {
@@ -112,6 +112,6 @@ impl <'a> BdosEnvironment<'_> {
     }
 
     pub fn print_error_on_disk(&self, message: &str, disk: u8) {
-        println!("\nBdos Err On {}: {}", ('A' as u8 + disk) as char, message);
+        println!("\nBdos Err On {}: {}", (b'A' + disk) as char, message);
     }
 }

@@ -30,12 +30,12 @@ use self::cpm_machine::CpmMachine;
 use self::fcb::*;
 
 // Welcome message
-const WELCOME: &'static str =
+const WELCOME: &str =
 "iz-cpm https://github.com/ivanizag/iz-cpm
 CP/M 2.2 Emulation
 Press ctrl-c ctrl-c Y to return to host";
 
-static CCP_BINARY: &'static [u8] = include_bytes!("../third-party/bin/zcpr.bin");
+static CCP_BINARY: &[u8] = include_bytes!("../third-party/bin/zcpr.bin");
 
 fn main() {
     // Parse arguments
@@ -119,7 +119,7 @@ fn main() {
 
     // Assign drives
     for i in 0..15 {
-        let res = matches.value_of(format!("disk_{}", (i + 'a' as u8) as char));
+        let res = matches.value_of(format!("disk_{}", (i + b'a') as char));
         if let Some(path) = res {
             if let Err(err) = fs::read_dir(path) {
                 eprintln!("Error with directory \"{}\": {}", path, err);
@@ -208,7 +208,7 @@ fn main() {
             // Push 0x0000
             machine.poke(sp, (0x0000 >> 8) as u8);
             sp -= 1;
-            machine.poke(sp, 0x0000 as u8);
+            machine.poke(sp, 0x0000_u8);
             sp -= 1;
             cpu.registers().set16(Reg16::SP, sp);
         }
@@ -229,7 +229,7 @@ fn main() {
                     len = 0x7E; // Max 0x7E chars for parameters
                 }
                 machine.poke(SYSTEM_PARAMS_ADDRESS, (len + 1) as u8);
-                machine.poke(SYSTEM_PARAMS_ADDRESS + 1, ' ' as u8);
+                machine.poke(SYSTEM_PARAMS_ADDRESS + 1, b' ');
                 let p_bytes = p.as_bytes();
                 for i in 0..len {
                     machine.poke(SYSTEM_PARAMS_ADDRESS + (i as u16) + 2, p_bytes[i]);

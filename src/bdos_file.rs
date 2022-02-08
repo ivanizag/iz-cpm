@@ -183,7 +183,7 @@ pub fn rename(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
             for name in paths {
                 let src_path = Path::new(&name);
                 let new_name = name_from_8_3(&fcb.get_name_secondary(env));
-                let mut dst_path = PathBuf::from(src_path.parent().unwrap_or(Path::new("")));
+                let mut dst_path = PathBuf::from(src_path.parent().unwrap_or_else(|| Path::new("")));
                 dst_path.push(new_name);
 
                 if fs::rename(src_path, dst_path).is_err() {
@@ -506,7 +506,7 @@ fn compute_file_size_internal(env: &mut BdosEnvironment, fcb: &Fcb) -> io::Resul
 fn find_host_files(env: &mut BdosEnvironment, fcb: &Fcb, wildcard: bool, to_write: bool) -> io::Result<Vec<OsString>> {
     let fcb_drive = fcb.get_drive(env);
     let path = env.get_directory(fcb_drive, to_write)
-        .ok_or(io::Error::new(io::ErrorKind::Other, "No directory assigned to drive"))?;
+        .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "No directory assigned to drive"))?;
     let dir = fs::read_dir(path)?;
     let mut files = Vec::new();
     for entry in dir {
@@ -522,7 +522,7 @@ fn find_host_files(env: &mut BdosEnvironment, fcb: &Fcb, wildcard: bool, to_writ
             }
         }
     }
-    if files.len() == 0 {
+    if files.is_empty() {
         Err(io::Error::new(io::ErrorKind::NotFound, "Empty drive"))
     } else {
         Ok(files)
@@ -532,7 +532,7 @@ fn find_host_files(env: &mut BdosEnvironment, fcb: &Fcb, wildcard: bool, to_writ
 fn create_file(env: &mut BdosEnvironment, fcb: &Fcb) -> io::Result<()> {
     let fcb_drive = fcb.get_drive(env);
     let path = env.get_directory(fcb_drive, true)
-        .ok_or(io::Error::new(io::ErrorKind::Other, "No directory assigned to drive"))?;
+        .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "No directory assigned to drive"))?;
     let file = Path::new(&path).join(fcb.get_name_host(env));
     fs::File::create(&file)?;
     Ok(())
@@ -567,10 +567,10 @@ fn write_record_from_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16) -
     if file_offset > file_pos {
         // We want to write past the end of the file. Seek wasn't able to get
         // there, so we will complete the holes with zeros as needed.
-        let zero = [0 as u8];
+        let zero = [0_u8];
         let needed = file_offset - file_pos;
         for _ in 0..needed {
-            os_file.write(&zero)?;
+            os_file.write_all(&zero)?;
         }
     }
 
@@ -585,10 +585,10 @@ fn search_nth(env: &mut BdosEnvironment) -> io::Result<u8> {
     // position. I don't know if BDOS was storing the state on the FCB or
     // globally. [Later] Yes, it does.
     let path = env.get_directory(env.state.dir_drive, false)
-        .ok_or(io::Error::new(io::ErrorKind::Other, "No directory assigned to drive"))?;
+        .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "No directory assigned to drive"))?;
     let dir = fs::read_dir(path)?;
 
-    let mut i = 0 as u16;
+    let mut i = 0;
     for entry in dir {
         let file = entry?;
         if file.file_type()?.is_file() {
@@ -648,7 +648,7 @@ fn build_directory_entry(buffer: &mut [u8], cpm_name: String) {
 // or filetype. Note that "*.*" equals the ambiguous file reference
 // "????????.???" while "filename.*" and "*.typ" are abbreviations for
 // "filename.???" and "????????.typ" respectively.
-const WILDCARD: u8 = '?' as u8;
+const WILDCARD: u8 = b'?';
 pub fn name_match(name: &str, pattern: &str) -> bool {
     let n = name.as_bytes();
     let p = pattern.as_bytes();

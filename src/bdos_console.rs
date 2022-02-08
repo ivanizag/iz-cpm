@@ -52,7 +52,7 @@ pub fn read_string(env: &mut BdosEnvironment, address: u16) -> u8 {
     // above figure.
     //
     // TODO: Process controls characters
-    let max_size = env.machine.peek(address + 0);
+    let max_size = env.machine.peek(address);
     let mut size = 0;
     loop {
         let ch = env.bios.read();

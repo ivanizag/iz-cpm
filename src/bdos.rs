@@ -8,7 +8,7 @@ use super::bdos_file;
 use super::cpm_machine::CpmMachine;
 use super::constants::*;
 
-const BDOS_COMMAND_NAMES: [&'static str; 106] = [
+const BDOS_COMMAND_NAMES: [&str; 106] = [
     // 0
     "P_TERMCPM", "C_READ", "C_WRITE", "A_READ", "A_WRITE",
     "L_WRITE", "C_RAWIO", "A_STATIN", "A_STATOUT", "C_WRITESTR",
@@ -65,7 +65,7 @@ impl Bdos {
 
         // Disk parameter block 0
         // See "Programmer CP/M Handbook" by Andy Johnson-Laird, page 33
-        machine.poke16(BDOS_DPB0_ADDRESS +  0,  26);        // 128 bytes sectors per track
+        machine.poke16(BDOS_DPB0_ADDRESS     ,  26);        // 128 bytes sectors per track
         machine.poke  (BDOS_DPB0_ADDRESS +  2,   3);        // Block shift for 1024 bytes block
         machine.poke  (BDOS_DPB0_ADDRESS +  3,   7);        // Block mask for 1024 bytes block
         machine.poke  (BDOS_DPB0_ADDRESS +  4,   3);        // Extent mask for 1024 bytes block
