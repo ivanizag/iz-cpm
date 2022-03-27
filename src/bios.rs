@@ -1,6 +1,7 @@
 use iz80::*;
 use super::cpm_machine::*;
 use super::constants::*;
+use super::terminal::TerminalEmulator;
 
 #[cfg(windows)]
 use super::console_windows::Console;
@@ -22,9 +23,9 @@ const BIOS_ENTRY_POINT_COUNT: usize = 30;
 const BIOS_RET_TRAP_START: u16 = BIOS_BASE_ADDRESS + 0x80;
 
 impl Bios {
-    pub fn new() -> Bios {
+    pub fn new(terminal: Box<dyn TerminalEmulator>) -> Bios {
         Bios {
-            console: Console::new(),
+            console: Console::new(terminal),
             ctrl_c_count: 0
         }
     }

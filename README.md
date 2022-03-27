@@ -99,23 +99,25 @@ FLAGS:
     -V, --version           Prints version information
 
 OPTIONS:
-        --cpu <model>      cpu model z80 or 8080 [default: z80]
-    -a, --disk-a <path>    directory to map disk A: [default: .]
-    -b, --disk-b <path>    directory to map disk B:
-    -c, --disk-c <path>    directory to map disk C:
-    -d, --disk-d <path>    directory to map disk D:
-        --disk-e <path>    directory to map disk E:
-        --disk-f <path>    directory to map disk F:
-        --disk-g <path>    directory to map disk G:
-        --disk-h <path>    directory to map disk H:
-        --disk-i <path>    directory to map disk I:
-        --disk-j <path>    directory to map disk J:
-        --disk-k <path>    directory to map disk K:
-        --disk-l <path>    directory to map disk L:
-        --disk-m <path>    directory to map disk M:
-        --disk-n <path>    directory to map disk N:
-        --disk-o <path>    directory to map disk O:
-        --disk-p <path>    directory to map disk P:
+        --cpu <model>            cpu model z80 or 8080 [default: z80]
+    -a, --disk-a <path>          directory to map disk A: [default: .]
+    -b, --disk-b <path>          directory to map disk B:
+    -c, --disk-c <path>          directory to map disk C:
+    -d, --disk-d <path>          directory to map disk D:
+        --disk-e <path>          directory to map disk E:
+        --disk-f <path>          directory to map disk F:
+        --disk-g <path>          directory to map disk G:
+        --disk-h <path>          directory to map disk H:
+        --disk-i <path>          directory to map disk I:
+        --disk-j <path>          directory to map disk J:
+        --disk-k <path>          directory to map disk K:
+        --disk-l <path>          directory to map disk L:
+        --disk-m <path>          directory to map disk M:
+        --disk-n <path>          directory to map disk N:
+        --disk-o <path>          directory to map disk O:
+        --disk-p <path>          directory to map disk P:
+        --terminal <terminal>    Terminal emulation ADM-3A or ANSI [default: adm3a]
+
 
 ARGS:
     <CMD>     The binay image to run, 

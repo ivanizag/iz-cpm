@@ -1,3 +1,5 @@
+use crate::terminal::TerminalEmulator;
+
 /*
 See:
     http://bitsavers.informatik.uni-stuttgart.de/pdf/kaypro/3318-A_Kaypro_Robbie_Users_Guide_Feb85.pdf
@@ -140,8 +142,10 @@ impl Adm3aToAnsi {
             _ => Some(format!("{}", self.buffer[0] as char)) // Write the char
         }
     }
+}
 
-    pub fn translate(&mut self, ch: u8) -> Option<String> {
+impl TerminalEmulator for Adm3aToAnsi {
+    fn translate(&mut self, ch: u8) -> Option<String> {
         self.buffer[self.buffer_len] = ch & 0x7f; // Only 7 bits ASCII
         self.buffer_len += 1;
 

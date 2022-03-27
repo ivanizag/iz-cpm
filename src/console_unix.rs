@@ -4,25 +4,25 @@ use std::time::Duration;
 
 use termios::*;
 
-use super::translate::Adm3aToAnsi;
+use super::terminal::TerminalEmulator;
 
 const STDIN_FD: i32 = 0;
 
 pub struct Console {
     initial_termios: Option<Termios>,
     next_char: Option<u8>,
-    translator: Adm3aToAnsi
+    terminal: Box<dyn TerminalEmulator>
 }
 
 impl Console {
-    pub fn new() -> Console {
+    pub fn new(terminal: Box<dyn TerminalEmulator>) -> Console {
         // Prepare terminal
         let initial_termios = Termios::from_fd(STDIN_FD).ok();
 
         let c = Console {
             initial_termios,
             next_char: None,
-            translator: Adm3aToAnsi::new(),
+            terminal: terminal,
         };
 
         c.setup_host_terminal(false);
@@ -75,7 +75,7 @@ impl Console {
     }
 
     pub fn put(&mut self, ch: u8) {
-        if let Some(sequence) = self.translator.translate(ch) {
+        if let Some(sequence) = self.terminal.translate(ch) {
             print!("{}", sequence);
             stdout().flush().unwrap();
         }

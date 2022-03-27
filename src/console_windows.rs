@@ -6,20 +6,20 @@ use crossterm::event;
 use crossterm::queue;
 use crossterm::style;
 
-use super::translate::Adm3aToAnsi;
+use super::terminal::TerminalEmulator;
 
 pub struct Console {
     next_char: Option<u8>,
-    translator: Adm3aToAnsi
+    terminal: Box<dyn TerminalEmulator>
 }
 
 impl Console {
-    pub fn new() -> Console {
+    pub fn new(terminal: Box<dyn TerminalEmulator>) -> Console {
         terminal::enable_raw_mode().unwrap();
 
         Console {
             next_char: None,
-            translator: Adm3aToAnsi::new(),
+            terminal: terminal,
         }
     }
 }
@@ -66,7 +66,7 @@ impl Console {
     }
 
     pub fn put(&mut self, ch: u8) {
-        if let Some(sequence) = self.translator.translate(ch) {
+        if let Some(sequence) = self.terminal.translate(ch) {
             queue!(stdout(), style::Print(sequence)).unwrap();
             stdout().flush().unwrap();
         }

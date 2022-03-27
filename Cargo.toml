@@ -1,6 +1,6 @@
 [package]
 name = "iz-cpm"
-version = "1.1.0"
+version = "1.2.0"
 authors = ["Ivan Izaguirre <ivanizag@gmail.com>"]
 edition = "2018"
 

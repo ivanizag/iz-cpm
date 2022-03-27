@@ -16,7 +16,8 @@ mod bdos_environment;
 mod bdos_file;
 mod cpm_machine;
 mod fcb;
-mod translate;
+mod terminal;
+mod terminal_adm3a;
 
 #[cfg(windows)]
 mod console_windows;
@@ -28,6 +29,9 @@ use self::bios::Bios;
 use self::constants::*;
 use self::cpm_machine::CpmMachine;
 use self::fcb::*;
+use self::terminal::TerminalEmulator;
+use self::terminal::Transparent;
+use self::terminal_adm3a::Adm3aToAnsi;
 
 // Welcome message
 const WELCOME: &str =
@@ -69,6 +73,10 @@ fn main() {
             .value_name("model")
             .default_value("z80")
             .help("Cpu model z80 or 8080"))
+        .arg(Arg::with_name("terminal")
+            .long("terminal")
+            .default_value("adm3a")
+            .help("Terminal emulation ADM-3A or ANSI"))
         .arg(Arg::with_name("ccp")
             .long("ccp")
             .value_name("ccp")
@@ -97,6 +105,7 @@ fn main() {
     let call_trace_all = matches.is_present("call_trace_all");
     let slow = matches.is_present("slow");
     let cpu_model = matches.value_of("cpu");
+    let terminal = matches.value_of("terminal");
     let ccp_filename = matches.value_of("ccp");
     let use_tpa = filename.is_none();
 
@@ -110,9 +119,17 @@ fn main() {
             return;
         }
     };
+    let term_emu: Box<dyn TerminalEmulator> = match terminal {
+        Some("adm3a") => Box::new(Adm3aToAnsi::new()),
+        Some("ansi") => Box::new(Transparent::new()),
+        _ => {
+            eprintln!("Unkown terminal emulattion. Choose \"adm3a\" or \"ansi\".");
+            return;
+        }
+    };
 
     // Init cpm
-    let mut bios = Bios::new();
+    let mut bios = Bios::new(term_emu);
     bios.setup(&mut machine);
     let mut bdos = Bdos::new();
     bdos.reset(&mut machine);
@@ -289,7 +306,6 @@ fn main() {
             er = bdos.execute(&mut bios, &mut machine, cpu.registers(),
                 call_trace || call_trace_all, call_trace && ! call_trace_all);
         }
-
     
         match er {
             ExecutionResult::Continue => (),
