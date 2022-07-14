@@ -2,7 +2,7 @@
 name = "iz-cpm"
 version = "1.2.0"
 authors = ["Ivan Izaguirre <ivanizag@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [[bin]]
 name = "iz-cpm"
@@ -14,7 +14,7 @@ iz80 = "^0.3.5"
 clap = "^2"
 
 [target.'cfg(windows)'.dependencies]
-crossterm = "^0.17"
+crossterm = "^0.24"
 
 [target.'cfg(unix)'.dependencies]
 termios = "^0.3"
