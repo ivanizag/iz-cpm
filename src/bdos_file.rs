@@ -491,12 +491,11 @@ fn compute_file_size_internal(env: &mut BdosEnvironment, fcb: &Fcb) -> io::Resul
 
     let file_size = os_file.metadata()?.len();
     let mut record = file_size / RECORD_SIZE as u64;
-    if record % RECORD_SIZE as u64 != 0 {
+    if file_size % RECORD_SIZE as u64 != 0 {
         // We need integer division rounding up.
         record += 1;
     }
 
-    record += 1;
     if record >= 65536 {
         record = 65536;
     }
