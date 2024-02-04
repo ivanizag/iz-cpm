@@ -330,7 +330,7 @@ pub fn write_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     let fcb = Fcb::new(fcb_address);
     let record = fcb.get_random_record_number(env);
     if env.call_trace {
-        print!("[Read random record {:x} into {:04x}]", record, env.state.dma);
+        print!("[Write random record {:x} into {:04x}]", record, env.state.dma);
     }
     if record > 65535 {
         return 6; //06	seek Past Physical end of disk
