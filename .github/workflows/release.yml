@@ -22,16 +22,13 @@ jobs:
             os: macos-latest
             target: x86_64-apple-darwin
 
-          - build: windows-gnu
+          - build: windows
             os: windows-latest
-            target: x86_64-pc-windows-gnu
-
+            target: x86_64-pc-windows-msvc
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
@@ -63,18 +60,19 @@ jobs:
           fi
 
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            7z -r "$dir_name.zip" "$dir_name"
+            7z a "$dir_name.zip" "$dir_name"
             echo "ASSET=$dir_name.zip" >> $GITHUB_ENV
           else
             tar -czf "$dir_name.tar.gz" "$dir_name"
             echo "ASSET=$dir_name.tar.gz" >> $GITHUB_ENV
           fi
 
-      - name: Upload the binaries
-        uses: softprops/action-gh-release@v1
+      - uses: ncipollo/release-action@v1
         with:
-          files: |
-            ${{ env.ASSET }}
+          artifacts:  ${{ env.ASSET }}
+          body: "Release for Linux, Windows and MacOS"
+          allowUpdates: true
+          draft: true
 
       
 
