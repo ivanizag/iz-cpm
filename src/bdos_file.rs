@@ -542,7 +542,7 @@ fn read_record_in_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16) -> i
     let mut os_file = fs::File::open(&paths[0])?;
 
     let file_offset = record as u64 * RECORD_SIZE as u64;
-    if file_offset > os_file.metadata()?.len() {
+    if file_offset >= os_file.metadata()?.len() {
         return Ok(1); // End of file
     }
 
