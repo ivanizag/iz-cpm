@@ -1,0 +1,80 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v[0-9]*
+
+jobs:
+  build-and-upload:
+    name: Build and upload
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - build: linux
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+
+          - build: macos
+            os: macos-latest
+            target: x86_64-apple-darwin
+
+          - build: windows-gnu
+            os: windows-latest
+            target: x86_64-pc-windows-gnu
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Get the version from the tag
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --verbose --release --target ${{ matrix.target }}
+
+      - name: Build archive
+        shell: bash
+        run: |
+          binary_name="iz-cpm"
+          dir_name="${binary_name}-${{ matrix.build }}-${{ env.VERSION }}"
+          mkdir "$dir_name"
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cp download.bat "$dir_name"
+            cp README.md "$dir_name"
+            cp "target/${{ matrix.target }}/release/${binary_name}.exe" "$dir_name"
+          else
+            cp download.sh "$dir_name"
+            cp README.md "$dir_name"
+            cp "target/${{ matrix.target }}/release/${binary_name}" "$dir_name"
+          fi
+
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            7z -r "$dir_name.zip" "$dir_name"
+            echo "ASSET=$dir_name.zip" >> $GITHUB_ENV
+          else
+            tar -czf "$dir_name.tar.gz" "$dir_name"
+            echo "ASSET=$dir_name.tar.gz" >> $GITHUB_ENV
+          fi
+
+      - name: Upload the binaries
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ${{ env.ASSET }}
+
+      
+
