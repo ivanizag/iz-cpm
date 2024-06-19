@@ -325,6 +325,7 @@ fn main() {
                     print!("[[Warm boot]]");
                 }
                 if use_tpa {
+                    bdos.warm_reset(&mut machine);
                     for i in 0..binary_size {
                         machine.poke(binary_address + i as u16, binary[i]);
                     }

@@ -48,12 +48,15 @@ impl Bdos {
         }
     }
 
-    pub fn reset(&mut self, machine: &mut CpmMachine) {
-        self.state.reset();
-
-        // Setup BOOT entrypoint
+    pub fn warm_reset(&mut self, machine: &mut CpmMachine) {
+        // Setup/Restore BOOT entrypoint
         machine.poke(  BDOS_ENTRY_ADDRESS,   0xc3 /* jp BDOS_BASE_ADDRESS */);
         machine.poke16(BDOS_ENTRY_ADDRESS+1, BDOS_BASE_ADDRESS);
+    }
+
+    pub fn reset(&mut self, machine: &mut CpmMachine) {
+        self.state.reset();
+        self.warm_reset(machine);
 
         // Reset IOBYTE
         machine.poke(IOBYTE_ADDRESS, 0);
