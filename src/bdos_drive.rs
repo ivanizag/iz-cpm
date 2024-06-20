@@ -18,7 +18,7 @@ pub fn select(env: &mut BdosEnvironment, selected: u8) {
     env.state.selected_bitmap |= 1 << env.state.drive;
 
 
-    // Update the RAM bye to mark our drive/user in a persistent way.
+    // Update the RAM byte to mark our drive/user in a persistent way.
     env.machine.poke(CCP_USER_DRIVE_ADDRESS, env.state.user << 4 | env.state.drive)
 }
 
