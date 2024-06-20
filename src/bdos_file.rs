@@ -363,7 +363,7 @@ pub fn get_set_user_number(env: &mut BdosEnvironment, user: u8) -> u8 {
     if user != 0xff {
         env.state.user = user & 0x0f;
 
-        // Update the RAM bye to mark our drive/user in a persistent way.
+        // Update the RAM byte to mark our drive/user in a persistent way.
         env.machine.poke(CCP_USER_DRIVE_ADDRESS, env.state.user << 4 | env.state.drive)
 
     }
