@@ -8,7 +8,9 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use super::bdos_environment::*;
+use super::constants::*;
 use super::fcb::*;
+use iz80::Machine;
 
 // Many file processing functions return a value in register A that is either
 // OFFH, indicating that the file named in the FCB could not be found, or equal
@@ -37,7 +39,7 @@ pub fn set_dma(env: &mut BdosEnvironment, dma: u16) {
     // another area of memory where the data records reside. Thus, the DMA
     // address becomes the value specified by DE until it is changed by a
     // subsequent Set DMA function, cold start, warm start, or disk system
-    // reset. 
+    // reset.
     env.state.dma = dma;
 }
 
@@ -58,7 +60,7 @@ pub fn open(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // decimal) if the file cannot be found. If question marks occur in the FCB,
     // the first matching FCB is activated. Note that the current record, (cr)
     // must be zeroed by the program if the file is to be accessed sequentially
-    // from the first record. 
+    // from the first record.
     let mut fcb = Fcb::new(fcb_address);
     if env.call_trace {
         print!("[[Open file {}]]", fcb.get_name_for_log(env));
@@ -110,7 +112,7 @@ pub fn close(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // 3, while a 0FFH (255 decimal) is returned if the filename cannot be found
     // in the directory. A file need not be closed if only read operations have
     // taken place. If write operations have occurred, the close operation is
-    // necessary to record the new directory information permanently. 
+    // necessary to record the new directory information permanently.
     let fcb = Fcb::new(fcb_address);
     match find_host_files(env, &fcb, false, false){
         Err(_) => FILE_NOT_FOUND, // Error or file not found
@@ -172,7 +174,7 @@ pub fn rename(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // drive, while the drive code for the new filename at position 16 of the
     // FCB is assumed to be zero. Upon return, register A is set to a value
     // between 0 and 3 if the rename was successful and 0FFH (255 decimal) if
-    // the first filename could not be found in the directory scan. 
+    // the first filename could not be found in the directory scan.
     let fcb = Fcb::new(fcb_address);
     if env.call_trace {
         print!("[[Rename file {} to {}]]", fcb.get_name_for_log(env), fcb.get_name_secondary(env));
@@ -360,7 +362,12 @@ pub fn get_set_user_number(env: &mut BdosEnvironment, user: u8) -> u8 {
     */
     if user != 0xff {
         env.state.user = user & 0x0f;
+
+        // Update the RAM bye to mark our drive/user in a persistent way.
+        env.machine.poke(CCP_USER_DRIVE_ADDRESS, env.state.user << 4 | env.state.drive)
+
     }
+
     env.state.user
 }
 
@@ -432,7 +439,7 @@ pub fn search_first(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // entry, allocated or free, belonging to any user number. This latter
     // function is not normally used by application programs, but it allows
     // complete flexibility to scan all current directory values. If the dr
-    // field is not a question mark, the s2 byte is automatically zeroed. 
+    // field is not a question mark, the s2 byte is automatically zeroed.
     let fcb = Fcb::new(fcb_address);
     if env.call_trace {
         print!("[[DIR start {}]]", fcb.get_name_for_log(env));
@@ -447,7 +454,7 @@ pub fn search_next(env: &mut BdosEnvironment) -> u8 {
     // The Search Next function is similar to the Search First function, except
     // that the directory scan continues from the last matched entry. Similar to
     // Function 17, Function 18 returns the decimal value 255 in A when no more
-    // directory items match. 
+    // directory items match.
     search_nth(env).unwrap_or(FILE_NOT_FOUND)
 }
 

@@ -80,7 +80,7 @@ fn main() {
         .arg(Arg::with_name("ccp")
             .long("ccp")
             .value_name("ccp")
-            .help("Alternative CPP bynary, it must be compiled with CCP_BASE=$f000"))
+            .help("Alternative CPP binary, it must be compiled with CCP_BASE=$f000"))
         .arg(Arg::with_name("disk_a").long("disk-a").value_name("path").short("a").default_value(".").help("directory to map disk A:"))
         .arg(Arg::with_name("disk_b").long("disk-b").value_name("path").short("b").help("directory to map disk B:"))
         .arg(Arg::with_name("disk_c").long("disk-c").value_name("path").short("c").help("directory to map disk C:"))
@@ -123,7 +123,7 @@ fn main() {
         Some("adm3a") => Box::new(Adm3aToAnsi::new()),
         Some("ansi") => Box::new(Transparent::new()),
         _ => {
-            eprintln!("Unkown terminal emulattion. Choose \"adm3a\" or \"ansi\".");
+            eprintln!("Unkown terminal emulation. Choose \"adm3a\" or \"ansi\".");
             return;
         }
     };
@@ -219,7 +219,7 @@ fn main() {
     if !use_tpa {
         // Upon entry to a transient program, the CCP leaves the stack pointer
         // set to an eight-level stack area with the CCP return address pushed
-        // onto the stack, leaving seven levels before overflow occurs. 
+        // onto the stack, leaving seven levels before overflow occurs.
         if binary_address == TPA_BASE_ADDRESS {
             let mut sp = TPA_STACK_ADDRESS;
             // Push 0x0000
@@ -235,7 +235,7 @@ fn main() {
         // the operator following the program name. The first position contains
         // the number of characters, with the characters themselves following
         // the character count. The characters are translated to upper-case
-        // ASCII with uninitialized memory following the last valid character. 
+        // ASCII with uninitialized memory following the last valid character.
         Fcb::new(FCB1_ADDRESS).set_name_direct(&mut machine, "        .   ".to_string());
         Fcb::new(FCB2_ADDRESS).set_name_direct(&mut machine, "        .   ".to_string());
         match params {
@@ -306,7 +306,7 @@ fn main() {
             er = bdos.execute(&mut bios, &mut machine, cpu.registers(),
                 call_trace || call_trace_all, call_trace && ! call_trace_all);
         }
-    
+
         match er {
             ExecutionResult::Continue => (),
             ExecutionResult::Stop => {
@@ -346,13 +346,14 @@ fn main() {
                         machine.poke(binary_address + i as u16, binary[i]);
                     }
                     cpu.registers().set_pc(binary_address);
-                    cpu.registers().set8(Reg8::C, 0); // Reset user and drive
+                    let user_drive = machine.peek(CCP_USER_DRIVE_ADDRESS);
+                    cpu.registers().set8(Reg8::C, user_drive);
                     bdos.reset(&mut machine); // Reset Bdos
                 } else {
                     break;
                 }
             }
-            
+
 
         }
 
