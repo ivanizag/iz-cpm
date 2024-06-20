@@ -1,5 +1,6 @@
 use super::bdos_environment::*;
 use super::constants::*;
+use iz80::Machine;
 
 pub fn select(env: &mut BdosEnvironment, selected: u8) {
     // The Select Disk function designates the disk drive named in register E as
@@ -15,6 +16,10 @@ pub fn select(env: &mut BdosEnvironment, selected: u8) {
     // directly reference drives A through P.
     env.state.drive = selected & 0x0f;
     env.state.selected_bitmap |= 1 << env.state.drive;
+
+
+    // Update the RAM bye to mark our drive/user in a persistent way.
+    env.machine.poke(CCP_USER_DRIVE_ADDRESS, env.state.user << 4 | env.state.drive)
 }
 
 pub fn get_current(env: &BdosEnvironment) -> u8 {
@@ -33,7 +38,7 @@ pub fn get_log_in_vector(env: &BdosEnvironment) -> u16 {
     // or an implicit drive select caused by a file operation that specified a
     // nonzero dr field. The user should note that compatibility is maintained
     // with earlier releases, because registers A and L contain the same values
-    // upon return. 
+    // upon return.
     env.state.selected_bitmap
 }
 
@@ -51,7 +56,7 @@ pub fn get_read_only_vector(env: &BdosEnvironment) -> u16 {
     // least significant bit corresponds to drive A, while the most significant
     // bit corresponds to drive P. The R/O bit is set either by an explicit call
     // to Function 28 or by the automatic software mechanisms within CP/M that
-    // detect changed disks. 
+    // detect changed disks.
     env.state.read_only_bitmap
 }
 
@@ -64,7 +69,7 @@ pub fn get_disk_allocation_vector(_env: &BdosEnvironment) -> u16 {
     // information might be invalid if the selected disk has been marked
     // Read-Only. Although this function is not normally used by application
     // programs, additional details of the allocation vector are found in
-    // Section 6. 
+    // Section 6.
     BDOS_ALVEC0_ADDRESS
 }
 

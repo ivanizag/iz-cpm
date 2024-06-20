@@ -46,8 +46,6 @@ impl BdosState {
     }
 
     pub fn reset(&mut self) {
-        self.user = 0;
-        self.drive = 0;
         self.selected_bitmap = 1<<0;
         self.read_only_bitmap = 0;
         self.dma =  DEFAULT_DMA;
@@ -77,7 +75,7 @@ impl <'a> BdosEnvironment<'_> {
         self.machine.peek(IOBYTE_ADDRESS) & 0x0f
     }
     pub fn set_iobyte(&mut self, iobyte: u8) {
-        self.machine.poke(IOBYTE_ADDRESS, iobyte); 
+        self.machine.poke(IOBYTE_ADDRESS, iobyte);
     }
 
     pub fn load_buffer(&mut self) {
