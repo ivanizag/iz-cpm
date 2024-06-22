@@ -1,4 +1,6 @@
 use iz80::Machine;
+use crate::ExecutionResult;
+
 use super::bdos_environment::*;
 
 pub fn read(env: &mut BdosEnvironment) -> u8 {
@@ -38,7 +40,7 @@ pub fn write_string(env: &mut BdosEnvironment, address: u16) {
     }
 }
 
-pub fn read_string(env: &mut BdosEnvironment, address: u16) -> u8 {
+pub fn read_string(env: &mut BdosEnvironment, address: u16) -> ExecutionResult {
     // The Read Buffer function reads a line of edited console input into a
     // buffer addressed by registers DE. Console input is terminated when either
     // input buffer overflows or a carriage return or line-feed is typed. The
@@ -62,6 +64,12 @@ pub fn read_string(env: &mut BdosEnvironment, address: u16) -> u8 {
         if ch == 10 || ch == 13 { // CR of LF
             break;
         }
+
+        // break on control-c at the start of the line
+        if ch == 3 && size == 0 {
+            return ExecutionResult::WarmBoot
+        }
+
         if ch == 127 { // DEL
             if size > 0 {
                 size -= 1;
@@ -79,7 +87,7 @@ pub fn read_string(env: &mut BdosEnvironment, address: u16) -> u8 {
     }
 
     env.machine.poke(address + 1, size);
-    size
+    ExecutionResult::Continue
 }
 
 pub fn status(env: &mut BdosEnvironment) -> u8 {

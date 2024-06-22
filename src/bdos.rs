@@ -156,7 +156,10 @@ impl Bdos {
                     bdos_console::write_string(env, arg16);
                 },
                 10 => { // C_READSTR
-                    bdos_console::read_string(env, arg16);
+                    let result = bdos_console::read_string(env, arg16);
+                    if result == ExecutionResult::Continue{
+                        return result;
+                    }
                 },
                 11 => { // C_STAT - Console status
                     res8 = Some(bdos_console::status(env));
