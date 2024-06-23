@@ -174,10 +174,10 @@ impl Bdos {
                     bdos_drive::select(env, arg8);
                 },
                 15 => { // F_OPEN - Open file
-                    res8 = Some(bdos_file::open(env, arg16));
+                    res16 = Some(bdos_file::open(env, arg16).into());
                 },
                 16 => { // F_CLOSE - Close file
-                    res8 = Some(bdos_file::close(env, arg16));
+                    res16 = Some(bdos_file::close(env, arg16).into());
                 },
                 17 => { // F_SFIRST - Search for first
                     res8 = Some(bdos_file::search_first(env, arg16));
@@ -186,7 +186,8 @@ impl Bdos {
                     res8 = Some(bdos_file::search_next(env));
                 },
                 19 => { // F_DELETE - Delete file
-                    res8 = Some(bdos_file::delete(env, arg16));
+                    bdos_file::delete(env, arg16);
+                    res16 = Some(0)
                 },
                 20 => { // F_READ - Read next record
                     res8 = Some(bdos_file::read(env, arg16));
@@ -195,7 +196,7 @@ impl Bdos {
                     res8 = Some(bdos_file::write(env, arg16));
                 },
                 22 => { // F_MAKE - Create file
-                    res8 = Some(bdos_file::make(env, arg16));
+                    res16 = Some(bdos_file::make(env, arg16).into());
                 },
                 23 => { // F_RENAME - Rename file
                     res8 = Some(bdos_file::rename(env, arg16));
@@ -228,7 +229,7 @@ impl Bdos {
                     res8 = Some(bdos_file::get_set_user_number(env, arg8));
                 },
                 33 => { // F_READRAND - Random access read record
-                    res8 = Some(bdos_file::read_rand(env, arg16));
+                    res16 = Some(bdos_file::read_rand(env, arg16).into());
                 },
                 34 => { // F_WRITERAND - Write random
                     res8 = Some(bdos_file::write_rand(env, arg16));
@@ -243,7 +244,7 @@ impl Bdos {
                     res8 = Some(bdos_drive::reset_drives(env, arg16));
                 },
                 40 => { // F_WRITEZ - Write random with zero fill
-                    res8 = Some(bdos_file::write_rand_zero_fill(env, arg16));
+                    res16 = Some(bdos_file::write_rand_zero_fill(env, arg16).into());
                 },
                 45 => { // F_ERRMODE - Set action on hardware error
                     bdos_file::set_error_mode(env, arg8);
