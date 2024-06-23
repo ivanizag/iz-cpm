@@ -23,6 +23,13 @@ pub fn write(env: &mut BdosEnvironment, ch: u8) {
     env.bios.write(ch);
 }
 
+pub fn read_reader(env: &mut BdosEnvironment) -> u8 {
+    // The Reader Input function reads the next character from the logical reader
+    // into register A. Control does not return until the character has been read.
+    let ch = env.bios.read();
+    ch
+}
+
 pub fn write_string(env: &mut BdosEnvironment, address: u16) {
     // The Print String function sends the character string stored in memory at
     // the location given by DE to the console device, until a $ is encountered

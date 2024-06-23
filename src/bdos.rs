@@ -133,7 +133,7 @@ impl Bdos {
                 },
                 3 => { // A_READ - Reader input
                     // Use the console as the reader
-                    res8 = Some(bdos_console::read(env))
+                    res8 = Some(bdos_console::read_reader(env))
                 },
                 4 => { // A_WRITE - Punch output
                     // Use the console as the punch
