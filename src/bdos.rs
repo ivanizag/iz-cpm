@@ -61,8 +61,14 @@ impl Bdos {
         // Reset IOBYTE
         machine.poke(IOBYTE_ADDRESS, 0);
 
-        // We put ret on that address
-        machine.poke(BDOS_BASE_ADDRESS, 0xc9 /*ret*/);
+        // We will trap here to execute the BDOS and then copy the result from
+        // HL to A and B. It is done as code to make sure that the flags are
+        // set correctly.
+        // The actual CP/M 2.2 code executes these three instructions to return.
+        machine.poke(BDOS_BASE_ADDRESS, 0x7d /*ld a,l*/);
+        machine.poke(BDOS_BASE_ADDRESS+1, 0x44 /*ld b,h*/);
+        machine.poke(BDOS_BASE_ADDRESS+2, 0xc9 /*ret*/);
+
         // Note: if the first 6 bytes of BDOS change, the serial number in the
         // CCP source code needs to be updated.
 
@@ -263,22 +269,23 @@ impl Bdos {
 
             // Single byte values are returned in register A, with double byte
             // values returned in HL, a zero value is returned when the function
-            // number is out of range. For reasons of compatibility, register A
-            // = L and register B = H upon return in all cases.
-            if let Some(a) = res8 {
-                reg.set8(Reg8::A, a);
-                reg.set8(Reg8::L, a);
+            // number is out of range. We put the result in HL, the return code
+            // will copy it to A and B.
+            let res = if let Some(a) = res8 {
                 if bdos_trace {
                     println!("[[=>{:02x}]]", a);
                 }
+                a as u16
             } else if let Some(hl) = res16 {
-                reg.set16(Reg16::HL, hl);
-                reg.set8(Reg8::A, hl as u8);
-                reg.set8(Reg8::B, (hl>>8) as u8);
                 if bdos_trace {
                     println!("[[=>{:04x}]]", hl);
                 }
-            }
+                hl
+            } else {
+                0
+            };
+
+            reg.set16(Reg16::HL, res);
         }
         ExecutionResult::Continue
     }
