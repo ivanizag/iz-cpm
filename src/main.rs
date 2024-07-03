@@ -135,7 +135,7 @@ fn main() {
     bdos.reset(&mut machine);
 
     // Assign drives
-    for i in 0..15 {
+    for i in 0..16 {
         let res = matches.value_of(format!("disk_{}", (i + b'a') as char));
         if let Some(path) = res {
             if let Err(err) = fs::read_dir(path) {
