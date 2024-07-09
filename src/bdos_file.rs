@@ -215,9 +215,11 @@ pub fn read(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     }
 
     fcb.inc_current_record(env);
-    let res = read_record_in_buffer(env, &fcb, record as u16).unwrap_or(NO_DATA);
+
+    let mut buffer: Buffer = [0; RECORD_SIZE]; 
+    let res = read_record_in_buffer(env, &fcb, record as u16, &mut buffer).unwrap_or(NO_DATA);
     if res == DIRECTORY_CODE {
-        env.load_buffer();
+        env.store_buffer_to_dma(&buffer);
     }
     res
 }
@@ -234,14 +236,15 @@ pub fn write(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // written records overlay those that already exist in the file. Register A
     // = 00H upon return from a successful write operation, while a nonzero
     // value indicates an unsuccessful write caused by a full disk.
-    env.save_buffer();
     let mut fcb = Fcb::new(fcb_address);
     let record = fcb.get_sequential_record_number(env);
     if env.call_trace {
         print!("[Write record {:x} from {:04x}]", record, env.state.dma);
     }
     fcb.inc_current_record(env);
-    write_record_from_buffer(env, &fcb, record as u16).unwrap_or(NO_DATA)
+
+    let buffer = env.load_buffer_from_dma();
+    write_record_from_buffer(env, &fcb, record as u16, &buffer).unwrap_or(NO_DATA)
 }
 
 pub fn read_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
@@ -302,9 +305,10 @@ pub fn read_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     if record > 65535 {
         return 6; //06	seek Past Physical end of disk
     }
-    let res = read_record_in_buffer(env, &fcb, record as u16).unwrap_or(NO_DATA);
+    let mut buffer: Buffer = [0; RECORD_SIZE];
+    let res = read_record_in_buffer(env, &fcb, record as u16, &mut buffer).unwrap_or(NO_DATA);
     if res == DIRECTORY_CODE {
-        env.load_buffer();
+        env.store_buffer_to_dma(&buffer);
     }
     res
 }
@@ -328,7 +332,6 @@ pub fn write_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // The error codes returned by a random write are identical to the random
     // read operation with the addition of error code 05, which indicates that a
     // new extent cannot be created as a result of directory overflow.
-    env.save_buffer();
     let fcb = Fcb::new(fcb_address);
     let record = fcb.get_random_record_number(env);
     if env.call_trace {
@@ -338,7 +341,8 @@ pub fn write_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
         return 6; //06	seek Past Physical end of disk
     }
 
-    write_record_from_buffer(env, &fcb, record as u16).unwrap_or(NO_DATA)
+    let buffer = env.load_buffer_from_dma();
+    write_record_from_buffer(env, &fcb, record as u16, &buffer).unwrap_or(NO_DATA)
 }
 
 pub fn write_rand_zero_fill(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
@@ -544,7 +548,7 @@ fn create_file(env: &mut BdosEnvironment, fcb: &Fcb) -> io::Result<()> {
     Ok(())
 }
 
-fn read_record_in_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16) -> io::Result<u8> {
+fn read_record_in_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16, buffer: &mut Buffer) -> io::Result<u8> {
     let paths = find_host_files(env, fcb, false, false)?;
     let mut os_file = fs::File::open(&paths[0])?;
 
@@ -554,16 +558,16 @@ fn read_record_in_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16) -> i
     }
 
     os_file.seek(io::SeekFrom::Start(file_offset))?;
-    let size = os_file.read(&mut env.state.buffer)?;
+    let size = os_file.read(buffer)?;
 
-    // Fill with zeros
+    // Fill with ctrl-Z
     for i in size..RECORD_SIZE {
-        env.state.buffer[i] = 26; // (CTRL-Z)
+        buffer[i] = 26; // (CTRL-Z)
     }
     Ok(0)
 }
 
-fn write_record_from_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16) -> io::Result<u8> {
+fn write_record_from_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16, buffer: &[u8]) -> io::Result<u8> {
     let paths = find_host_files(env, fcb, false, true)?;
     let mut os_file = fs::OpenOptions::new().write(true).open(&paths[0])?;
 
@@ -580,7 +584,7 @@ fn write_record_from_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16) -
         }
     }
 
-    os_file.write_all(& env.state.buffer)?;
+    os_file.write_all(buffer)?;
     Ok(0)
 }
 
@@ -604,9 +608,9 @@ fn search_nth(env: &mut BdosEnvironment) -> io::Result<u8> {
                     // Fits the pattern
                     if i == env.state.dir_pos {
                         // This is the one to show
-                        build_directory_entry(&mut env.state.buffer, cpm_name);
+                        let buffer = build_directory_entry(cpm_name);
                         env.state.dir_pos += 1;
-                        env.load_buffer();
+                        env.store_buffer_to_dma(&buffer);
                         return Ok(DIRECTORY_CODE);
                     }
                     i += 1;
@@ -617,14 +621,12 @@ fn search_nth(env: &mut BdosEnvironment) -> io::Result<u8> {
     Ok(FILE_NOT_FOUND) // No more items
 }
 
-fn build_directory_entry(buffer: &mut [u8], cpm_name: String) {
+fn build_directory_entry(cpm_name: String) -> Buffer {
     // Some commands return a directory record. It can hold 4 directoy entries,
     // but we only use the first one.
 
     // Zero the buffer
-    for i in 0..RECORD_SIZE {
-        buffer[i] = 0;
-    }
+    let mut buffer = [0; RECORD_SIZE];
 
     // Store name in the first entry
     let bytes = cpm_name.as_bytes();
@@ -641,6 +643,8 @@ fn build_directory_entry(buffer: &mut [u8], cpm_name: String) {
     buffer[32] = 0xe5;
     buffer[64] = 0xe5;
     buffer[96] = 0xe5;
+
+    buffer
 }
 
 // An ambiguous file reference is used for directory search and pattern

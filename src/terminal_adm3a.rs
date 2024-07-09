@@ -1,4 +1,4 @@
-use crate::terminal::TerminalEmulator;
+use super::terminal::TerminalEmulator;
 
 /*
 See:

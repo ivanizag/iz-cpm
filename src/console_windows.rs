@@ -6,26 +6,24 @@ use crossterm::event;
 use crossterm::queue;
 use crossterm::style;
 
-use super::terminal::TerminalEmulator;
+use super::console_emulator::ConsoleEmulator;
 
 pub struct Console {
     next_char: Option<u8>,
-    terminal: Box<dyn TerminalEmulator>
 }
 
 impl Console {
-    pub fn new(terminal: Box<dyn TerminalEmulator>) -> Console {
+    pub fn new() -> Console {
         terminal::enable_raw_mode().unwrap();
 
         Console {
             next_char: None,
-            terminal: terminal,
         }
     }
 }
 
-impl Console {
-    pub fn status(&mut self) -> bool {
+impl ConsoleEmulator for Console {
+    fn status(&mut self) -> bool {
         match self.next_char {
             Some(_) => true,
             None => {
@@ -46,7 +44,7 @@ impl Console {
         }
     }
 
-    pub fn read(&mut self) -> u8 {
+    fn read(&mut self) -> u8 {
         match self.next_char {
             Some(ch) => {
                 self.next_char = None;
@@ -65,11 +63,15 @@ impl Console {
         }
     }
 
-    pub fn put(&mut self, ch: u8) {
-        if let Some(sequence) = self.terminal.translate(ch) {
+    fn put(&mut self, sequence: Option<String>) {
+        if let Some(sequence) = sequence {
             queue!(stdout(), style::Print(sequence)).unwrap();
             stdout().flush().unwrap();
         }
+    }
+
+    fn terminated(&self) -> bool {
+        false
     }
 }
 

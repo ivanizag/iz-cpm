@@ -4,25 +4,23 @@ use std::time::Duration;
 
 use termios::*;
 
-use super::terminal::TerminalEmulator;
+use super::console_emulator::ConsoleEmulator;
 
 const STDIN_FD: i32 = 0;
 
 pub struct Console {
     initial_termios: Option<Termios>,
     next_char: Option<u8>,
-    terminal: Box<dyn TerminalEmulator>
 }
 
 impl Console {
-    pub fn new(terminal: Box<dyn TerminalEmulator>) -> Console {
+    pub fn new() -> Console {
         // Prepare terminal
         let initial_termios = Termios::from_fd(STDIN_FD).ok();
 
         let c = Console {
             initial_termios,
             next_char: None,
-            terminal: terminal,
         };
 
         c.setup_host_terminal(false);
@@ -38,8 +36,10 @@ impl Console {
             tcsetattr(STDIN_FD, TCSANOW, &initial).unwrap();
         }
     }
+}
 
-    pub fn status(&mut self) -> bool {
+impl ConsoleEmulator for Console {
+    fn status(&mut self) -> bool {
         match self.next_char {
             Some(_) => true,
             None => {
@@ -57,7 +57,7 @@ impl Console {
         }
     }
 
-    pub fn read(&mut self) -> u8 {
+    fn read(&mut self) -> u8 {
         match self.next_char {
             Some(ch) => {
                 self.next_char = None;
@@ -74,11 +74,15 @@ impl Console {
         }
     }
 
-    pub fn put(&mut self, ch: u8) {
-        if let Some(sequence) = self.terminal.translate(ch) {
+    fn put(&mut self, sequence: Option<String>) {
+        if let Some(sequence) = sequence {
             print!("{}", sequence);
             stdout().flush().unwrap();
         }
+    }
+
+    fn terminated(&self) -> bool {
+        false
     }
 }
 

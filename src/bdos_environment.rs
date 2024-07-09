@@ -1,6 +1,7 @@
 use iz80::Machine;
 
 use super::bios::Bios;
+use super::console_emulator::ConsoleEmulator;
 use super::constants::*;
 use super::cpm_machine::*;
 
@@ -20,7 +21,6 @@ pub struct BdosState {
     pub directories: [Option<String>; 16],
     // File
     pub dma: u16,
-    pub buffer: [u8; RECORD_SIZE],
     // DIR state
     pub dir_drive: u8,
     pub dir_pattern: String,
@@ -41,7 +41,6 @@ impl BdosState {
             dir_drive: 0,
             dir_pattern: "????????.???".to_string(),
             dir_pos: 0,
-            buffer: [0; RECORD_SIZE],
         }
     }
 
@@ -51,13 +50,18 @@ impl BdosState {
         self.dma =  DEFAULT_DMA;
         self.dir_pattern = "????????.???".to_string();
         self.dir_pos = 0;
-        self.buffer = [0; RECORD_SIZE];
+
+
+        self.drive = 0;
     }
 }
+
+pub type Buffer = [u8; RECORD_SIZE];
 
 pub struct BdosEnvironment<'a> {
     pub state : &'a mut BdosState,
     pub bios: &'a mut Bios,
+    pub console: &'a mut dyn ConsoleEmulator,
     pub machine: &'a mut CpmMachine,
     pub call_trace: bool
 }
@@ -66,9 +70,10 @@ impl <'a> BdosEnvironment<'_> {
     pub fn new(
             state: &'a mut BdosState,
             bios: &'a mut Bios,
+            console: &'a mut dyn ConsoleEmulator,
             machine: &'a mut CpmMachine,
             call_trace: bool) -> BdosEnvironment<'a> {
-        BdosEnvironment {state, bios, machine, call_trace}
+        BdosEnvironment {state, bios, console, machine, call_trace}
     }
 
     pub fn iobyte(&self) -> u8 {
@@ -78,19 +83,21 @@ impl <'a> BdosEnvironment<'_> {
         self.machine.poke(IOBYTE_ADDRESS, iobyte);
     }
 
-    pub fn load_buffer(&mut self) {
+    pub fn store_buffer_to_dma(&mut self, buffer: &Buffer) {
         for i in 0..RECORD_SIZE {
-            self.machine.poke(self.state.dma + i as u16, self.state.buffer[i]);
+            self.machine.poke(self.state.dma + i as u16, buffer[i]);
         }
     }
 
-    pub fn save_buffer(&mut self) {
+    pub fn load_buffer_from_dma(&mut self) -> Buffer {
+        let mut buffer = [0; RECORD_SIZE];
         for i in 0..RECORD_SIZE {
-            self.state.buffer[i] = self.machine.peek(self.state.dma + i as u16);
+            buffer[i] = self.machine.peek(self.state.dma + i as u16);
         }
+        buffer
     }
 
-    pub fn get_directory(&self, fcb_drive: u8, to_write: bool) -> Option<String> {
+    pub fn get_directory(&mut self, fcb_drive: u8, to_write: bool) -> Option<String> {
         let drive = if fcb_drive == 0 {
             self.state.drive
         } else {
@@ -109,7 +116,8 @@ impl <'a> BdosEnvironment<'_> {
         res
     }
 
-    pub fn print_error_on_disk(&self, message: &str, disk: u8) {
-        println!("\nBdos Err On {}: {}", (b'A' + disk) as char, message);
+    pub fn print_error_on_disk(&mut self, message: &str, disk: u8) {
+        let text = format!("\nBdos Err On {}: {}", (b'A' + disk) as char, message);
+        self.bios.write_string(self.console, &text);
     }
 }

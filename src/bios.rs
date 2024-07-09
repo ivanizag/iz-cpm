@@ -1,15 +1,14 @@
 use iz80::*;
+
 use super::cpm_machine::*;
 use super::constants::*;
+use super::console_emulator::ConsoleEmulator;
 use super::terminal::TerminalEmulator;
 
-#[cfg(windows)]
-use super::console_windows::Console;
-#[cfg(unix)]
-use super::console_unix::Console;
 
-pub struct Bios{
-    console: Console,
+pub struct Bios {
+    //console: &'a mut dyn ConsoleEmulator,
+    terminal: Box<dyn TerminalEmulator>,
     ctrl_c_count: u8
 }
 
@@ -23,9 +22,10 @@ const BIOS_ENTRY_POINT_COUNT: usize = 30;
 const BIOS_RET_TRAP_START: u16 = BIOS_BASE_ADDRESS + 0x80;
 
 impl Bios {
-    pub fn new(terminal: Box<dyn TerminalEmulator>) -> Bios {
+    pub fn new(/*console: &mut dyn ConsoleEmulator, */terminal: Box<dyn TerminalEmulator>) -> Bios {
         Bios {
-            console: Console::new(terminal),
+            //console,
+            terminal,
             ctrl_c_count: 0
         }
     }
@@ -47,16 +47,16 @@ impl Bios {
         }
     }
 
-    pub fn status(&mut self) -> u8 {
-        if self.console.status() {
+    pub fn status(&mut self, console: &mut dyn ConsoleEmulator) -> u8 {
+        if console.status() {
             0xff
         } else {
             0
         }
     }
 
-    pub fn read(&mut self) -> u8 {
-        let ch = self.console.read();
+    pub fn read(&mut self, console: &mut dyn ConsoleEmulator) -> u8 {
+        let ch = console.read();
         if ch == 3 { // Control-C
             self.ctrl_c_count += 1;
         } else {
@@ -65,15 +65,23 @@ impl Bios {
         ch
     }
 
-    pub fn write(&mut self, ch: u8) {
-        self.console.put(ch);
+    pub fn write(&mut self, console: &mut dyn ConsoleEmulator, ch: u8) {
+        let stream = self.terminal.translate(ch);
+        console.put(stream);
     }
+
+    pub fn write_string(&mut self, console: &mut dyn ConsoleEmulator, text: &str) {
+        for ch in text.chars() {
+            self.write(console, ch as u8);
+        }
+    }
+
 
     pub fn stop(&self) -> bool {
         self.ctrl_c_count > 1
     }
 
-    pub fn execute(&mut self, reg: &mut Registers, call_trace: bool) -> ExecutionResult {
+    pub fn execute(&mut self, console: &mut dyn ConsoleEmulator, reg: &mut Registers, call_trace: bool) -> ExecutionResult {
         if self.stop() {
             // Stop with two control-c
             self.ctrl_c_count = 0;
@@ -126,7 +134,7 @@ impl Bios {
                     // console device and return 0FFH in register A if a
                     // character is ready to read and 00H in register A if no
                     // console characters are ready. 
-                let res8 = self.status();
+                let res8 = self.status(console);
                     reg.set_a(res8);
                 }
                 3 => { // CONIN: Console Input
@@ -134,7 +142,7 @@ impl Bios {
                     // the parity bit is set, high-order bit, to zero. If no
                     // console character is ready, wait until a character is
                     // typed before returning. 
-                    let res8 = self.read();
+                    let res8 = self.read(console);
                     reg.set_a(res8);
                 }
                 4 => {  // CONOUT: Console Output
@@ -147,7 +155,7 @@ impl Bios {
                     // filter out control characters that cause the console
                     // device to react in a strange way (CTRL-Z causes the Lear-
                     // Siegler terminal to clear the screen, for example). 
-                    self.write(reg.get8(Reg8::C));
+                    self.write(console, reg.get8(Reg8::C));
                 }
                 _ => {
                     eprintln!("BIOS command {} not implemented.\n", command);
