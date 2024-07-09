@@ -50,9 +50,6 @@ impl BdosState {
         self.dma =  DEFAULT_DMA;
         self.dir_pattern = "????????.???".to_string();
         self.dir_pos = 0;
-
-
-        self.drive = 0;
     }
 }
 
