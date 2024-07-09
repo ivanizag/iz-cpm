@@ -7,9 +7,9 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
-use super::bdos_environment::*;
-use super::constants::*;
-use super::fcb::*;
+use crate::bdos_environment::*;
+use crate::constants::*;
+use crate::fcb::*;
 use iz80::Machine;
 
 // Many file processing functions return a value in register A that is either

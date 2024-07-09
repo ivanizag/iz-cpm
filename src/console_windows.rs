@@ -6,7 +6,7 @@ use crossterm::event;
 use crossterm::queue;
 use crossterm::style;
 
-use super::console_emulator::ConsoleEmulator;
+use crate::console_emulator::ConsoleEmulator;
 
 pub struct Console {
     next_char: Option<u8>,

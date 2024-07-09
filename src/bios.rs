@@ -1,9 +1,9 @@
 use iz80::*;
 
-use super::cpm_machine::*;
-use super::constants::*;
-use super::console_emulator::ConsoleEmulator;
-use super::terminal::TerminalEmulator;
+use crate::cpm_machine::*;
+use crate::constants::*;
+use crate::console_emulator::ConsoleEmulator;
+use crate::terminal::TerminalEmulator;
 
 
 pub struct Bios {

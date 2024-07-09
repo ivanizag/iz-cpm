@@ -1,13 +1,13 @@
 use iz80::*;
 
-use super::bios::Bios;
-use super::bdos_environment::*;
-use super::bdos_console;
-use super::bdos_drive;
-use super::bdos_file;
-use super::console_emulator::ConsoleEmulator;
-use super::cpm_machine::CpmMachine;
-use super::constants::*;
+use crate::bios::Bios;
+use crate::bdos_environment::*;
+use crate::bdos_console;
+use crate::bdos_drive;
+use crate::bdos_file;
+use crate::console_emulator::ConsoleEmulator;
+use crate::cpm_machine::CpmMachine;
+use crate::constants::*;
 
 const BDOS_COMMAND_NAMES: [&str; 106] = [
     // 0

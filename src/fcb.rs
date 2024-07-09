@@ -1,5 +1,5 @@
 use iz80::Machine;
-use super::bdos_environment::BdosEnvironment;
+use crate::bdos_environment::BdosEnvironment;
 
 /*
 File Control Block

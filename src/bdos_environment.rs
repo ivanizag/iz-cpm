@@ -1,9 +1,9 @@
 use iz80::Machine;
 
-use super::bios::Bios;
-use super::console_emulator::ConsoleEmulator;
-use super::constants::*;
-use super::cpm_machine::*;
+use crate::bios::Bios;
+use crate::console_emulator::ConsoleEmulator;
+use crate::constants::*;
+use crate::cpm_machine::*;
 
 pub const RECORD_SIZE: usize = 128;
 pub const DEFAULT_DMA: u16 = 0x0080;

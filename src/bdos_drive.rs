@@ -1,5 +1,5 @@
-use super::bdos_environment::*;
-use super::constants::*;
+use crate::bdos_environment::*;
+use crate::constants::*;
 use iz80::Machine;
 
 pub fn select(env: &mut BdosEnvironment, selected: u8) {

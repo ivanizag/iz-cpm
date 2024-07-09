@@ -1,6 +1,6 @@
 use iz80::Machine;
-use super::bdos_environment::*;
-use super::constants::ExecutionResult;
+use crate::bdos_environment::*;
+use crate::constants::ExecutionResult;
 
 pub fn read(env: &mut BdosEnvironment) -> u8 {
     // The Console Input function reads the next console character to register

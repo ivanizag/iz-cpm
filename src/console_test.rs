@@ -1,7 +1,7 @@
 use core::panic;
 use std::collections::VecDeque;
 
-use super::console_emulator::ConsoleEmulator;
+use crate::console_emulator::ConsoleEmulator;
 
 pub enum Step <'a> {
     Input(&'a str),

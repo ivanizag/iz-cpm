@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use termios::*;
 
-use super::console_emulator::ConsoleEmulator;
+use crate::console_emulator::ConsoleEmulator;
 
 const STDIN_FD: i32 = 0;
 

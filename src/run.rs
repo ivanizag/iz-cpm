@@ -8,16 +8,16 @@ use clap::{Arg, App};
 use iz80::*;
 
 
-use super::bdos::Bdos;
-use super::bdos::execute_bdos;
-use super::console_emulator::ConsoleEmulator;
-use super::bios::Bios;
-use super::constants::*;
-use super::cpm_machine::CpmMachine;
-use super::fcb::*;
-use super::terminal::TerminalEmulator;
-use super::terminal::Transparent;
-use super::terminal_adm3a::Adm3aToAnsi;
+use crate::bdos::Bdos;
+use crate::bdos::execute_bdos;
+use crate::console_emulator::ConsoleEmulator;
+use crate::bios::Bios;
+use crate::constants::*;
+use crate::cpm_machine::CpmMachine;
+use crate::fcb::*;
+use crate::terminal::TerminalEmulator;
+use crate::terminal::Transparent;
+use crate::terminal_adm3a::Adm3aToAnsi;
 
 // Welcome message
 const WELCOME: &str =
