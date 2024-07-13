@@ -11,6 +11,6 @@ fn test_issue16() {
         Step::Expect("A$DIR"),
         Step::Expect("A$XYZ"),
         Step::Expect("A>"),
-        ), vec!("-b", "tests/artifacts")
+        ), vec!("-a", "tests/artifacts")
     );
 }
