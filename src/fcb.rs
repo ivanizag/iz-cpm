@@ -1,3 +1,5 @@
+use std::cmp::min;
+
 use iz80::Machine;
 use crate::bdos_environment::BdosEnvironment;
 
@@ -78,10 +80,26 @@ impl Fcb {
         env.machine.poke(self.address + offset, v)
     }
 
-    pub fn init(&mut self, env: &mut BdosEnvironment) {
+    pub fn init(&mut self, env: &mut BdosEnvironment, record_count: u32) {
         self.set_byte(env, FCB_EXTENT_OFFSET, 0);
         self.set_byte(env, FCB_CURRENT_RECORD_OFFSET, 0);
-        self.set_byte(env, FCB_RECORD_COUNT_OFFSET, 0);
+
+        let first_extent_record_count = min(record_count, EXTENT_SIZE as u32) as u8;
+        self.set_byte(env, FCB_RECORD_COUNT_OFFSET, first_extent_record_count);
+    }
+
+    pub fn update_record_count(&mut self, env: &mut BdosEnvironment, record_count: u32) {
+        /*
+            The record count must reflect the size of the current extent. For us
+            only the final extent can have a record count less than 128.
+        */
+        let extent = self.get_byte(env, FCB_EXTENT_OFFSET);
+        if (extent as u32) * (EXTENT_SIZE as u32) < record_count {
+            // We are not at the last extent:
+            self.set_byte(env, FCB_RECORD_COUNT_OFFSET, EXTENT_SIZE);
+        } else {
+            self.set_byte(env, FCB_RECORD_COUNT_OFFSET, (record_count % EXTENT_SIZE as u32) as u8);
+        }
     }
 
     pub fn get_name(&self, env: &mut BdosEnvironment) -> String {
@@ -158,14 +176,16 @@ impl Fcb {
         + (self.get_byte(env, FCB_CURRENT_RECORD_OFFSET) as u16)
     }
 
-    pub fn inc_current_record(&mut self, env: &mut BdosEnvironment) {
-        let cr = 1 + self.get_byte(env, FCB_CURRENT_RECORD_OFFSET);
+    pub fn inc_current_record(&mut self, env: &mut BdosEnvironment) -> bool {
+        let cr = 1 + (self.get_byte(env, FCB_CURRENT_RECORD_OFFSET) % EXTENT_SIZE);
         if cr == EXTENT_SIZE {
             self.set_byte(env, FCB_CURRENT_RECORD_OFFSET, 0);
             let v = 1 + self.get_byte(env, FCB_EXTENT_OFFSET);
             self.set_byte(env, FCB_EXTENT_OFFSET, v);
+            true // Extent changed
         } else {
             self.set_byte(env, FCB_CURRENT_RECORD_OFFSET, cr);
+            false // Extent not changed
         }
     }
 
@@ -179,6 +199,16 @@ impl Fcb {
         self.set_byte(env, FCB_RANDOM_RECORD_OFFSET, record as u8);
         self.set_byte(env, FCB_RANDOM_RECORD_OFFSET + 1, (record >> 8) as u8);
         self.set_byte(env, FCB_RANDOM_RECORD_OFFSET + 2, (record >> 16) as u8);
+    }
+
+    pub fn get_record_count(&self, env: &mut BdosEnvironment) -> (bool, u16) {
+        if self.get_byte(env, FCB_RECORD_COUNT_OFFSET) == EXTENT_SIZE {
+            (true, EXTENT_SIZE as u16)
+        } else {
+            let record_count = (EXTENT_SIZE as u16) * (self.get_byte(env, FCB_EXTENT_OFFSET) as u16)
+            + (self.get_byte(env, FCB_RECORD_COUNT_OFFSET) as u16);
+            (false, record_count)
+        }
     }
 }
 

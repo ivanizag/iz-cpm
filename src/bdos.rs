@@ -176,7 +176,7 @@ pub fn execute_bdos(bdos: &mut Bdos, bios: &mut Bios, console: &mut dyn ConsoleE
                 res16 = Some(get_version());
             },
             13 => { // DRV_ALLRESET - Reset disk system
-                env.state.reset();
+                res8 = Some(bdos_drive::all_reset(env));
             },
             14 => { // DRV_SET - Select disk
                 bdos_drive::select(env, arg8);

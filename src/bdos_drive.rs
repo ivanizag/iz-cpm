@@ -1,6 +1,46 @@
+use std::fs;
+use std::io;
+
 use crate::bdos_environment::*;
 use crate::constants::*;
+use crate::fcb::name_to_8_3;
 use iz80::Machine;
+
+pub fn all_reset(env: &mut BdosEnvironment) -> u8{
+    // The Reset Disk function is used to programmatically restore the file
+    // system to a reset state where all disks are set to Read-Write. Only
+    // disk drive A is selected, and the default DMA address is reset to
+    // BOOT+0080H. This function can be used, for example, by an application
+    // program that requires a disk change without a system reboot.
+    // In versions 1 and 2, logs in drive A: and returns 0FFh if there is a file
+    // present whose name begins with a $, otherwise 0. Replacement BDOSses may
+    // modify this behaviour.
+    env.state.reset();
+
+    match has_dollar_file(env) {
+        Ok(true) => 0xff,
+        _ => 0,
+    }
+}
+
+fn has_dollar_file(env: &mut BdosEnvironment) -> io::Result<bool> {
+    let path = env.get_directory(0, false)
+        .ok_or(io::Error::new(io::ErrorKind::Other, "No directory assigned to drive"))?;
+    let dir = fs::read_dir(path)?;
+
+    for entry in dir {
+        let file = entry?;
+        if file.file_type()?.is_file() {
+            let os_name = file.file_name();
+            if let Some(cpm_name) = name_to_8_3(&os_name.to_string_lossy()) {
+                if cpm_name.starts_with("$") {
+                    return Ok(true);
+                }
+            }
+        }
+    }
+    Ok(false)
+}
 
 pub fn select(env: &mut BdosEnvironment, selected: u8) {
     // The Select Disk function designates the disk drive named in register E as
