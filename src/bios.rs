@@ -7,7 +7,6 @@ use crate::terminal::TerminalEmulator;
 
 
 pub struct Bios {
-    //console: &'a mut dyn ConsoleEmulator,
     terminal: Box<dyn TerminalEmulator>,
     ctrl_c_count: u8
 }
@@ -22,9 +21,8 @@ const BIOS_ENTRY_POINT_COUNT: usize = 30;
 const BIOS_RET_TRAP_START: u16 = BIOS_BASE_ADDRESS + 0x80;
 
 impl Bios {
-    pub fn new(/*console: &mut dyn ConsoleEmulator, */terminal: Box<dyn TerminalEmulator>) -> Bios {
+    pub fn new(terminal: Box<dyn TerminalEmulator>) -> Bios {
         Bios {
-            //console,
             terminal,
             ctrl_c_count: 0
         }
