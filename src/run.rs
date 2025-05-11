@@ -85,11 +85,19 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
     .arg(Arg::with_name("disk_p").long("disk-p").value_name("path").help("directory to map disk P:"));
 
     let matches = match command_line {
-        None => app.get_matches(),
+        None => app.get_matches_safe(),
         Some(args) => {
             let mut args_complete = vec!("testbin");
             args_complete.extend(args.iter());
-            app.get_matches_from(args_complete)
+            app.get_matches_from_safe(args_complete)
+        }
+    };
+
+    let matches = match matches {
+        Ok(m) => m,
+        Err(e) => {
+            eprint!("{}", e);
+            return;
         }
     };
         
