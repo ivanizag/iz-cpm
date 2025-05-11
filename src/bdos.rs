@@ -243,6 +243,7 @@ pub fn execute_bdos(bdos: &mut Bdos, bios: &mut Bios, console: &mut dyn ConsoleE
             },
             35 => { // F_SIZE - Compute file size
                 bdos_file::compute_file_size(env, arg16);
+                // res8 = Some(0xff) // Undefined, CPM 2.2 returns 0xff
             },
             36 => { // F_RANDREC - Set random record
                 bdos_file::set_random_record(env, arg16);
