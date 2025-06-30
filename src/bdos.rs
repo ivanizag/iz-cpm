@@ -259,6 +259,10 @@ pub fn execute_bdos(bdos: &mut Bdos, bios: &mut Bios, console: &mut dyn ConsoleE
             },
 
 
+            102 => { // F_TIMEDATE - Get file date and time
+                // Not implemented
+                // Ignored silently to run the HiSoft C compilers.
+            },
             105 => { // T_GET - Get date and time
                 // Not implemented
                 // Ignored silently to run https://github.com/sblendorio/gorilla-cpm
