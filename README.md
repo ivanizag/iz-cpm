@@ -1,5 +1,17 @@
 # iz-cpm -- CP/M 2.2 environment
 
+## This is a fork of iz-cpm from Ivan Izaguirre
+
+This fork adds some CP/M Plus (CP/M 3) compatibility features:
+
+- **`--cpm3` flag**: Reports CP/M version 3.1 via BDOS 12 (S_BDOSVER) instead of 2.2. Required for programs that check the version before using CP/M+ features.
+- **BDOS 44 (F_MULTISEC)**: Multi-sector I/O support. Programs can request multiple 128-byte sectors per F_READ/F_WRITE call. Unfilled sectors on EOF are padded with ctrl-Z as per CP/M convention.
+- **BDOS 108 (P_CODE)**: Program return code. CP/M+ programs can set an exit code that is propagated to the host OS process exit code.
+
+The exit code mapping from the 16-bit P_CODE to the 8-bit host exit code is: `0x0000` → 0, `0x0001`–`0xFEFF` → low byte, `0xFF00`–`0xFFFF` (fatal errors) → low byte if non-zero, else `0xFF`.
+
+This enables using iz-cpm in Makefiles, with CP/M+ programs reporting success or failure via the return code (BDOS 108 / P_CODE).  SLR180 is one example. 
+
 ## What is this?
 
 This is a CP/M 2.2 execution environment. It provides everything needed to run a standard CP/M for Z80 or 8080 binary.
