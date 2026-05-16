@@ -27,7 +27,7 @@ Press ctrl-c ctrl-c Y to return to host";
 
 static CCP_BINARY: &[u8] = include_bytes!("../third-party/bin/zcpr.bin");
 
-pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulator) {
+pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulator) -> i32 {
     // Parse arguments
     let app = App::new(WELCOME)
     .arg(Arg::with_name("CMD")
@@ -50,6 +50,9 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
         .short("z")
         .long("cpu-trace")
         .help("Traces CPU instructions execution"))
+    .arg(Arg::with_name("cpm3")
+        .long("cpm3")
+        .help("Report CP/M version 3.1 instead of 2.2 (enables some CP/M Plus features)"))
     .arg(Arg::with_name("slow")
         .short("s")
         .long("slow")
@@ -97,7 +100,7 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
         Ok(m) => m,
         Err(e) => {
             eprint!("{}", e);
-            return;
+            return 1;
         }
     };
         
@@ -106,6 +109,7 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
     let cpu_trace = matches.is_present("cpu_trace");
     let call_trace = matches.is_present("call_trace") || matches.is_present("call_trace_all");
     let call_trace_all = matches.is_present("call_trace_all");
+    let cpm3 = matches.is_present("cpm3");
     let slow = matches.is_present("slow");
     let cpu_model = matches.value_of("cpu");
     let terminal = matches.value_of("terminal");
@@ -119,7 +123,7 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
         Some("8080") => Cpu::new_8080(),
         _ => {
             eprintln!("Invalid CPU model. Choose \"z80\" or \"8080\" as the CPU.");
-            return;
+            return 1;
         }
     };
 
@@ -129,7 +133,7 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
         Some("ansi") => Box::new(Transparent::new()),
         _ => {
             eprintln!("Unkown terminal emulation. Choose \"adm3a\" or \"ansi\".");
-            return;
+            return 1;
         }
     };
 /*     let console = match console {
@@ -141,7 +145,7 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
     bios.setup(&mut machine);
 
     // Init BDOS
-    let mut bdos = Bdos::new();
+    let mut bdos = Bdos::new(cpm3);
     bdos.reset(&mut machine);
 
     // Assign drives
@@ -150,7 +154,7 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
         if let Some(path) = res {
             if let Err(err) = fs::read_dir(path) {
                 eprintln!("Error with directory \"{}\": {}", path, err);
-                return;
+                return 1;
             }
             bdos.assign_drive(i, path.to_string());
         }
@@ -173,13 +177,13 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
                     match File::open(name) {
                         Err(err) => {
                             eprintln!("Error opening ccp \"{}\": {}", name, err);
-                            return; //process::exit(1);
+                            return 1; //process::exit(1);
                         },
                         Ok(mut file) => {
                             match file.read(&mut buf) {
                                 Err(err) => {
                                     eprintln!("Error loading ccp \"{}\": {}", name, err);
-                                    return; //process::exit(1);
+                                    return 1; //process::exit(1);
                                 },
                                 Ok(size) => {
                                     binary_size = size;
@@ -202,13 +206,13 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
             match File::open(name) {
                 Err(err) => {
                     eprintln!("Error opening \"{}\": {}", name, err);
-                    return; //process::exit(1);
+                    return 1; //process::exit(1);
                 },
                 Ok(mut file) => {
                     match file.read(&mut buf) {
                         Err(err) => {
                             eprintln!("Error loading \"{}\": {}", name, err);
-                            return; //process::exit(1);
+                            return 1; //process::exit(1);
                         },
                         Ok(size) => {
                             binary = &buf;
@@ -375,6 +379,16 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
                 thread::sleep(Duration::from_nanos(1000));
                 n = 0;
             }
+        }
+    }
+
+    match bdos.p_code() {
+        None | Some(0) => 0,
+        Some(c) if c < 0xFF00 => (c & 0xFF) as i32,
+        Some(c) => {
+            // Fatal/special error range (0xFF00-0xFFFF): always non-zero
+            let lo = c & 0xFF;
+            if lo != 0 { lo as i32 } else { 0xFF }
         }
     }
 }
