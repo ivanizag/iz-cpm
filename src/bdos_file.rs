@@ -230,10 +230,38 @@ pub fn read(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // is read from position cr of the extent, and the cr field is automatically
     // incremented to the next record position. If the cr field overflows, the
     // next logical extent is automatically opened and the cr field is reset to
-    // zero in preparation for the next read operation. The value 00H is
-    // returned in the A register if the read operation was successful, while a
-    // nonzero value is returned if no data exist at the next record position
-    // (for example, end-of-file occurs).
+    // zero in preparation for the next read operation.
+    // In single-sector mode (count=1): returns 0=success, non-zero=error/EOF.
+    // In multi-sector mode (count>1, CP/M+): returns the number of records NOT
+    // transferred, so 0 means all N records were read.
+    let count = env.state.multi_sector_count;
+    let base_dma = env.state.dma;
+    let mut records_read: u8 = 0;
+    for i in 0..count {
+        env.state.dma = base_dma.wrapping_add(i as u16 * RECORD_SIZE as u16);
+        let res = read_one(env, fcb_address);
+        if res != DIRECTORY_CODE {
+            // Fill remaining sectors with ctrl-Z so the caller can use ctrl-Z
+            // as an in-buffer EOF marker (CP/M text file convention).
+            if records_read > 0 {
+                for j in (i + 1)..count {
+                    let fill_addr = base_dma.wrapping_add(j as u16 * RECORD_SIZE as u16);
+                    for k in 0..RECORD_SIZE {
+                        env.machine.poke(fill_addr + k as u16, 0x1a /* ctrl-Z */);
+                    }
+                }
+            }
+            break;
+        }
+        records_read += 1;
+    }
+    env.state.dma = base_dma;
+    // CP/M+ multi-sector: return 0 if at least one sector was transferred
+    // (caller uses ctrl-Z as in-buffer EOF); return count if nothing was read.
+    if records_read > 0 { DIRECTORY_CODE } else { count }
+}
+
+fn read_one(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     let mut fcb = Fcb::new(fcb_address);
     let record = fcb.get_sequential_record_number(env);
     if env.call_trace {
@@ -242,7 +270,7 @@ pub fn read(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
 
     let extent_changed = fcb.inc_current_record(env);
 
-    let mut buffer: Buffer = [0; RECORD_SIZE]; 
+    let mut buffer: Buffer = [0; RECORD_SIZE];
     let res = read_record_in_buffer(env, &fcb, record as u16, &mut buffer).unwrap_or(NO_DATA);
     if res == DIRECTORY_CODE {
         env.store_buffer_to_dma(&buffer);
@@ -276,6 +304,22 @@ pub fn write(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // written records overlay those that already exist in the file. Register A
     // = 00H upon return from a successful write operation, while a nonzero
     // value indicates an unsuccessful write caused by a full disk.
+    let count = env.state.multi_sector_count;
+    let base_dma = env.state.dma;
+    let mut records_written: u8 = 0;
+    for i in 0..count {
+        env.state.dma = base_dma.wrapping_add(i as u16 * RECORD_SIZE as u16);
+        let res = write_one(env, fcb_address);
+        if res != DIRECTORY_CODE {
+            break;
+        }
+        records_written += 1;
+    }
+    env.state.dma = base_dma;
+    count - records_written
+}
+
+fn write_one(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     let mut fcb = Fcb::new(fcb_address);
     let record = fcb.get_sequential_record_number(env);
     if env.call_trace {
@@ -420,6 +464,14 @@ pub fn get_set_user_number(env: &mut BdosEnvironment, user: u8) -> u8 {
     }
 
     env.state.user
+}
+
+pub fn set_multi_sector_count(env: &mut BdosEnvironment, count: u8) -> u8 {
+    if count == 0 || count > 127 {
+        return 0xff;
+    }
+    env.state.multi_sector_count = count;
+    0
 }
 
 pub fn set_error_mode(_env: &mut BdosEnvironment, _mode: u8) {

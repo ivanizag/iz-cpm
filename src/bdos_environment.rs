@@ -25,7 +25,10 @@ pub struct BdosState {
     pub dir_drive: u8,
     pub dir_pattern: String,
     pub dir_pos: u16, // We will hold a global position in a DIR.
-
+    // CP/M+ multi-sector I/O count (BDOS 44 / F_MULTISEC)
+    pub multi_sector_count: u8,
+    // CP/M+ program return code (BDOS 108 / P_CODE)
+    pub p_code: Option<u16>,
 }
 
 impl BdosState {
@@ -41,6 +44,8 @@ impl BdosState {
             dir_drive: 0,
             dir_pattern: "????????.???".to_string(),
             dir_pos: 0,
+            multi_sector_count: 1,
+            p_code: None,
         }
     }
 
@@ -50,6 +55,8 @@ impl BdosState {
         self.dma =  DEFAULT_DMA;
         self.dir_pattern = "????????.???".to_string();
         self.dir_pos = 0;
+        self.multi_sector_count = 1;
+        self.p_code = None;
     }
 }
 
