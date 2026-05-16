@@ -9,7 +9,7 @@ use crate::console_emulator::ConsoleEmulator;
 use crate::cpm_machine::CpmMachine;
 use crate::constants::*;
 
-const BDOS_COMMAND_NAMES: [&str; 106] = [
+const BDOS_COMMAND_NAMES: [&str; 109] = [
     // 0
     "P_TERMCPM", "C_READ", "C_WRITE", "A_READ", "A_WRITE",
     "L_WRITE", "C_RAWIO", "A_STATIN", "A_STATOUT", "C_WRITESTR",
@@ -23,29 +23,31 @@ const BDOS_COMMAND_NAMES: [&str; 106] = [
     "F_ATTRIB", "DRV_DPB", "F_USERNUM", "F_READRAND", "F_WRITERAND",
     "F_SIZE", "F_RANDREC", "DRV_RESET", "*", "",
     // 40
-    "F_WRITEZ", "", "", "", "",
+    "F_WRITEZ", "", "", "", "F_MULTISEC",
     "F_ERRMODE", "", "", "", "",
 
     "", "", "", "", "", "", "", "", "", "", // 50-59
     "", "", "", "", "", "", "", "", "", "", // 60-69
     "", "", "", "", "", "", "", "", "", "", // 70-79
     "", "", "", "", "", "", "", "", "", "", // 80-89
-    "", "", "", "", "", "", "", "", "", "", // 00-09
+    "", "", "", "", "", "", "", "", "", "", // 90-99
 
     // 100
     "", "", "", "", "",
-    "T_GET"
+    "T_GET", "", "", "P_CODE",
     ];
 
 pub struct Bdos {
     state: BdosState,
+    pub cpm3: bool,
 }
 
 impl Bdos {
 
-    pub fn new() -> Bdos {
+    pub fn new(cpm3: bool) -> Bdos {
         Bdos {
-            state: BdosState::new()
+            state: BdosState::new(),
+            cpm3,
         }
     }
 
@@ -94,6 +96,10 @@ impl Bdos {
 
     pub fn assign_drive(&mut self, drive: u8, path: String) {
         self.state.directories[(drive & 0x0f) as usize] = Some(path);
+    }
+
+    pub fn p_code(&self) -> Option<u16> {
+        self.state.p_code
     }
 }
 
@@ -173,7 +179,7 @@ pub fn execute_bdos(bdos: &mut Bdos, bios: &mut Bios, console: &mut dyn ConsoleE
                 res8 = Some(bdos_console::status(env));
             },
             12 => { // S_BDOSVER - Return version number
-                res16 = Some(get_version());
+                res16 = Some(get_version(bdos.cpm3));
             },
             13 => { // DRV_ALLRESET - Reset disk system
                 res8 = Some(bdos_drive::all_reset(env));
@@ -254,6 +260,9 @@ pub fn execute_bdos(bdos: &mut Bdos, bios: &mut Bios, console: &mut dyn ConsoleE
             40 => { // F_WRITEZ - Write random with zero fill
                 res8 = Some(bdos_file::write_rand_zero_fill(env, arg16));
             },
+            44 => { // F_MULTISEC - Set number of records to read/write at once (CP/M+)
+                res8 = Some(bdos_file::set_multi_sector_count(env, arg8));
+            },
             45 => { // F_ERRMODE - Set action on hardware error
                 bdos_file::set_error_mode(env, arg8);
             },
@@ -266,6 +275,13 @@ pub fn execute_bdos(bdos: &mut Bdos, bios: &mut Bios, console: &mut dyn ConsoleE
             105 => { // T_GET - Get date and time
                 // Not implemented
                 // Ignored silently to run https://github.com/sblendorio/gorilla-cpm
+            },
+            108 => { // P_CODE - Get/set program return code (CP/M+)
+                if arg16 == 0xffff {
+                    res16 = Some(env.state.p_code.unwrap_or(0));
+                } else {
+                    env.state.p_code = Some(arg16);
+                }
             },
 
             _ => {
@@ -297,16 +313,14 @@ pub fn execute_bdos(bdos: &mut Bdos, bios: &mut Bios, console: &mut dyn ConsoleE
     ExecutionResult::Continue
 }
 
-fn get_version() -> u16 {
+fn get_version(cpm3: bool) -> u16 {
     /*
     Function 12 provides information that allows version independent
     programming. A two-byte value is returned, with H = 00
     designating the CP/M release (H = 01 for MP/M) and L = 00 for all
     releases previous to 2.0. CP/M 2.0 returns a hexadecimal 20 in
     register L, with subsequent version 2 releases in the hexadecimal
-    range 21, 22, through 2F. Using Function 12, for example, the
-    user can write application programs that provide both sequential
-    and random access functions.
+    range 21, 22, through 2F. CP/M Plus returns 0x31 (version 3.1).
     */
-    0x0022 // CP/M 2.2 for Z80
+    if cpm3 { 0x0031 } else { 0x0022 }
 }
