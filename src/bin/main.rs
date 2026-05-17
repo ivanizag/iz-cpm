@@ -4,6 +4,7 @@ fn main() {
     let mut console = Console::new();
     let exit_code = run(None, &mut console);
     if exit_code != 0 {
+        drop(console);
         std::process::exit(exit_code);
     }
 }
