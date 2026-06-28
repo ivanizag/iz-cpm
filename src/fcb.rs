@@ -201,6 +201,13 @@ impl Fcb {
         self.set_byte(env, FCB_RANDOM_RECORD_OFFSET + 2, (record >> 16) as u8);
     }
 
+    pub fn set_sequential_record_number(&mut self, env: &mut BdosEnvironment, record: u16) {
+        let extent = (record / EXTENT_SIZE as u16) as u8;
+        let cr = (record % EXTENT_SIZE as u16) as u8;
+        self.set_byte(env, FCB_EXTENT_OFFSET, extent);
+        self.set_byte(env, FCB_CURRENT_RECORD_OFFSET, cr);
+    }
+
     pub fn get_record_count(&self, env: &mut BdosEnvironment) -> (bool, u16) {
         if self.get_byte(env, FCB_RECORD_COUNT_OFFSET) == EXTENT_SIZE {
             (true, EXTENT_SIZE as u16)

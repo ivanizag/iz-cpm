@@ -388,7 +388,7 @@ pub fn read_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // nonzero under the current 2.0 release. Normally, nonzero return codes can
     // be treated as missing data, with zero return codes indicating operation
     // complete.
-    let fcb = Fcb::new(fcb_address);
+    let mut fcb = Fcb::new(fcb_address);
     let record = fcb.get_random_record_number(env);
     if env.call_trace {
         print!("[Read random record {:x} into {:04x}]", record, env.state.dma);
@@ -396,6 +396,7 @@ pub fn read_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     if record > 65535 {
         return 6; //06	seek Past Physical end of disk
     }
+    fcb.set_sequential_record_number(env, record as u16);
     let mut buffer: Buffer = [0; RECORD_SIZE];
     let res = read_record_in_buffer(env, &fcb, record as u16, &mut buffer).unwrap_or(NO_DATA);
     if res == DIRECTORY_CODE {
@@ -423,7 +424,7 @@ pub fn write_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // The error codes returned by a random write are identical to the random
     // read operation with the addition of error code 05, which indicates that a
     // new extent cannot be created as a result of directory overflow.
-    let fcb = Fcb::new(fcb_address);
+    let mut fcb = Fcb::new(fcb_address);
     let record = fcb.get_random_record_number(env);
     if env.call_trace {
         print!("[Write random record {:x} into {:04x}]", record, env.state.dma);
@@ -432,6 +433,7 @@ pub fn write_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
         return 6; //06	seek Past Physical end of disk
     }
 
+    fcb.set_sequential_record_number(env, record as u16);
     let buffer = env.load_buffer_from_dma();
     write_record_from_buffer(env, &fcb, record as u16, &buffer).unwrap_or(NO_DATA)
 }
