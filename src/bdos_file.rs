@@ -65,14 +65,24 @@ pub fn open(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     if env.call_trace {
         print!("[[Open file {}]]", fcb.get_name_for_log(env));
     }
+    // CP/M+: if the current record field, cr, is set to 0FFH on entry,
+    // Function 15 returns the byte count of the last record of the file in
+    // the cr field instead of zeroing it. A value of 0 means the last record
+    // is fully used (128 bytes), 1-127 means that many bytes are used.
+    let return_last_record_byte_count = env.cpm3 && fcb.get_current_record(env) == 0xff;
     match find_host_files(env, &fcb, false, false) {
         Err(_) => FILE_NOT_FOUND, // Error or file not found
         Ok(paths) => match fs::File::open(&paths[0]) {
             Err(_) => FILE_NOT_FOUND,
-            Ok(os_file) => match os_file_size_records(os_file) {
+            Ok(os_file) => match os_file.metadata() {
                 Err(_) => FILE_NOT_FOUND,
-                Ok(record_count) => {
-                    fcb.init(env, record_count);
+                Ok(metadata) => {
+                    let file_size = metadata.len();
+                    fcb.init(env, bytes_to_records(file_size));
+                    if return_last_record_byte_count {
+                        let last_record_byte_count = (file_size % RECORD_SIZE as u64) as u8;
+                        fcb.set_current_record(env, last_record_byte_count);
+                    }
                     DIRECTORY_CODE
                 }
             }
@@ -133,7 +143,7 @@ fn truncate_if_needed(env: &mut BdosEnvironment, fcb: &Fcb, os_file_name: &OsStr
     if extent_is_full {
         return Ok(()); // No truncation needed and it could not be the last extent.
     }
-    if record_count == fcb_record_count as u32 {
+    if record_count == fcb_record_count {
         return Ok(());
     }
 
@@ -189,7 +199,28 @@ pub fn set_attributes(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
 
     match find_host_files(env, &fcb, false, true) {
         Err(_) => FILE_NOT_FOUND, // Error or file not found
-        Ok(_) => DIRECTORY_CODE // TODO: Do something with this.
+        Ok(paths) => {
+            if env.cpm3 && fcb.get_f6_flag(env) {
+                // CP/M+: F6' set means the cr field contains the Last Record
+                // Byte Count. Truncate the host file accordingly.
+                // lrbc=0: last record is full (128 bytes), no truncation needed.
+                // lrbc=1..127: that many bytes are used in the last record.
+                let lrbc = fcb.get_current_record(env);
+                if lrbc > 0 {
+                    if let Ok(metadata) = fs::metadata(&paths[0]) {
+                        let current_records = bytes_to_records(metadata.len());
+                        if current_records > 0 {
+                            let new_size = (current_records as u64 - 1) * RECORD_SIZE as u64
+                                + lrbc as u64;
+                            if let Ok(file) = fs::OpenOptions::new().write(true).open(&paths[0]) {
+                                let _ = file.set_len(new_size);
+                            }
+                        }
+                    }
+                }
+            }
+            DIRECTORY_CODE
+        }
     }
 }
 
@@ -268,10 +299,15 @@ fn read_one(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
         print!("[Read record {:x} into {:04x}]", record, env.state.dma);
     }
 
+    let max_record = if env.cpm3 { 262143 } else { 65535 };
+    if record > max_record {
+        return NO_DATA;
+    }
+
     let extent_changed = fcb.inc_current_record(env);
 
     let mut buffer: Buffer = [0; RECORD_SIZE];
-    let res = read_record_in_buffer(env, &fcb, record as u16, &mut buffer).unwrap_or(NO_DATA);
+    let res = read_record_in_buffer(env, &fcb, record, &mut buffer).unwrap_or(NO_DATA);
     if res == DIRECTORY_CODE {
         env.store_buffer_to_dma(&buffer);
     }
@@ -326,8 +362,13 @@ fn write_one(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
         print!("[Write record {:x} from {:04x}]", record, env.state.dma);
     }
 
+    let max_record = if env.cpm3 { 262143 } else { 65535 };
+    if record > max_record {
+        return NO_DATA;
+    }
+
     let buffer = env.load_buffer_from_dma();
-    let result = write_record_from_buffer(env, &fcb, record as u16, &buffer).unwrap_or(NO_DATA);
+    let result = write_record_from_buffer(env, &fcb, record, &buffer).unwrap_or(NO_DATA);
 
     fcb.inc_current_record(env);
     match update_record_count(env, &mut fcb) {
@@ -388,17 +429,22 @@ pub fn read_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     // nonzero under the current 2.0 release. Normally, nonzero return codes can
     // be treated as missing data, with zero return codes indicating operation
     // complete.
+    // Fork note: we always read r0/r1/r2 as a 24-bit record number. Under CP/M 2.2
+    // the 65535-record limit still causes error 06 for nonzero r2, preserving the
+    // original behaviour. Under --cpm3, r2 may be non-zero for files up to 262143
+    // records (32 MB); set_sequential_record_number then sets EX, S2 and CR correctly.
     let mut fcb = Fcb::new(fcb_address);
     let record = fcb.get_random_record_number(env);
     if env.call_trace {
         print!("[Read random record {:x} into {:04x}]", record, env.state.dma);
     }
-    if record > 65535 {
+    let max_record = if env.cpm3 { 262143 } else { 65535 };
+    if record > max_record {
         return 6; //06	seek Past Physical end of disk
     }
-    fcb.set_sequential_record_number(env, record as u16);
+    fcb.set_sequential_record_number(env, record);
     let mut buffer: Buffer = [0; RECORD_SIZE];
-    let res = read_record_in_buffer(env, &fcb, record as u16, &mut buffer).unwrap_or(NO_DATA);
+    let res = read_record_in_buffer(env, &fcb, record, &mut buffer).unwrap_or(NO_DATA);
     if res == DIRECTORY_CODE {
         env.store_buffer_to_dma(&buffer);
     }
@@ -429,13 +475,14 @@ pub fn write_rand(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
     if env.call_trace {
         print!("[Write random record {:x} into {:04x}]", record, env.state.dma);
     }
-    if record > 65535 {
+    let max_record = if env.cpm3 { 262143 } else { 65535 };
+    if record > max_record {
         return 6; //06	seek Past Physical end of disk
     }
 
-    fcb.set_sequential_record_number(env, record as u16);
+    fcb.set_sequential_record_number(env, record);
     let buffer = env.load_buffer_from_dma();
-    write_record_from_buffer(env, &fcb, record as u16, &buffer).unwrap_or(NO_DATA)
+    write_record_from_buffer(env, &fcb, record, &buffer).unwrap_or(NO_DATA)
 }
 
 pub fn write_rand_zero_fill(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
@@ -523,7 +570,7 @@ pub fn set_random_record(env: &mut BdosEnvironment, fcb_address: u16) {
         print!("[[Set pos of {}]]", fcb.get_name_for_log(env));
     }
     let record = fcb.get_sequential_record_number(env);
-    fcb.set_random_record_number(env, record as u32);
+    fcb.set_random_record_number(env, record);
 }
 
 pub fn search_first(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
@@ -600,11 +647,22 @@ pub fn compute_file_size(env: &mut BdosEnvironment, fcb_address: u16) {
 fn compute_file_size_internal(env: &mut BdosEnvironment, fcb: &Fcb) -> io::Result<u32> {
     let paths = find_host_files(env, fcb, false, false)?;
     let os_file = fs::File::open(&paths[0])?;
-    os_file_size_records(os_file)
+    if env.cpm3 {
+        // CP/M+: maximum is 262144 records; r2=04 signals exactly 262144.
+        let file_size = os_file.metadata()?.len();
+        let record = (file_size + RECORD_SIZE as u64 - 1) / RECORD_SIZE as u64;
+        Ok(record.min(262144) as u32)
+    } else {
+        os_file_size_records(os_file)
+    }
 }
 
 fn os_file_size_records(os_file: fs::File) -> io::Result<u32> {
     let file_size = os_file.metadata()?.len();
+    Ok(bytes_to_records(file_size))
+}
+
+fn bytes_to_records(file_size: u64) -> u32 {
     let mut record = file_size / RECORD_SIZE as u64;
     if file_size % RECORD_SIZE as u64 != 0 {
         // We need integer division rounding up.
@@ -614,7 +672,7 @@ fn os_file_size_records(os_file: fs::File) -> io::Result<u32> {
     if record >= 65536 {
         record = 65536;
     }
-    Ok(record as u32)
+    record as u32
 }
 
 fn find_host_files(env: &mut BdosEnvironment, fcb: &Fcb, wildcard: bool, to_write: bool) -> io::Result<Vec<OsString>> {
@@ -652,7 +710,7 @@ fn create_file(env: &mut BdosEnvironment, fcb: &Fcb) -> io::Result<()> {
     Ok(())
 }
 
-fn read_record_in_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16, buffer: &mut Buffer) -> io::Result<u8> {
+fn read_record_in_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u32, buffer: &mut Buffer) -> io::Result<u8> {
     let paths = find_host_files(env, fcb, false, false)?;
     let mut os_file = fs::File::open(&paths[0])?;
 
@@ -671,7 +729,7 @@ fn read_record_in_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16, buff
     Ok(0)
 }
 
-fn write_record_from_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u16, buffer: &[u8]) -> io::Result<u8> {
+fn write_record_from_buffer(env: &mut BdosEnvironment, fcb: &Fcb, record: u32, buffer: &[u8]) -> io::Result<u8> {
     let paths = find_host_files(env, fcb, false, true)?;
     let mut os_file = fs::OpenOptions::new().write(true).open(&paths[0])?;
 
@@ -710,7 +768,13 @@ fn search_nth(env: &mut BdosEnvironment) -> io::Result<u8> {
                     // Fits the pattern
                     if i == env.state.dir_pos {
                         // This is the one to show
-                        let buffer = build_directory_entry(cpm_name);
+                        let s1 = if env.cpm3 {
+                            let file_size = file.metadata().map(|m| m.len()).unwrap_or(0);
+                            (file_size % RECORD_SIZE as u64) as u8
+                        } else {
+                            0
+                        };
+                        let buffer = build_directory_entry(cpm_name, s1);
                         env.state.dir_pos += 1;
                         env.store_buffer_to_dma(&buffer);
                         return Ok(DIRECTORY_CODE);
@@ -723,7 +787,7 @@ fn search_nth(env: &mut BdosEnvironment) -> io::Result<u8> {
     Ok(FILE_NOT_FOUND) // No more items
 }
 
-fn build_directory_entry(cpm_name: String) -> Buffer {
+fn build_directory_entry(cpm_name: String, s1: u8) -> Buffer {
     // Some commands return a directory record. It can hold 4 directoy entries,
     // but we only use the first one.
 
@@ -738,6 +802,9 @@ fn build_directory_entry(cpm_name: String) -> Buffer {
     for i in 0..3 {
         buffer[9+i] = 0x7F & bytes[9 + i as usize];
     }
+
+    // S1 field: Last Record Byte Count under CP/M+, otherwise 0
+    buffer[13] = s1;
 
     // This user-number byte serves a second purpose. If this byte is set to a
     // value of 0E5H, CP/M considers that the file directory entry has been

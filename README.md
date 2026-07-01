@@ -2,15 +2,33 @@
 
 ## This is a fork of iz-cpm from Ivan Izaguirre
 
-This fork adds some CP/M Plus (CP/M 3) compatibility features:
+This fork adds some CP/M Plus (CP/M 3) compatibility features, all guarded by the `--cpm3` flag:
 
 - **`--cpm3` flag**: Reports CP/M version 3.1 via BDOS 12 (S_BDOSVER) instead of 2.2. Required for programs that check the version before using CP/M+ features.
 - **BDOS 44 (F_MULTISEC)**: Multi-sector I/O support. Programs can request multiple 128-byte sectors per F_READ/F_WRITE call. Unfilled sectors on EOF are padded with ctrl-Z as per CP/M convention.
 - **BDOS 108 (P_CODE)**: Program return code. CP/M+ programs can set an exit code that is propagated to the host OS process exit code.
-
 The exit code mapping from the 16-bit P_CODE to the 8-bit host exit code is: `0x0000` → 0, `0x0001`–`0xFEFF` → low byte, `0xFF00`–`0xFFFF` (fatal errors) → low byte if non-zero, else `0xFF`.
+This enables using iz-cpm in Makefiles, with CP/M+ programs reporting success or failure via the return code (BDOS 108 / P_CODE). SLR180 is one example.
 
-This enables using iz-cpm in Makefiles, with CP/M+ programs reporting success or failure via the return code (BDOS 108 / P_CODE).  SLR180 is one example. 
+### File size with byte granularity (LRBC)
+
+CP/M 2.2 file sizes are always a multiple of 128 bytes. CP/M Plus introduces the Last Record Byte Count to express the exact byte size of a file:
+
+- **BDOS 15 (F_OPEN)**: If CR = 0FFH on entry, F_OPEN returns the LRBC in CR instead of zeroing it. `0` means the last record is full (128 bytes); `1`–`127` is the number of bytes used.
+- **BDOS 17/18 (F_SFIRST / F_SNEXT)**: The S1 field (byte 13) of the returned directory entry contains the LRBC, enabling byte-granular file sizes in directory listings.
+- **BDOS 30 (F_ATTRIB)**: Setting the F6' attribute bit and writing a byte count into FCB+32 (CR) truncates the host file to the exact size.
+- **BDOS 35 (F_SIZE)**: Record count is capped at 262144 (r2=4) as per the CP/M 3 specification, instead of 65536 (r2=1) for CP/M 2.2.
+
+### FCB S2/EX/CR fix (applies to both CP/M 2.2 and CP/M 3)
+
+The S2 field of the FCB was'nt read or written in the original iz-cpm, silently limiting sequential file access to ~4 MB before the EX byte overflowed. S2 is now (hopefully?) correctly managed as the highest bits of the extent number, raising the limit to 8 MB for CP/M 2.2 and 32 MB for CP/M 3.
+Also, Read/Write Random didn't update the S2/EX/CR fields. 
+
+This affects all file access paths:
+- **Sequential read/write (BDOS 20/21)**: EX rolls over at 31 and increments S2 instead of wrapping.
+- **Random read/write (BDOS 33/34)**: After positioning via r0/r1/r2, the FCB fields EX, S2 and CR are set, so subsequent sequential access from that position should work as expected.
+- **F_RANDREC (BDOS 36)**: Converts the current sequential position (including S2) back to r0/r1/r2.
+- **F_SIZE (BDOS 35)**: Record count already uses the host file size directly and is not affected.
 
 ## What is this?
 
