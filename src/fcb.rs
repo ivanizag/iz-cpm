@@ -31,11 +31,13 @@ const FCB_EXTENSION_OFFSET: u16 = 9;
 */
 const FCB_EXTENT_OFFSET: u16 = 12;
 /*
-    ex: contains the current extent number, normally set to 00 by the user,
-        but in range 0-31 during file I/O
+    ex: current extent number, 0-31 during file I/O
     s1: reserved for internal system use
-    s2: reserved for internal system use, set to zero on call to OPEN, MAKE, SEARCH
+    s2: reserved for internal system use. The BDOS uses it as the high byte
+        of the extent: record = (s2 * 32 + ex) * 128 + cr
+        (s2 = file_pointer / 524288, ex = (file_pointer % 524288) / 16384)
 */
+const FCB_S2_OFFSET: u16 = 14;
 const FCB_RECORD_COUNT_OFFSET: u16 = 15;
 /*
     rc: record count for extent ex; takes on values from 0-127
@@ -88,13 +90,28 @@ impl Fcb {
         self.set_byte(env, FCB_RECORD_COUNT_OFFSET, first_extent_record_count);
     }
 
+    pub fn get_current_record(&self, env: &mut BdosEnvironment) -> u8 {
+        self.get_byte(env, FCB_CURRENT_RECORD_OFFSET)
+    }
+
+    pub fn set_current_record(&mut self, env: &mut BdosEnvironment, value: u8) {
+        self.set_byte(env, FCB_CURRENT_RECORD_OFFSET, value);
+    }
+
+    pub fn get_f6_flag(&self, env: &mut BdosEnvironment) -> bool {
+        // F6' is bit 7 of the 6th filename character (FCB offset 6)
+        self.get_byte(env, FCB_NAME_OFFSET + 5) & 0x80 != 0
+    }
+
     pub fn update_record_count(&mut self, env: &mut BdosEnvironment, record_count: u32) {
         /*
             The record count must reflect the size of the current extent. For us
             only the final extent can have a record count less than 128.
         */
-        let extent = self.get_byte(env, FCB_EXTENT_OFFSET);
-        if (extent as u32) * (EXTENT_SIZE as u32) < record_count {
+        let s2 = self.get_byte(env, FCB_S2_OFFSET) as u32;
+        let ex = self.get_byte(env, FCB_EXTENT_OFFSET) as u32;
+        let extent = s2 * 32 + ex;
+        if extent * (EXTENT_SIZE as u32) < record_count {
             // We are not at the last extent:
             self.set_byte(env, FCB_RECORD_COUNT_OFFSET, EXTENT_SIZE);
         } else {
@@ -171,17 +188,25 @@ impl Fcb {
         }
     }
 
-    pub fn get_sequential_record_number(&self, env: &mut BdosEnvironment) -> u16 {
-        (EXTENT_SIZE as u16) * (self.get_byte(env, FCB_EXTENT_OFFSET) as u16)
-        + (self.get_byte(env, FCB_CURRENT_RECORD_OFFSET) as u16)
+    pub fn get_sequential_record_number(&self, env: &mut BdosEnvironment) -> u32 {
+        let s2 = self.get_byte(env, FCB_S2_OFFSET) as u32;
+        let ex = self.get_byte(env, FCB_EXTENT_OFFSET) as u32;
+        let cr = self.get_byte(env, FCB_CURRENT_RECORD_OFFSET) as u32;
+        (s2 * 32 + ex) * EXTENT_SIZE as u32 + cr
     }
 
     pub fn inc_current_record(&mut self, env: &mut BdosEnvironment) -> bool {
         let cr = 1 + (self.get_byte(env, FCB_CURRENT_RECORD_OFFSET) % EXTENT_SIZE);
         if cr == EXTENT_SIZE {
             self.set_byte(env, FCB_CURRENT_RECORD_OFFSET, 0);
-            let v = 1 + self.get_byte(env, FCB_EXTENT_OFFSET);
-            self.set_byte(env, FCB_EXTENT_OFFSET, v);
+            let ex = self.get_byte(env, FCB_EXTENT_OFFSET);
+            if ex == 31 {
+                self.set_byte(env, FCB_EXTENT_OFFSET, 0);
+                let s2 = 1 + self.get_byte(env, FCB_S2_OFFSET);
+                self.set_byte(env, FCB_S2_OFFSET, s2);
+            } else {
+                self.set_byte(env, FCB_EXTENT_OFFSET, ex + 1);
+            }
             true // Extent changed
         } else {
             self.set_byte(env, FCB_CURRENT_RECORD_OFFSET, cr);
@@ -201,19 +226,25 @@ impl Fcb {
         self.set_byte(env, FCB_RANDOM_RECORD_OFFSET + 2, (record >> 16) as u8);
     }
 
-    pub fn set_sequential_record_number(&mut self, env: &mut BdosEnvironment, record: u16) {
-        let extent = (record / EXTENT_SIZE as u16) as u8;
-        let cr = (record % EXTENT_SIZE as u16) as u8;
-        self.set_byte(env, FCB_EXTENT_OFFSET, extent);
+    pub fn set_sequential_record_number(&mut self, env: &mut BdosEnvironment, record: u32) {
+        let extent = record / EXTENT_SIZE as u32;
+        let cr = (record % EXTENT_SIZE as u32) as u8;
+        let ex = (extent % 32) as u8;
+        let s2 = (extent / 32) as u8;
+        self.set_byte(env, FCB_EXTENT_OFFSET, ex);
+        self.set_byte(env, FCB_S2_OFFSET, s2);
         self.set_byte(env, FCB_CURRENT_RECORD_OFFSET, cr);
     }
 
-    pub fn get_record_count(&self, env: &mut BdosEnvironment) -> (bool, u16) {
+    pub fn get_record_count(&self, env: &mut BdosEnvironment) -> (bool, u32) {
         if self.get_byte(env, FCB_RECORD_COUNT_OFFSET) == EXTENT_SIZE {
-            (true, EXTENT_SIZE as u16)
+            (true, EXTENT_SIZE as u32)
         } else {
-            let record_count = (EXTENT_SIZE as u16) * (self.get_byte(env, FCB_EXTENT_OFFSET) as u16)
-            + (self.get_byte(env, FCB_RECORD_COUNT_OFFSET) as u16);
+            let s2 = self.get_byte(env, FCB_S2_OFFSET) as u32;
+            let ex = self.get_byte(env, FCB_EXTENT_OFFSET) as u32;
+            let extent = s2 * 32 + ex;
+            let record_count = extent * EXTENT_SIZE as u32
+                + self.get_byte(env, FCB_RECORD_COUNT_OFFSET) as u32;
             (false, record_count)
         }
     }

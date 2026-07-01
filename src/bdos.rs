@@ -110,7 +110,7 @@ pub fn execute_bdos(bdos: &mut Bdos, bios: &mut Bios, console: &mut dyn ConsoleE
     // We do the BIOS actions outside the emulation.
     let pc = reg.pc();
     if pc == BDOS_BASE_ADDRESS {
-        let env = &mut BdosEnvironment::new(&mut bdos.state, bios, console, machine, call_trace);
+        let env = &mut BdosEnvironment::new(&mut bdos.state, bios, console, machine, call_trace, bdos.cpm3);
         let arg8 = reg.get8(Reg8::E);
         let arg16 = reg.get16(Reg16::DE);
         let command = reg.get8(Reg8::C);
@@ -260,7 +260,7 @@ pub fn execute_bdos(bdos: &mut Bdos, bios: &mut Bios, console: &mut dyn ConsoleE
             40 => { // F_WRITEZ - Write random with zero fill
                 res8 = Some(bdos_file::write_rand_zero_fill(env, arg16));
             },
-            44 => { // F_MULTISEC - Set number of records to read/write at once (CP/M+)
+            44 if env.cpm3 => { // F_MULTISEC - Set number of records to read/write at once (CP/M+)
                 res8 = Some(bdos_file::set_multi_sector_count(env, arg8));
             },
             45 => { // F_ERRMODE - Set action on hardware error
@@ -276,7 +276,7 @@ pub fn execute_bdos(bdos: &mut Bdos, bios: &mut Bios, console: &mut dyn ConsoleE
                 // Not implemented
                 // Ignored silently to run https://github.com/sblendorio/gorilla-cpm
             },
-            108 => { // P_CODE - Get/set program return code (CP/M+)
+            108 if env.cpm3 => { // P_CODE - Get/set program return code (CP/M+)
                 if arg16 == 0xffff {
                     res16 = Some(env.state.p_code.unwrap_or(0));
                 } else {

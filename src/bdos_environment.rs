@@ -67,7 +67,8 @@ pub struct BdosEnvironment<'a> {
     pub bios: &'a mut Bios,
     pub console: &'a mut dyn ConsoleEmulator,
     pub machine: &'a mut CpmMachine,
-    pub call_trace: bool
+    pub call_trace: bool,
+    pub cpm3: bool
 }
 
 impl <'a> BdosEnvironment<'_> {
@@ -76,8 +77,9 @@ impl <'a> BdosEnvironment<'_> {
             bios: &'a mut Bios,
             console: &'a mut dyn ConsoleEmulator,
             machine: &'a mut CpmMachine,
-            call_trace: bool) -> BdosEnvironment<'a> {
-        BdosEnvironment {state, bios, console, machine, call_trace}
+            call_trace: bool,
+            cpm3: bool) -> BdosEnvironment<'a> {
+        BdosEnvironment {state, bios, console, machine, call_trace, cpm3}
     }
 
     pub fn iobyte(&self) -> u8 {
