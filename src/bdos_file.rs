@@ -202,19 +202,23 @@ pub fn set_attributes(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
         Ok(paths) => {
             if env.cpm3 && fcb.get_f6_flag(env) {
                 // CP/M+: F6' set means the cr field contains the Last Record
-                // Byte Count. Truncate the host file accordingly.
-                // lrbc=0: last record is full (128 bytes), no truncation needed.
-                // lrbc=1..127: that many bytes are used in the last record.
+                // Byte Count. Adjust the host file size accordingly.
+                // lrbc=0: last record is full; round UP to next 128-byte boundary.
+                // lrbc=1..127: that many bytes are used in the last record; truncate.
                 let lrbc = fcb.get_current_record(env);
-                if lrbc > 0 {
-                    if let Ok(metadata) = fs::metadata(&paths[0]) {
-                        let current_records = bytes_to_records(metadata.len());
-                        if current_records > 0 {
-                            let new_size = (current_records as u64 - 1) * RECORD_SIZE as u64
-                                + lrbc as u64;
-                            if let Ok(file) = fs::OpenOptions::new().write(true).open(&paths[0]) {
-                                let _ = file.set_len(new_size);
-                            }
+                if let Ok(metadata) = fs::metadata(&paths[0]) {
+                    let file_size = metadata.len();
+                    let current_records = bytes_to_records(file_size);
+                    let new_size = if lrbc == 0 {
+                        current_records as u64 * RECORD_SIZE as u64
+                    } else if current_records > 0 {
+                        (current_records as u64 - 1) * RECORD_SIZE as u64 + lrbc as u64
+                    } else {
+                        file_size // 0-byte file with lrbc>0: undefined, leave unchanged
+                    };
+                    if new_size != file_size {
+                        if let Ok(file) = fs::OpenOptions::new().write(true).open(&paths[0]) {
+                            let _ = file.set_len(new_size);
                         }
                     }
                 }
