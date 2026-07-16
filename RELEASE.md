@@ -13,3 +13,8 @@
    The tag must match the version in `Cargo.toml` or the build fails.
 4. Review and publish the draft at
    <https://github.com/ivanizag/iz-cpm/releases>.
+5. Publishing triggers the `Update Homebrew tap` action, which updates the
+   formula in [ivanizag/homebrew-tap](https://github.com/ivanizag/homebrew-tap).
+   It needs the `TAP_GITHUB_TOKEN` secret (a fine-grained PAT with contents
+   read/write on `homebrew-tap`). If it ever fails, run
+   `./update-iz-cpm.sh <version>` in the tap repo and push.

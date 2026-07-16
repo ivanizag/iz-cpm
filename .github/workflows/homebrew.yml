@@ -1,0 +1,30 @@
+name: Update Homebrew tap
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-formula:
+    name: Update the formula
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ivanizag/homebrew-tap
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+
+      - name: Update the formula
+        run: ./update-iz-cpm.sh "${TAG#v}"
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git commit -am "iz-cpm ${{ github.event.release.tag_name }}"; then
+            git push
+          else
+            echo "Formula already up to date"
+          fi
