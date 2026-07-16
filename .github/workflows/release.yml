@@ -1,78 +1,96 @@
-name: Deploy
+name: Release
 
 on:
   push:
-    branches:
-      - main
     tags:
       - v[0-9]*
 
+permissions:
+  contents: write
+
 jobs:
+  create-release:
+    name: Create draft release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that the tag matches the Cargo.toml version
+        run: |
+          cargo_version=$(grep -m1 '^version' Cargo.toml | cut -d '"' -f2)
+          if [ "v$cargo_version" != "${{ github.ref_name }}" ]; then
+            echo "Tag ${{ github.ref_name }} does not match Cargo.toml version $cargo_version"
+            exit 1
+          fi
+
+      - name: Create the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "${{ github.ref_name }}" ||
+            gh release create "${{ github.ref_name }}" --draft --verify-tag --generate-notes
+
   build-and-upload:
     name: Build and upload
+    needs: create-release
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - build: linux
+          - build: linux-x86_64
             os: ubuntu-latest
             target: x86_64-unknown-linux-musl
 
-          - build: macos
+          - build: linux-arm64
+            os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+
+          - build: macos-x86_64
             os: macos-latest
             target: x86_64-apple-darwin
 
-          - build: windows
+          - build: macos-arm64
+            os: macos-latest
+            target: aarch64-apple-darwin
+
+          - build: windows-x86_64
             os: windows-latest
             target: x86_64-pc-windows-msvc
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
+      - name: Install the Rust target
+        run: rustup target add ${{ matrix.target }}
 
-      - name: Get the version from the tag
-        shell: bash
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - name: Install musl tools
+        if: contains(matrix.target, 'musl')
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
 
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: --verbose --release --target ${{ matrix.target }}
+        run: cargo build --verbose --release --target ${{ matrix.target }}
 
       - name: Build archive
         shell: bash
         run: |
           binary_name="iz-cpm"
-          dir_name="${binary_name}-${{ matrix.build }}-${{ env.VERSION }}"
+          dir_name="${binary_name}-${{ matrix.build }}-${{ github.ref_name }}"
           mkdir "$dir_name"
+          cp README.md "$dir_name"
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             cp download.bat "$dir_name"
-            cp README.md "$dir_name"
             cp "target/${{ matrix.target }}/release/${binary_name}.exe" "$dir_name"
-          else
-            cp download.sh "$dir_name"
-            cp README.md "$dir_name"
-            cp "target/${{ matrix.target }}/release/${binary_name}" "$dir_name"
-          fi
-
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
             7z a "$dir_name.zip" "$dir_name"
             echo "ASSET=$dir_name.zip" >> $GITHUB_ENV
           else
+            cp download.sh "$dir_name"
+            cp "target/${{ matrix.target }}/release/${binary_name}" "$dir_name"
             tar -czf "$dir_name.tar.gz" "$dir_name"
             echo "ASSET=$dir_name.tar.gz" >> $GITHUB_ENV
           fi
 
-      - uses: ncipollo/release-action@v1
-        with:
-          artifacts:  ${{ env.ASSET }}
-          body: "Release for Linux, Windows and MacOS"
-          allowUpdates: true
-          draft: true
-
-      
-
+      - name: Upload the archive to the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.ref_name }}" "${{ env.ASSET }}" --clobber
