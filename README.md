@@ -10,8 +10,14 @@ Made with Rust
 
 Note that iz-cpm is a very basic implementation, mostly for educational purposes. I recommend MockbaTheBorg's [RunCPM](https://github.com/MockbaTheBorg/RunCPM) or Udo Munk's [Z80pack](https://github.com/udo-munk/z80pack/blob/master/doc/README-cpm.txt) for a much more complete CP/M emulation. 
 
-## Installation
+## Installation from zip
 Extract the [latest zip](https://github.com/ivanizag/iz-cpm/releases) for Linux, MacOS or Windows. Optionally run `download.sh` or `download.bat`  to download the CP/M 2.2 system disk, Microsoft Basic, Turbo Pascal, Lisp and some games.
+
+## Installation with brew
+Run:
+```console
+brew install ivanizag/tap/iz-cpm
+```
 
 ## Build from source
 To build from source, install the latest Rust compiler, clone the repo and run `cargo build --release`. To cross compile to Windows, install the target with `rustup` and run `cargo build --release --target x86_64-pc-windows-gnu`.
