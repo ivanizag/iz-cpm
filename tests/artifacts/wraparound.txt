@@ -1,0 +1,16 @@
+Hand-assembled test programs for the RAM wrap-around tests (tests/wraparound.rs).
+
+wrapfcb.com: Open File (BDOS 15) with the FCB at 0xFFFB, so the 36 bytes of the
+FCB straddle the end of RAM.
+    LD DE,0FFFBh / LD C,0Fh / CALL 5 / RET
+
+wrapdma.com: Set DMA to 0xFFFF (BDOS 26), fill FCB1 with '?' and call Search
+First (BDOS 17), so the 128 bytes directory record is stored straddling the end
+of RAM. The wrapped part overwrites the start of page zero, so the program saves
+0x0000-0x007F at 0x0200 before and restores it after, to be able to return.
+    LD HL,0 / LD DE,0200h / LD BC,0080h / LDIR
+    LD DE,0FFFFh / LD C,1Ah / CALL 5
+    LD HL,005Dh / LD B,0Bh / loop: LD (HL),'?' / INC HL / DJNZ loop
+    LD DE,005Ch / LD C,11h / CALL 5
+    LD HL,0200h / LD DE,0 / LD BC,0080h / LDIR
+    RET

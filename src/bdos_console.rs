@@ -37,7 +37,7 @@ pub fn write_string(env: &mut BdosEnvironment, address: u16) {
     let mut index = address;
     loop {
         let ch = env.machine.peek(index);
-        index += 1;
+        index = index.wrapping_add(1);
 
         if ch as char == '$'{
             break;
@@ -61,6 +61,11 @@ pub fn read_string(env: &mut BdosEnvironment, address: u16) -> ExecutionResult {
     //
     // TODO: Process controls characters
     let max_size = env.machine.peek(address);
+    if max_size == 0 {
+        // The buffer cannot hold any character. Do not read nor write beyond it.
+        env.machine.poke(address.wrapping_add(1), 0);
+        return ExecutionResult::Continue;
+    }
     let mut size = 0;
     loop {
         let ch = env.bios.read(env.console);
@@ -84,7 +89,7 @@ pub fn read_string(env: &mut BdosEnvironment, address: u16) -> ExecutionResult {
             continue;
         }
         env.bios.write(env.console, ch);
-        env.machine.poke(address + 2 + size as u16, ch);
+        env.machine.poke(address.wrapping_add(2 + size as u16), ch);
         size += 1;
         if size >= max_size {
             // The buffer is full
@@ -92,7 +97,7 @@ pub fn read_string(env: &mut BdosEnvironment, address: u16) -> ExecutionResult {
         }
     }
 
-    env.machine.poke(address + 1, size);
+    env.machine.poke(address.wrapping_add(1), size);
     ExecutionResult::Continue
 }
 

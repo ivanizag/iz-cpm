@@ -227,7 +227,7 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
 
     // Load the code in memory
     for i in 0..binary_size {
-        machine.poke(binary_address + i as u16, binary[i]);
+        machine.poke(binary_address.wrapping_add(i as u16), binary[i]);
     }
 
     if !use_tpa {
@@ -263,7 +263,7 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
                 machine.poke(SYSTEM_PARAMS_ADDRESS + 1, b' ');
                 let p_bytes = p.as_bytes();
                 for i in 0..len {
-                    machine.poke(SYSTEM_PARAMS_ADDRESS + (i as u16) + 2, p_bytes[i]);
+                    machine.poke(SYSTEM_PARAMS_ADDRESS.wrapping_add(i as u16 + 2), p_bytes[i]);
                 }
 
                 // As a convenience, the CCP takes the first two parameters that
@@ -341,7 +341,7 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
                 if use_tpa {
                     bdos.warm_reset(&mut machine);
                     for i in 0..binary_size {
-                        machine.poke(binary_address + i as u16, binary[i]);
+                        machine.poke(binary_address.wrapping_add(i as u16), binary[i]);
                     }
                     cpu.registers().set_pc(binary_address);
                     let user_drive = machine.peek(CCP_USER_DRIVE_ADDRESS);
@@ -357,7 +357,7 @@ pub fn run<'a>(command_line: Option<Vec<&str>>, console: &mut dyn ConsoleEmulato
                 if use_tpa {
                     bdos.reset(&mut machine);
                     for i in 0..binary_size {
-                        machine.poke(binary_address + i as u16, binary[i]);
+                        machine.poke(binary_address.wrapping_add(i as u16), binary[i]);
                     }
                     cpu.registers().set_pc(binary_address);
                     let user_drive = machine.peek(CCP_USER_DRIVE_ADDRESS);

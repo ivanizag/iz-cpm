@@ -282,7 +282,7 @@ pub fn read(env: &mut BdosEnvironment, fcb_address: u16) -> u8 {
                 for j in (i + 1)..count {
                     let fill_addr = base_dma.wrapping_add(j as u16 * RECORD_SIZE as u16);
                     for k in 0..RECORD_SIZE {
-                        env.machine.poke(fill_addr + k as u16, 0x1a /* ctrl-Z */);
+                        env.machine.poke(fill_addr.wrapping_add(k as u16), 0x1a /* ctrl-Z */);
                     }
                 }
             }

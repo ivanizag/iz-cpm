@@ -75,11 +75,11 @@ impl Fcb {
     }
 
     fn get_byte(&self, env: &mut BdosEnvironment, offset: u16) -> u8 {
-        env.machine.peek(self.address + offset)
+        env.machine.peek(self.address.wrapping_add(offset))
     }
 
     fn set_byte(&self, env: &mut BdosEnvironment, offset: u16, v: u8) {
-        env.machine.poke(self.address + offset, v)
+        env.machine.poke(self.address.wrapping_add(offset), v)
     }
 
     pub fn init(&mut self, env: &mut BdosEnvironment, record_count: u32) {
@@ -148,13 +148,13 @@ impl Fcb {
     }
 
     pub fn set_name_direct(&mut self, machine: &mut dyn Machine, name: String) {
-        machine.poke(self.address + FCB_DRIVE_OFFSET, 1 /* drive A: */);
+        machine.poke(self.address.wrapping_add(FCB_DRIVE_OFFSET), 1 /* drive A: */);
         let bytes = name.as_bytes();
         for i in 0..8 {
-            machine.poke(self.address + i + FCB_NAME_OFFSET, 0x7F & bytes[i as usize]);
+            machine.poke(self.address.wrapping_add(i + FCB_NAME_OFFSET), 0x7F & bytes[i as usize]);
         }
         for i in 0..3 {
-            machine.poke(self.address + i + FCB_EXTENSION_OFFSET, 0x7F & bytes[9 + i as usize]);
+            machine.poke(self.address.wrapping_add(i + FCB_EXTENSION_OFFSET), 0x7F & bytes[9 + i as usize]);
         }
     }
 

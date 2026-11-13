@@ -92,14 +92,14 @@ impl <'a> BdosEnvironment<'_> {
 
     pub fn store_buffer_to_dma(&mut self, buffer: &Buffer) {
         for i in 0..RECORD_SIZE {
-            self.machine.poke(self.state.dma + i as u16, buffer[i]);
+            self.machine.poke(self.state.dma.wrapping_add(i as u16), buffer[i]);
         }
     }
 
     pub fn load_buffer_from_dma(&mut self) -> Buffer {
         let mut buffer = [0; RECORD_SIZE];
         for i in 0..RECORD_SIZE {
-            buffer[i] = self.machine.peek(self.state.dma + i as u16);
+            buffer[i] = self.machine.peek(self.state.dma.wrapping_add(i as u16));
         }
         buffer
     }
